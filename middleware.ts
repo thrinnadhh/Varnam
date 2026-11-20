@@ -12,8 +12,16 @@ export async function middleware(request: NextRequest) {
   let user = null;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const isCloudWithoutCredentials =
+    (process.env.VERCEL || process.env.NODE_ENV === "production") &&
+    (!supabaseUrl ||
+      supabaseUrl.includes("127.0.0.1") ||
+      supabaseUrl.includes("localhost") ||
+      supabaseUrl.includes("placeholder-project.supabase.co"));
 
-  if (supabaseUrl && supabaseKey) {
+  const demoRole = request.cookies.get("varnam_demo_role")?.value;
+
+  if (supabaseUrl && supabaseKey && !isCloudWithoutCredentials) {
     try {
       const supabase = createServerClient(supabaseUrl, supabaseKey, {
         cookies: {
@@ -47,17 +55,20 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Server-side Route Guard for /admin
-  if (pathname.startsWith("/admin")) {
-    if (!user) {
+  if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
+    const isDemoAdmin = demoRole === "admin";
+    if (!user && !isDemoAdmin) {
       const redirectUrl = new URL("/login", request.url);
       redirectUrl.searchParams.set("redirectTo", pathname);
+      redirectUrl.searchParams.set("role", "admin");
       return NextResponse.redirect(redirectUrl);
     }
   }
 
   // Server-side Route Guard for /account
   if (pathname.startsWith("/account")) {
-    if (!user) {
+    const isDemoUser = demoRole === "customer" || demoRole === "admin";
+    if (!user && !isDemoUser) {
       const redirectUrl = new URL("/login", request.url);
       redirectUrl.searchParams.set("redirectTo", pathname);
       return NextResponse.redirect(redirectUrl);

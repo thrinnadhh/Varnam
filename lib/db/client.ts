@@ -2,13 +2,39 @@ import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "@/types/db";
 
 /**
+ * Checks if client is connected to a reachable live Supabase backend
+ */
+export function isSupabaseConfiguredClient(): boolean {
+  if (typeof window === "undefined") return true;
+  const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const isLocalHost =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
+  if (!envUrl) {
+    return isLocalHost;
+  }
+  if (
+    !isLocalHost &&
+    (envUrl.includes("127.0.0.1") ||
+      envUrl.includes("localhost") ||
+      envUrl.includes("placeholder-project.supabase.co"))
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * Client-side Supabase Browser Client
  * Completely isolated from server-only APIs (no next/headers)
  * Resilient fallback for prerendering build phases
  */
 export function createBrowserSupabaseClient() {
   const isBrowser = typeof window !== "undefined";
-  const isLocalHost = isBrowser && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+  const isLocalHost =
+    isBrowser &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1");
 
   const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   // If no envUrl, or if envUrl points to local 127.0.0.1 while browsing on a remote domain, avoid mixed-content hangs
@@ -24,8 +50,13 @@ export function createBrowserSupabaseClient() {
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.placeholder";
 
   const fetchWithTimeout = (input: RequestInfo | URL, init?: RequestInit) => {
-    if (typeof input === "string" && input.includes("placeholder-project.supabase.co")) {
-      return Promise.reject(new Error("Supabase credentials not configured in cloud deployment"));
+    if (
+      typeof input === "string" &&
+      input.includes("placeholder-project.supabase.co")
+    ) {
+      return Promise.reject(
+        new Error("Supabase credentials not configured in cloud deployment")
+      );
     }
     const signal = init?.signal || AbortSignal.timeout(3000);
     return fetch(input, { ...init, signal });

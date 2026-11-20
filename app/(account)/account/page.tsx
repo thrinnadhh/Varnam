@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { createBrowserSupabaseClient } from "@/lib/db/client";
+import { createBrowserSupabaseClient, isSupabaseConfiguredClient } from "@/lib/db/client";
 import {
   getUserOrders,
   getAddresses,
@@ -142,6 +142,20 @@ function AccountContent() {
   useEffect(() => {
     async function checkUser() {
       try {
+        const isDemo =
+          typeof document !== "undefined" &&
+          document.cookie.includes("varnam_demo_role=");
+        if (isDemo && !isSupabaseConfiguredClient()) {
+          setUser({
+            id: "demo-customer-id",
+            email: "ananya.parent@varnam.luxury",
+            user_metadata: { full_name: "Ananya Sharma (Demo Parent)" },
+          } as unknown as User);
+          loadUserData();
+          setIsLoadingAuth(false);
+          return;
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
         setUser(user);
         if (user) {
@@ -162,6 +176,19 @@ function AccountContent() {
     setIsAuthPending(true);
 
     try {
+      if (!isSupabaseConfiguredClient()) {
+        const { loginDemoUser } = await import("@/lib/db/actions");
+        await loginDemoUser("customer");
+        setUser({
+          id: "demo-customer-id",
+          email: email || "parent@varnam.luxury",
+          user_metadata: { full_name: fullName || "Parent Customer" },
+        } as unknown as User);
+        loadUserData();
+        setIsAuthPending(false);
+        return;
+      }
+
       if (authMode === "signup") {
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -187,11 +214,18 @@ function AccountContent() {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Ignore unconfigured
+    }
+    const { logoutDemoUser } = await import("@/lib/db/actions");
+    await logoutDemoUser();
     setUser(null);
     setOrders([]);
     setAddresses([]);
     setWishlist([]);
+    window.location.href = "/login";
   };
 
   const handleSaveNewAddress = async (e: React.FormEvent) => {

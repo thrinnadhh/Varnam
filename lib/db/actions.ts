@@ -1,6 +1,7 @@
 "use server";
 
 import { createServerSupabaseClient, isSupabaseConfigured } from "./supabase";
+import { cookies } from "next/headers";
 import {
   checkoutSchema,
   addressSchema,
@@ -23,6 +24,139 @@ import {
   type FallbackProduct,
   type FallbackBanner,
 } from "./fallback-data";
+
+// ==========================================
+// Demo / Cloud Sandbox Authentication Actions
+// ==========================================
+
+export async function loginDemoUser(role: "customer" | "admin" = "customer") {
+  const cookieStore = await cookies();
+  cookieStore.set("varnam_demo_role", role, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+    sameSite: "lax",
+    httpOnly: false,
+  });
+  return { success: true, role, redirect: role === "admin" ? "/admin" : "/account" };
+}
+
+export async function logoutDemoUser() {
+  const cookieStore = await cookies();
+  cookieStore.delete("varnam_demo_role");
+  return { success: true };
+}
+
+const DEMO_ORDERS = [
+  {
+    id: "demo-ord-1",
+    order_number: "VARNAM-2024-8842",
+    status: "confirmed",
+    total_amount: 389900,
+    subtotal_amount: 389900,
+    shipping_amount: 0,
+    payment_method: "prepaid_upi",
+    payment_status: "paid",
+    carrier: "BlueDart Express",
+    tracking_number: "BD983248102IN",
+    tracking_url: "https://www.bluedart.com",
+    estimated_delivery_date: new Date(Date.now() + 86400000 * 3).toISOString(),
+    created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+    order_items: [
+      {
+        id: "item-1",
+        product_name: "Maharani Pattu Pavadai - Pure Kanjeevaram Silk",
+        size_name: "4-5Y",
+        size_age: "4-5 Years",
+        color_name: "Sindhoori Crimson & Mustard Gold",
+        quantity: 1,
+        price: 389900,
+      },
+    ],
+  },
+  {
+    id: "demo-ord-2",
+    order_number: "VARNAM-2024-7621",
+    status: "delivered",
+    total_amount: 249900,
+    subtotal_amount: 249900,
+    shipping_amount: 0,
+    payment_method: "cashfree",
+    payment_status: "paid",
+    carrier: "Delhivery Surface",
+    tracking_number: "DEL1298471203",
+    tracking_url: "https://www.delhivery.com",
+    estimated_delivery_date: new Date(Date.now() - 86400000 * 10).toISOString(),
+    created_at: new Date(Date.now() - 86400000 * 14).toISOString(),
+    order_items: [
+      {
+        id: "item-2",
+        product_name: "Ayodhya Silk Anarkali Gown",
+        size_name: "6-7Y",
+        size_age: "6-7 Years",
+        color_name: "Peacock Blue",
+        quantity: 1,
+        price: 249900,
+      },
+    ],
+  },
+];
+
+const DEMO_ADDRESSES = [
+  {
+    id: "demo-addr-1",
+    name: "Ananya Sharma",
+    phone: "9876543210",
+    address_line1: "Flat 402, Lotus Grand Residences, Indiranagar 100ft Road",
+    address_line2: "Near BDA Complex",
+    city: "Bengaluru",
+    state: "Karnataka",
+    postal_code: "560038",
+    country: "India",
+    is_default: true,
+  },
+  {
+    id: "demo-addr-2",
+    name: "Ananya Sharma (Ancestral Home)",
+    phone: "9876543210",
+    address_line1: "House No. 14, Temple Street, Mylapore",
+    address_line2: "Opp. Kapaleeshwarar Temple",
+    city: "Chennai",
+    state: "Tamil Nadu",
+    postal_code: "600004",
+    country: "India",
+    is_default: false,
+  },
+];
+
+const DEMO_WISHLIST = [
+  {
+    id: "demo-wish-1",
+    product_id: "demo-prod-1",
+    products: {
+      id: "demo-prod-1",
+      name: "Maharani Pattu Pavadai - Pure Kanjeevaram Silk",
+      slug: "maharani-pattu-pavadai",
+      fabric: "Pure Mulberry Silk",
+      lining: "100% Breathable Mulmul Cotton",
+      product_variants: [
+        {
+          id: "demo-var-1",
+          size_age: "4-5 Years",
+          price: 389900,
+          mrp: 499900,
+          stock: 5,
+        },
+      ],
+      product_images: [
+        {
+          image_url:
+            "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80",
+          is_primary: true,
+        },
+      ],
+    },
+  },
+];
 
 // ==========================================
 // Store Settings & Rotating Hero Banners Actions
@@ -52,6 +186,11 @@ export async function getStoreSettings() {
 
 export async function updateBannerDuration(durationSec: number) {
   try {
+    if (!isSupabaseConfigured()) {
+      revalidatePath("/");
+      revalidatePath("/admin/banners");
+      return { success: true, duration: durationSec };
+    }
     const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Authentication required" };
@@ -85,6 +224,11 @@ export async function updateBannerDuration(durationSec: number) {
 
 export async function updateStoreSettings(input: Partial<StoreSettingsInput>) {
   try {
+    if (!isSupabaseConfigured()) {
+      revalidatePath("/");
+      revalidatePath("/admin/banners");
+      return { success: true };
+    }
     const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Authentication required" };
@@ -135,6 +279,11 @@ export async function getHeroBanners(includeInactive = false): Promise<FallbackB
 
 export async function upsertHeroBanner(input: HeroBannerInput) {
   try {
+    if (!isSupabaseConfigured()) {
+      revalidatePath("/");
+      revalidatePath("/admin/banners");
+      return { success: true, banner: { ...input, id: input.id || "demo-banner-new" } };
+    }
     const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Authentication required" };
@@ -187,6 +336,11 @@ export async function upsertHeroBanner(input: HeroBannerInput) {
 
 export async function deleteHeroBanner(bannerId: string) {
   try {
+    if (!isSupabaseConfigured()) {
+      revalidatePath("/");
+      revalidatePath("/admin/banners");
+      return { success: true };
+    }
     const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Authentication required" };
@@ -203,6 +357,11 @@ export async function deleteHeroBanner(bannerId: string) {
 
 export async function toggleHeroBannerActive(bannerId: string, isActive: boolean) {
   try {
+    if (!isSupabaseConfigured()) {
+      revalidatePath("/");
+      revalidatePath("/admin/banners");
+      return { success: true };
+    }
     const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Authentication required" };
@@ -222,6 +381,11 @@ export async function toggleHeroBannerActive(bannerId: string, isActive: boolean
 
 export async function reorderHeroBanners(ordered: string[] | { id: string; sort_order: number }[]) {
   try {
+    if (!isSupabaseConfigured()) {
+      revalidatePath("/");
+      revalidatePath("/admin/banners");
+      return { success: true };
+    }
     const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Authentication required" };
@@ -791,6 +955,13 @@ export async function getCategoryTreeAdmin(): Promise<NavigationNode[]> {
 
 export async function upsertCategoryNode(input: CategoryNodeInput) {
   try {
+    if (!isSupabaseConfigured()) {
+      revalidatePath("/");
+      revalidatePath("/collections");
+      revalidatePath("/admin/categories");
+      revalidatePath("/admin/products");
+      return { success: true, category: { ...input, id: input.id || "demo-cat-new" } };
+    }
     const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Authentication required" };
@@ -848,6 +1019,13 @@ export async function upsertCategoryNode(input: CategoryNodeInput) {
 
 export async function deleteCategoryNode(categoryId: string) {
   try {
+    if (!isSupabaseConfigured()) {
+      revalidatePath("/");
+      revalidatePath("/collections");
+      revalidatePath("/admin/categories");
+      revalidatePath("/admin/products");
+      return { success: true };
+    }
     const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Authentication required" };
@@ -870,6 +1048,12 @@ export async function deleteCategoryNode(categoryId: string) {
 
 export async function reorderCategoryNodes(ordered: string[] | { id: string; sort_order: number }[]) {
   try {
+    if (!isSupabaseConfigured()) {
+      revalidatePath("/");
+      revalidatePath("/collections");
+      revalidatePath("/admin/categories");
+      return { success: true };
+    }
     const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Authentication required" };
@@ -1343,7 +1527,7 @@ export async function mergeGuestCartAction(guestItems: Array<{ variant_id: strin
 // ==========================================
 
 export async function getWishlist() {
-  if (!isSupabaseConfigured()) return [];
+  if (!isSupabaseConfigured()) return DEMO_WISHLIST;
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -1375,6 +1559,10 @@ export async function getWishlist() {
 }
 
 export async function toggleWishlist(productId: string) {
+  if (!isSupabaseConfigured()) {
+    revalidatePath("/account");
+    return { success: true, isFavorited: true };
+  }
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -1405,7 +1593,7 @@ export async function toggleWishlist(productId: string) {
 // ==========================================
 
 export async function getAddresses() {
-  if (!isSupabaseConfigured()) return [];
+  if (!isSupabaseConfigured()) return DEMO_ADDRESSES;
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -1426,6 +1614,11 @@ export async function getAddresses() {
 }
 
 export async function saveAddress(input: AddressInput) {
+  if (!isSupabaseConfigured()) {
+    revalidatePath("/checkout");
+    revalidatePath("/account");
+    return { success: true };
+  }
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -1483,6 +1676,21 @@ export async function saveAddress(input: AddressInput) {
 // ==========================================
 
 export async function createOrderAction(input: CheckoutInput) {
+  if (!isSupabaseConfigured()) {
+    return {
+      success: true,
+      order: {
+        order_id: "demo-order-new",
+        order_number: "VARNAM-" + Math.floor(100000 + Math.random() * 900000),
+        total_amount: 389900,
+        subtotal_amount: 389900,
+        shipping_amount: 0,
+        payment_method: "prepaid_upi",
+        status: "confirmed",
+        expires_at: null,
+      },
+    };
+  }
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -1531,7 +1739,7 @@ export async function createOrderAction(input: CheckoutInput) {
 }
 
 export async function getUserOrders() {
-  if (!isSupabaseConfigured()) return [];
+  if (!isSupabaseConfigured()) return DEMO_ORDERS;
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 

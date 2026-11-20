@@ -1,6 +1,7 @@
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { createServerSupabaseClient } from "@/lib/db/supabase";
+import { createServerSupabaseClient, isSupabaseConfigured } from "@/lib/db/supabase";
+import { cookies } from "next/headers";
 import { getNavigationTree, getStoreSettings } from "@/lib/db/actions";
 import { redirect } from "next/navigation";
 
@@ -9,10 +10,22 @@ export default async function AccountLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: { id: string; email?: string } | null = null;
+  const configured = isSupabaseConfigured();
+
+  if (configured) {
+    const supabase = await createServerSupabaseClient();
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+    user = authUser;
+  } else {
+    const cookieStore = await cookies();
+    const demoRole = cookieStore.get("varnam_demo_role")?.value;
+    if (demoRole === "customer" || demoRole === "admin") {
+      user = { id: "demo-customer-id", email: "parent@varnam.luxury" };
+    }
+  }
 
   if (!user) {
     redirect("/login?redirectTo=/account");

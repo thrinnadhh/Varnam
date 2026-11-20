@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition, Suspense } from "react";
+import { useState, useEffect, useTransition, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createBrowserSupabaseClient } from "@/lib/db/client";
-import { Sparkles, ArrowRight, Lock, Mail, AlertCircle } from "lucide-react";
+import { createBrowserSupabaseClient, isSupabaseConfiguredClient } from "@/lib/db/client";
+import { loginDemoUser } from "@/lib/db/actions";
+import { Sparkles, ArrowRight, Lock, Mail, AlertCircle, ShieldCheck } from "lucide-react";
 import { getSafeRedirectUrl } from "@/lib/utils";
 
 function LoginForm() {
@@ -27,10 +28,39 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isConfigured, setIsConfigured] = useState<boolean>(true);
+
+  useEffect(() => {
+    setIsConfigured(isSupabaseConfiguredClient());
+  }, []);
+
+  const handleDemoAccess = (role: "customer" | "admin") => {
+    setError(null);
+    startTransition(async () => {
+      try {
+        await loginDemoUser(role);
+        const rawRedirect = searchParams.get("redirectTo");
+        if (role === "admin" && (!rawRedirect || rawRedirect === "/account")) {
+          router.push("/admin");
+        } else {
+          router.push(role === "admin" ? "/admin" : (redirectTo || "/account"));
+        }
+        router.refresh();
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to enter demo session");
+      }
+    });
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    // If cloud credentials are not configured, seamlessly log in as demo user
+    if (!isConfigured) {
+      handleDemoAccess(loginRole);
+      return;
+    }
 
     startTransition(async () => {
       try {
@@ -142,6 +172,39 @@ function LoginForm() {
         </p>
       </div>
 
+      {/* Cloud Sandbox Notice & 1-Click Access */}
+      {!isConfigured && (
+        <div className="p-3.5 bg-[#EFE6D5] border border-[#C69214]/60 rounded-xl text-xs space-y-2">
+          <div className="flex items-center gap-1.5 font-bold text-[#8B1E3F]">
+            <Sparkles className="w-3.5 h-3.5 text-[#C69214]" />
+            <span>Interactive Cloud Sandbox Active</span>
+          </div>
+          <p className="text-[11px] text-[#6B574B] leading-relaxed">
+            Live database credentials are unconfigured in this cloud deployment. You can test both Customer and Admin portals with instant 1-click access:
+          </p>
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => handleDemoAccess("customer")}
+              disabled={isPending}
+              className="py-2 px-2.5 bg-[#8B1E3F] hover:bg-[#721531] text-[#FAF5EB] font-bold rounded-lg text-[11px] flex items-center justify-center gap-1 transition-all shadow-xs disabled:opacity-50"
+            >
+              <span>⚡ Demo Customer</span>
+              <ArrowRight className="w-3 h-3 shrink-0" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDemoAccess("admin")}
+              disabled={isPending}
+              className="py-2 px-2.5 bg-[#3B281E] hover:bg-[#2A1C15] text-[#FAF5EB] font-bold rounded-lg text-[11px] flex items-center justify-center gap-1 transition-all shadow-xs disabled:opacity-50"
+            >
+              <span>⚡ Demo Admin</span>
+              <ShieldCheck className="w-3 h-3 shrink-0 text-[#C69214]" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-center gap-2 font-medium">
           <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
@@ -161,7 +224,7 @@ function LoginForm() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={loginRole === "admin" ? "admin@varnam.com" : "ananya@example.com"}
+              placeholder={loginRole === "admin" ? "admin@varnam.luxury" : "ananya@example.com"}
               className="w-full pl-9 pr-3 py-2.5 bg-[#EFE6D5]/50 border border-[#D8C7AE] rounded-xl text-[#261C17] focus:ring-2 focus:ring-[#8B1E3F] focus:outline-none"
             />
           </div>
