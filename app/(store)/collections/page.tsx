@@ -1,6 +1,7 @@
-import { getCategories, getProducts } from "@/lib/db/actions";
+import { getCategories, getProducts, getBanners } from "@/lib/db/actions";
 import { CatalogBrowser } from "@/components/catalog-browser";
 import { SmoothScroll } from "@/components/smooth-scroll";
+import { BannerCarousel } from "@/components/banner-carousel";
 
 export const dynamic = "force-dynamic";
 
@@ -10,9 +11,10 @@ export default async function CollectionsPage({
   searchParams: Promise<{ segment?: "girls" | "teens" | "women"; age?: string; size?: string }>;
 }) {
   const { segment, age, size } = await searchParams;
-  const [categories, products] = await Promise.all([
+  const [categories, products, banners] = await Promise.all([
     getCategories(),
     getProducts(),
+    getBanners(),
   ]);
 
   const segmentTitle =
@@ -44,6 +46,12 @@ export default async function CollectionsPage({
           {segmentSubtitle}
         </p>
       </div>
+
+      {banners.length > 0 && (
+        <div className="mb-8">
+          <BannerCarousel banners={banners} />
+        </div>
+      )}
 
       <CatalogBrowser
         initialProducts={products}

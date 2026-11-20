@@ -27,6 +27,9 @@ interface PDPClientProps {
     description: string;
     fabric: string;
     lining: string;
+    craft_work?: string | null;
+    set_includes?: string | null;
+    wash_care?: string | null;
     care_instructions: string;
     model_height?: string | null;
     model_size_worn?: string | null;
@@ -426,11 +429,26 @@ export function PDPClient({ product }: PDPClientProps) {
             <p>
               <strong className="text-text-heading">Outer Shell:</strong> {product.fabric}
             </p>
+            {product.craft_work && (
+              <p>
+                <strong className="text-text-heading">Handcraft &amp; Work:</strong> {product.craft_work}
+              </p>
+            )}
+            {product.set_includes && (
+              <p>
+                <strong className="text-text-heading">Set Includes:</strong> {product.set_includes}
+              </p>
+            )}
             <p className="text-emerald-900 font-medium">
-              <strong className="text-emerald-950">Inner Lining:</strong> {product.lining} (Skin-Safe & Breathable)
+              <strong className="text-emerald-950">Inner Lining:</strong> {product.lining} (Skin-Safe &amp; Breathable)
             </p>
+            {product.wash_care && (
+              <p>
+                <strong className="text-text-heading">Wash &amp; Care:</strong> {product.wash_care}
+              </p>
+            )}
             <p>
-              <strong className="text-text-heading">Care & Maintenance:</strong> {product.care_instructions}
+              <strong className="text-text-heading">Care &amp; Maintenance:</strong> {product.care_instructions}
             </p>
           </div>
         </div>

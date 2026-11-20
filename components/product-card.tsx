@@ -3,10 +3,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useTransition } from "react";
-import { Heart, ShoppingBag, Check } from "lucide-react";
+import { Heart, ShoppingBag, Check, Eye } from "lucide-react";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { toggleWishlist, addToCart } from "@/lib/db/actions";
 import { motion } from "motion/react";
+import { QuickViewModal } from "@/components/quick-view-modal";
 
 interface ProductCardProps {
   product: {
@@ -16,6 +17,9 @@ interface ProductCardProps {
     segment?: "girls" | "teens" | "women" | string;
     fabric: string;
     lining: string;
+    craft_work?: string | null;
+    set_includes?: string | null;
+    wash_care?: string | null;
     categories?: { name: string; slug: string } | null;
     product_variants: Array<{
       id: string;
@@ -39,6 +43,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const [isPending, startTransition] = useTransition();
   const [isFavorited, setIsFavorited] = useState(false);
   const [addedFeedback, setAddedFeedback] = useState(false);
+  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
 
   const primaryImage =
     product.product_images?.find((img) => img.is_primary)?.image_url ||
@@ -150,21 +155,54 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        {/* Wishlist Heart on top-right */}
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.85 }}
-          whileHover={{ scale: 1.1 }}
-          onClick={handleWishlistClick}
-          className={`absolute top-2.5 right-2.5 p-2 rounded-full backdrop-blur-md transition-all z-10 ${
-            isFavorited
-              ? "bg-brand-primary text-white"
-              : "bg-surface/80 text-text-heading hover:bg-surface hover:text-brand-primary"
-          }`}
-          aria-label="Add to favorites"
-        >
-          <Heart className={`w-4 h-4 ${isFavorited ? "fill-current" : ""}`} />
-        </motion.button>
+        {/* Action icons on top-right */}
+        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.85 }}
+            whileHover={{ scale: 1.1 }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsQuickViewOpen(true);
+            }}
+            className="p-2 rounded-full backdrop-blur-md transition-all bg-surface/80 text-text-heading hover:bg-surface hover:text-brand-primary shadow-sm"
+            aria-label="Quick view product"
+            title="Quick View"
+          >
+            <Eye className="w-4 h-4" />
+          </motion.button>
+
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.85 }}
+            whileHover={{ scale: 1.1 }}
+            onClick={handleWishlistClick}
+            className={`p-2 rounded-full backdrop-blur-md transition-all shadow-sm ${
+              isFavorited
+                ? "bg-brand-primary text-white"
+                : "bg-surface/80 text-text-heading hover:bg-surface hover:text-brand-primary"
+            }`}
+            aria-label="Add to favorites"
+          >
+            <Heart className={`w-4 h-4 ${isFavorited ? "fill-current" : ""}`} />
+          </motion.button>
+        </div>
+
+        {/* Hover Quick View Pill (Desktop) */}
+        <div className="absolute inset-x-3 bottom-9 hidden sm:flex justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-10">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsQuickViewOpen(true);
+            }}
+            className="pointer-events-auto px-4 py-1.5 rounded-full bg-surface/95 hover:bg-surface text-brand-primary text-xs font-bold shadow-lg backdrop-blur-md border border-border flex items-center gap-1.5 transition-transform hover:scale-105"
+          >
+            <Eye className="w-3.5 h-3.5" /> Quick View
+          </button>
+        </div>
 
         {/* Cotton Lining Indicator Tag */}
         {product.lining && (
@@ -229,6 +267,31 @@ export function ProductCard({ product }: ProductCardProps) {
           </motion.button>
         </div>
       </div>
+
+      <QuickViewModal
+        isOpen={isQuickViewOpen}
+        onClose={() => setIsQuickViewOpen(false)}
+        product={{
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          fabric: product.fabric,
+          lining: product.lining,
+          craft_work: product.craft_work,
+          set_includes: product.set_includes,
+          wash_care: product.wash_care,
+          product_images: product.product_images,
+          product_variants: product.product_variants.map((v) => ({
+            id: v.id,
+            size_name: v.size_name || v.size_age || "Standard",
+            size_age: v.size_age,
+            color_name: v.color_name,
+            price: v.price,
+            mrp: v.mrp,
+            stock: v.stock,
+          })),
+        }}
+      />
     </div>
   );
 }

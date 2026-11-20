@@ -196,6 +196,9 @@ export const productInputSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters"),
   fabric: z.string().min(2, "Fabric details required"),
   lining: z.string().min(2, "Inner lining details required (e.g. 100% Breathable Cotton)"), // Mandatory
+  craft_work: z.string().optional().nullable(),
+  set_includes: z.string().optional().nullable(),
+  wash_care: z.string().optional().nullable(),
   care_instructions: z.string().min(2, "Care instructions required"),
   measurement_type: z.enum(MEASUREMENT_TYPES).default("garment"),
   model_height: z.string().optional().nullable(),
@@ -218,3 +221,30 @@ export const productInputSchema = z.object({
 
 export type ProductInput = z.infer<typeof productInputSchema>;
 export type ProductVariantInput = z.infer<typeof productVariantInputSchema>;
+
+// ==========================================
+// Banner & Coupon Schemas
+// ==========================================
+export const bannerSchema = z.object({
+  id: z.string().uuid().optional(),
+  title: z.string().min(2, "Title is required"),
+  subtitle: z.string().optional().nullable(),
+  cta_label: z.string().default("Shop Collection"),
+  cta_link: z.string().default("/collections"),
+  image_url: z.string().url("Valid image URL required"),
+  is_active: z.boolean().default(true),
+  sort_order: z.number().int().default(0),
+});
+
+export const couponSchema = z.object({
+  id: z.string().uuid().optional(),
+  code: z.string().min(3, "Code must be at least 3 characters").max(30),
+  discount_type: z.enum(["percentage", "fixed"]),
+  discount_value: z.number().int().min(1, "Discount value must be at least 1"),
+  min_order_amount: z.number().int().min(0).default(0),
+  is_active: z.boolean().default(true),
+  expires_at: z.string().optional().nullable(),
+});
+
+export type BannerInput = z.infer<typeof bannerSchema>;
+export type CouponInput = z.infer<typeof couponSchema>;

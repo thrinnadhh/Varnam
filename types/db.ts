@@ -82,6 +82,45 @@ export type Database = {
         }
         Relationships: []
       }
+      banners: {
+        Row: {
+          created_at: string
+          cta_label: string
+          cta_link: string
+          id: string
+          image_url: string
+          is_active: boolean
+          sort_order: number
+          subtitle: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cta_label?: string
+          cta_link?: string
+          id?: string
+          image_url: string
+          is_active?: boolean
+          sort_order?: number
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cta_label?: string
+          cta_link?: string
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          sort_order?: number
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           created_at: string
@@ -156,6 +195,92 @@ export type Database = {
         }
         Relationships: []
       }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          min_order_amount: number
+          updated_at: string
+          usage_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          discount_type: string
+          discount_value: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_amount?: number
+          updated_at?: string
+          usage_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_amount?: number
+          updated_at?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
+      inventory_audit_log: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          new_stock: number
+          operator: string
+          previous_stock: number
+          quantity_change: number
+          reference_id: string | null
+          variant_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          new_stock: number
+          operator?: string
+          previous_stock: number
+          quantity_change: number
+          reference_id?: string | null
+          variant_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          new_stock?: number
+          operator?: string
+          previous_stock?: number
+          quantity_change?: number
+          reference_id?: string | null
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_audit_log_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           color_name: string
@@ -225,8 +350,10 @@ export type Database = {
       }
       orders: {
         Row: {
+          awb_number: string | null
           cancelled_at: string | null
           carrier: string | null
+          courier_partner: string | null
           created_at: string
           delivered_at: string | null
           discount_amount: number
@@ -248,8 +375,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          awb_number?: string | null
           cancelled_at?: string | null
           carrier?: string | null
+          courier_partner?: string | null
           created_at?: string
           delivered_at?: string | null
           discount_amount?: number
@@ -271,8 +400,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          awb_number?: string | null
           cancelled_at?: string | null
           carrier?: string | null
+          courier_partner?: string | null
           created_at?: string
           delivered_at?: string | null
           discount_amount?: number
@@ -473,6 +604,7 @@ export type Database = {
         Row: {
           care_instructions: string
           category_id: string
+          craft_work: string | null
           created_at: string
           description: string
           fabric: string
@@ -484,13 +616,16 @@ export type Database = {
           model_size_worn: string | null
           name: string
           segment: string
+          set_includes: string | null
           size_chart: Json | null
           slug: string
           updated_at: string
+          wash_care: string | null
         }
         Insert: {
           care_instructions: string
           category_id: string
+          craft_work?: string | null
           created_at?: string
           description: string
           fabric: string
@@ -502,13 +637,16 @@ export type Database = {
           model_size_worn?: string | null
           name: string
           segment: string
+          set_includes?: string | null
           size_chart?: Json | null
           slug: string
           updated_at?: string
+          wash_care?: string | null
         }
         Update: {
           care_instructions?: string
           category_id?: string
+          craft_work?: string | null
           created_at?: string
           description?: string
           fabric?: string
@@ -520,9 +658,11 @@ export type Database = {
           model_size_worn?: string | null
           name?: string
           segment?: string
+          set_includes?: string | null
           size_chart?: Json | null
           slug?: string
           updated_at?: string
+          wash_care?: string | null
         }
         Relationships: [
           {

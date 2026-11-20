@@ -23,6 +23,21 @@ export async function getCategories() {
   return data || [];
 }
 
+export async function getBanners() {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("banners")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching banners:", error);
+    return [];
+  }
+  return data || [];
+}
+
 export interface GetProductsParams {
   categorySlug?: string;
   segment?: "girls" | "teens" | "women";
@@ -48,6 +63,9 @@ export async function getProducts(params: GetProductsParams = {}) {
       description,
       fabric,
       lining,
+      craft_work,
+      set_includes,
+      wash_care,
       care_instructions,
       model_height,
       model_size_worn,
@@ -151,6 +169,9 @@ export async function getProductBySlug(slug: string) {
       description,
       fabric,
       lining,
+      craft_work,
+      set_includes,
+      wash_care,
       care_instructions,
       model_height,
       model_size_worn,

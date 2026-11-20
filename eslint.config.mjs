@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Installed skill tools (not application source code):
     ".agents/**",
+    // External reference repositories:
+    ".agent-refs/**",
   ]),
 ]);
 

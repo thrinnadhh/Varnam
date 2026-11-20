@@ -67,6 +67,9 @@ insert into public.products (
   description,
   fabric,
   lining,
+  craft_work,
+  set_includes,
+  wash_care,
   care_instructions,
   model_height,
   model_size_worn,
@@ -85,6 +88,9 @@ values
     'A majestic floor-length royal crimson anarkali tailored from handloom Varanasi raw silk. Featuring hand-embroidered antique gold zardozi motifs across the neckline and flare. Tailored with 3-inch interior margins for effortless custom alteration and lined entirely in featherlight malmal cotton.',
     'Pure Varanasi Raw Silk & Zari',
     '100% Breathable Malmal Cotton',
+    'Handwoven Zari Weave & Antique Gold Zardozi',
+    'Anarkali Gown + Net Dupatta',
+    'Dry Clean Only',
     'Dry clean only. Steam iron on reverse under protective cloth.',
     '5''8" (173 cm)',
     'Size S',
@@ -110,6 +116,9 @@ values
     'Ethereal multi-tiered evening gown rendered in sheer blush silk organza with delicate floral brushwork. Soft structured bodice with non-scratch internal boning wrapped in pure cotton.',
     'Silk Organza & Soft French Net',
     '100% Pure Mulmul Cotton',
+    'Hand-Painted Floral Organza & Scalloped Hem',
+    'Tiered Gown + Cotton Voile Slip',
+    'Dry Clean Only',
     'Dry clean recommended to preserve delicate floral hand-painting.',
     '5''7" (170 cm)',
     'Size S',
@@ -134,6 +143,9 @@ values
     'Contemporary two-piece festive silhouette designed for modern teens. Lightweight Chanderi tissue peplum crop top paired with high-waist flared palazzo trousers. Finished with smooth elastic back-waist and rash-free mulmul lining.',
     'Chanderi Zari Tissue & Silk Georgette',
     '100% Breathable Malmal Cotton',
+    'Chanderi Zari Tissue & Gota Patti Borders',
+    'Peplum Crop Top + Flared Palazzo',
+    'Gentle Hand Wash Cold',
     'Dry clean or gentle hand wash. Warm iron on reverse.',
     '5''2" (157 cm)',
     'Size XS / 13-14Y',
@@ -158,6 +170,9 @@ values
     'Dreamy twilight lavender ombré tulle gown with flutter shoulder straps and subtle pearl sequin dusting. Tailored specifically for teen proportions with soft voile lining.',
     'Ombré Shimmer Tulle & Crepe',
     '100% Breathable Feather-Soft Voile',
+    'Shimmer Tulle & Micro-Sequin Embroidery',
+    'Tiered Gown',
+    'Dry Clean Only',
     'Dry clean only. Hang on padded hanger.',
     '5''3" (160 cm)',
     'Size 13-14Y',
@@ -181,6 +196,9 @@ values
     'A radiant rose pink brocade skirt adorned with traditional golden peacocks and floral zari jaal. Paired with a comfortable choli blouse featuring soft cotton lining and back tie-ups.',
     'Pure Brocade Silk & Tissue Organza',
     '100% Breathable Malmal Cotton',
+    'Handwoven Peacock Zari Border & Brocade Jaal',
+    'Blouse + Pavadai Skirt + Cotton Potli',
+    'Dry Clean Only',
     'Dry clean recommended to preserve zari luster. Store wrapped in cotton muslin.',
     '4''2" (127 cm)',
     'Ages 6-7Y',
@@ -206,6 +224,9 @@ values
     'Handcrafted 360-degree twirl frock made from heritage Bagru floral handblock prints. Double flared hem, covered fabric buttons, and zero synthetic contact for all-day skin comfort.',
     '100% Organic Handblock Cambric Cotton',
     '100% Ultra-Soft Cambric Cotton Self-Lined',
+    'Heritage Bagru Handblock Print',
+    'Twirl Frock + Matching Cotton Hair Bow',
+    'Machine Wash Gentle Cold',
     'Machine wash gentle cold with like colors. Line dry in shade.',
     '3''10" (117 cm)',
     'Ages 4-5Y',
@@ -226,6 +247,9 @@ on conflict (id) do update set
   description = excluded.description,
   fabric = excluded.fabric,
   lining = excluded.lining,
+  craft_work = excluded.craft_work,
+  set_includes = excluded.set_includes,
+  wash_care = excluded.wash_care,
   model_height = excluded.model_height,
   model_size_worn = excluded.model_size_worn,
   size_chart = excluded.size_chart,
@@ -337,3 +361,92 @@ values
   -- Girls 2
   ('cccccccc-2222-cccc-cccc-cccccccccccc', 'https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&w=1000&q=80', 'Avani Emerald Flared Pure Cotton Twirl Frock', 0, true)
 on conflict do nothing;
+
+-- ==========================================
+-- 5. Promotional & Storefront Banners
+-- ==========================================
+insert into public.banners (id, title, subtitle, cta_label, cta_link, image_url, is_active, sort_order)
+values
+  (
+    'eeeeeeee-1111-eeee-eeee-eeeeeeeeeeee',
+    'Festive & Wedding Couture 2026',
+    'Pure Kanchipuram Silks, Velvet Lehengas & Handwoven Brocades for Little Princesses',
+    'Shop Festive Lehengas',
+    '/collections/festive-wedding',
+    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
+    true,
+    1
+  ),
+  (
+    'eeeeeeee-2222-eeee-eeee-eeeeeeeeeeee',
+    'Pure Mulmul Cotton Everyday Frocks',
+    'Breathable, Skin-Soft Handblock Prints with Zero Synthetic Contact',
+    'Explore Cotton Comfort',
+    '/collections/cotton-dresses',
+    'https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&w=1200&q=80',
+    true,
+    2
+  )
+on conflict (id) do update set
+  title = excluded.title,
+  subtitle = excluded.subtitle,
+  cta_label = excluded.cta_label,
+  cta_link = excluded.cta_link,
+  image_url = excluded.image_url,
+  is_active = excluded.is_active,
+  sort_order = excluded.sort_order;
+
+-- ==========================================
+-- 6. Promotional Coupons Engine
+-- ==========================================
+insert into public.coupons (id, code, discount_type, discount_value, min_order_amount, usage_count, is_active)
+values
+  (
+    'ffffffff-1111-ffff-ffff-ffffffffffff',
+    'VARNAMFIRST',
+    'fixed',
+    50000, -- ₹500 in paise
+    299900, -- ₹2,999 minimum order
+    142,
+    true
+  ),
+  (
+    'ffffffff-2222-ffff-ffff-ffffffffffff',
+    'SISTERLOVE',
+    'percentage',
+    15, -- 15% discount
+    399900, -- ₹3,999 minimum order
+    88,
+    true
+  ),
+  (
+    'ffffffff-3333-ffff-ffff-ffffffffffff',
+    'DIWALI2026',
+    'percentage',
+    20, -- 20% discount
+    499900,
+    412,
+    true
+  )
+on conflict (code) do update set
+  discount_type = excluded.discount_type,
+  discount_value = excluded.discount_value,
+  min_order_amount = excluded.min_order_amount,
+  usage_count = excluded.usage_count,
+  is_active = excluded.is_active;
+
+-- ==========================================
+-- 7. Initial Inventory Audit Log Entry
+-- ==========================================
+insert into public.inventory_audit_log (variant_id, event_type, quantity_change, previous_stock, new_stock, reference_id, operator)
+select
+  id as variant_id,
+  'karigar_restock' as event_type,
+  10 as quantity_change,
+  stock - 10 as previous_stock,
+  stock as new_stock,
+  'BATCH-KARIGAR-2026-INIT' as reference_id,
+  'Master Karigar Raman' as operator
+from public.product_variants
+where sku = 'AADHYA-GIRLS-45Y'
+limit 1;

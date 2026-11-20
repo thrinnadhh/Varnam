@@ -1,17 +1,19 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getCategories, getProducts } from "@/lib/db/actions";
+import { getCategories, getProducts, getBanners } from "@/lib/db/actions";
 import { ProductCard } from "@/components/product-card";
 import { Sparkles, ArrowRight, ShieldCheck, Ruler, Users } from "lucide-react";
 import { HomeHeroMotion } from "@/components/home-hero-motion";
 import { SmoothScroll } from "@/components/smooth-scroll";
+import { BannerCarousel } from "@/components/banner-carousel";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [categories, featuredProducts] = await Promise.all([
+  const [categories, featuredProducts, banners] = await Promise.all([
     getCategories(),
     getProducts({ isFeatured: true, limit: 8 }),
+    getBanners(),
   ]);
 
   return (
@@ -82,6 +84,13 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Festive Showcase Promotional Banner Carousel */}
+      {banners.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full -mt-4 sm:-mt-6">
+          <BannerCarousel banners={banners} />
+        </section>
+      )}
 
       {/* 3-Segment Demographic Showcase */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">

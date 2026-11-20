@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54341";
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -73,7 +73,7 @@ export async function middleware(request: NextRequest) {
     "https://*.supabase.co",
     "https://*.cashfree.com",
     !isProd ? "https://images.unsplash.com" : "",
-    !isProd ? "http://127.0.0.1:54321" : "",
+    !isProd ? "http://127.0.0.1:54341" : "",
     !isProd ? "http://localhost:3000" : "",
     !isProd ? "http://localhost:3040" : "",
   ]
@@ -87,7 +87,7 @@ export async function middleware(request: NextRequest) {
     "https://*.cashfree.com",
     "https://*.supabase.co",
     !isProd
-      ? "http://127.0.0.1:54321 ws://127.0.0.1:54321 http://localhost:3000 http://localhost:3040"
+      ? "http://127.0.0.1:54341 ws://127.0.0.1:54341 http://localhost:3000 http://localhost:3040"
       : "",
   ]
     .filter(Boolean)

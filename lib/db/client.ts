@@ -8,7 +8,7 @@ import type { Database } from "@/types/db";
  */
 export function createBrowserSupabaseClient() {
   const url =
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54341";
   const anonKey =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.placeholder";
