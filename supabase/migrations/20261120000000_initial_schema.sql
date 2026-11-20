@@ -1,6 +1,6 @@
 -- Varnam Girls' Dress & Apparel Storefront
 -- Migration: 20261120000000_initial_schema.sql
--- Hardened with EGM Hostile Design Review & Tech Lead Audit Remediation
+-- Production Hardened Edition
 
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
@@ -47,7 +47,7 @@ create table public.products (
   slug text not null unique,
   description text not null,
   fabric text not null,
-  lining text not null default '100% Breathable Cotton',
+  lining text not null, -- No default: explicit declaration mandatory for child comfort transparency
   care_instructions text not null,
   size_chart jsonb, -- e.g. [{"age": "2-3Y", "chest": "21 in", "length": "20 in", "waist": "20 in"}]
   is_active boolean not null default true,
@@ -56,7 +56,7 @@ create table public.products (
   updated_at timestamptz not null default now()
 );
 
-comment on table public.products is 'Base dress products with rich fabric, inner lining, and size chart disclosures.';
+comment on table public.products is 'Base dress products with rich fabric, explicit inner lining, and size chart disclosures.';
 
 -- ==========================================
 -- 4. Product Variants Table
@@ -190,7 +190,7 @@ create table public.orders (
   estimated_delivery_date date,
   delivered_at timestamptz,
   cancelled_at timestamptz,
-  expires_at timestamptz, -- Reservation TTL for online checkouts (15 min); null for COD
+  expires_at timestamptz, -- Reservation TTL for online checkouts (15 min); NULL for COD!
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -226,6 +226,7 @@ create table public.payments (
   gateway_order_id text,
   gateway_payment_id text,
   payment_status text not null default 'pending',
+  refund_status text not null default 'none' check (refund_status in ('none', 'refund_required', 'refund_initiated', 'refunded')),
   amount bigint not null check (amount >= 0), -- paise
   currency text not null default 'INR',
   raw_response jsonb,
@@ -361,7 +362,9 @@ create trigger tr_addresses_updated_at before update on public.addresses for eac
 create trigger tr_orders_updated_at before update on public.orders for each row execute function public.set_updated_at();
 create trigger tr_payments_updated_at before update on public.payments for each row execute function public.set_updated_at();
 
--- Automatic inventory restocking when an order is cancelled
+-- ==========================================
+-- IDEMPOTENT RESTOCK TRIGGER & CANCELLATION GUARDS
+-- ==========================================
 create or replace function public.restore_stock_on_order_cancel()
 returns trigger
 language plpgsql
@@ -369,15 +372,22 @@ security definer
 set search_path = public
 as $$
 begin
-  if new.status = 'cancelled' and old.status in ('pending', 'confirmed', 'packed') then
+  -- Block cancelling orders that are already shipped or delivered
+  if new.status = 'cancelled' and old.status in ('shipped', 'delivered') then
+    raise exception 'Cannot cancel order %: order is already %.', old.order_number, old.status;
+  end if;
+
+  -- Idempotent stock restoration: restore ONLY IF transitioning from active state and NOT already cancelled
+  if new.status = 'cancelled' and old.status in ('pending', 'confirmed', 'packed') and old.cancelled_at is null then
     update public.product_variants pv
     set stock = pv.stock + oi.quantity,
         updated_at = now()
     from public.order_items oi
     where oi.order_id = new.id and pv.id = oi.variant_id;
 
-    new.cancelled_at = now();
+    new.cancelled_at = coalesce(new.cancelled_at, now());
   end if;
+
   return new;
 end;
 $$;
@@ -387,8 +397,49 @@ create trigger tr_restore_stock_on_cancel
   for each row execute function public.restore_stock_on_order_cancel();
 
 -- ==========================================
--- ROW LEVEL SECURITY (RLS) POLICIES
+-- LATE PAYMENT HANDLING TRIGGER
 -- ==========================================
+create or replace function public.handle_late_payment_arrival()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_order_status text;
+  v_order_num text;
+begin
+  select status, order_number into v_order_status, v_order_num
+  from public.orders
+  where id = new.order_id;
+
+  -- If payment arrives for an order that is already cancelled or expired:
+  if v_order_status = 'cancelled' and new.payment_status = 'paid' then
+    new.refund_status := 'refund_required';
+
+    update public.orders
+    set notes = coalesce(notes, '') || ' [ALERT: Late payment ' || coalesce(new.gateway_payment_id, '') || ' received for cancelled order. Marked refund_required via Cashfree.]'
+    where id = new.order_id;
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger tr_handle_late_payment
+  before insert or update on public.payments
+  for each row execute function public.handle_late_payment_arrival();
+
+-- ==========================================
+-- ROW LEVEL SECURITY (RLS) POLICIES & GRANTS
+-- ==========================================
+
+-- Explicit Grants for modern Supabase (where auto_expose_new_tables is false)
+grant usage on schema public to anon, authenticated, service_role;
+grant select on public.categories, public.products, public.product_variants, public.product_images to anon;
+grant select, insert, update, delete on all tables in schema public to authenticated;
+grant all on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to authenticated, anon, service_role;
 
 alter table public.profiles enable row level security;
 alter table public.categories enable row level security;
@@ -591,10 +642,10 @@ begin
     raise exception 'Malformed shipping address: mandatory fields missing.';
   end if;
 
-  -- 3. Determine status and expiration TTL based on payment method
+  -- 3. Determine status and expiration TTL: COD IS STRICTLY EXCLUDED FROM TTL!
   if p_payment_method = 'cod' then
     v_initial_status := 'confirmed';
-    v_expires_at := null; -- COD orders do not expire on payment timeout
+    v_expires_at := null; -- COD orders NEVER expire on payment timeout
   else
     v_initial_status := 'pending';
     v_expires_at := now() + interval '15 minutes'; -- 15-minute checkout reservation
@@ -804,7 +855,7 @@ revoke execute on function public.merge_guest_cart(jsonb) from public;
 grant execute on function public.merge_guest_cart(jsonb) to authenticated;
 
 -- ==========================================
--- EXPIRED ORDERS RESTOCK PROCEDURE
+-- EXPIRED ORDERS RESTOCK PROCEDURE (COD Strictly Excluded)
 -- ==========================================
 create or replace function public.cancel_expired_orders()
 returns int
@@ -820,15 +871,16 @@ begin
     select id from public.orders
     where status = 'pending'
       and payment_status = 'pending'
+      and payment_method <> 'cod' -- COD orders are strictly excluded from expiration
       and expires_at is not null
       and expires_at < now()
   )
   loop
     update public.orders
     set status = 'cancelled',
-        notes = coalesce(notes, '') || ' [System: Cancelled due to checkout timeout]'
+        notes = coalesce(notes, '') || ' [System: Cancelled due to Cashfree payment reservation timeout]'
     where id = v_order.id;
-    -- Note: tr_restore_stock_on_cancel trigger automatically restocks inventory!
+    -- Note: tr_restore_stock_on_cancel trigger automatically and idempotently restocks inventory!
 
     v_count := v_count + 1;
   end loop;
@@ -836,6 +888,18 @@ begin
   return v_count;
 end;
 $$;
+
+-- Scheduler configuration (via pg_cron if available in environment)
+do $$
+begin
+  if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
+    create extension if not exists pg_cron;
+    perform cron.unschedule(jobid) from cron.job where jobname = 'cancel_expired_orders_cron';
+    perform cron.schedule('cancel_expired_orders_cron', '*/2 * * * *', 'select public.cancel_expired_orders()');
+  end if;
+exception when others then
+  null;
+end $$;
 
 -- ==========================================
 -- STORAGE BUCKET CONFIGURATION (product-images)
