@@ -9,32 +9,40 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54341";
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  let user = null;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const supabase = createServerClient(supabaseUrl, supabaseKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) =>
-          request.cookies.set(name, value)
-        );
-        response = NextResponse.next({
-          request,
-        });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options)
-        );
-      },
-    },
-  });
+  if (supabaseUrl && supabaseKey) {
+    try {
+      const supabase = createServerClient(supabaseUrl, supabaseKey, {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            response = NextResponse.next({
+              request,
+            });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options)
+            );
+          },
+        },
+      });
 
-  // Refresh auth session
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+      // Refresh auth session
+      const { data } = await supabase.auth.getUser();
+      user = data?.user ?? null;
+    } catch (authError) {
+      // In case of unconfigured cloud credentials or network issues, gracefully treat user as unauthenticated
+      console.warn("Middleware Supabase auth check skipped:", authError);
+      user = null;
+    }
+  }
 
   const pathname = request.nextUrl.pathname;
 
@@ -72,7 +80,7 @@ export async function middleware(request: NextRequest) {
     "data:",
     "https://*.supabase.co",
     "https://*.cashfree.com",
-    !isProd ? "https://images.unsplash.com" : "",
+    "https://images.unsplash.com",
     !isProd ? "http://127.0.0.1:54341" : "",
     !isProd ? "http://localhost:3000" : "",
     !isProd ? "http://localhost:3040" : "",

@@ -3,40 +3,57 @@
 import { createServerSupabaseClient } from "./supabase";
 import { checkoutSchema, addressSchema, type CheckoutInput, type AddressInput } from "@/lib/schemas";
 import { revalidatePath } from "next/cache";
+import {
+  FALLBACK_CATEGORIES,
+  FALLBACK_BANNERS,
+  FALLBACK_PRODUCTS,
+  type FallbackProduct,
+} from "./fallback-data";
 
 // ==========================================
 // Catalog Queries
 // ==========================================
 
 export async function getCategories() {
-  const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("categories")
-    .select("*")
-    .eq("is_active", true)
-    .order("display_order", { ascending: true });
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true });
 
-  if (error) {
-    console.error("Error fetching categories:", error);
-    return [];
+    if (error || !data || data.length === 0) {
+      return FALLBACK_CATEGORIES;
+    }
+    return data;
+  } catch (err) {
+    console.warn("Error fetching categories from DB, using fallback:", err);
+    return FALLBACK_CATEGORIES;
   }
-  return data || [];
 }
 
 export async function getBanners() {
-  const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("banners")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
+      .from("banners")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
 
-  if (error) {
-    console.error("Error fetching banners:", error);
-    return [];
+    if (error || !data || data.length === 0) {
+      return FALLBACK_BANNERS;
+    }
+    return data;
+  } catch (err) {
+    console.warn("Error fetching banners from DB, using fallback:", err);
+    return FALLBACK_BANNERS;
   }
-  return data || [];
 }
+
+export type ProductListItem = FallbackProduct;
+export type ProductWithDetails = FallbackProduct;
 
 export interface GetProductsParams {
   categorySlug?: string;
@@ -49,175 +66,220 @@ export interface GetProductsParams {
   limit?: number;
 }
 
-export async function getProducts(params: GetProductsParams = {}) {
-  const supabase = await createServerSupabaseClient();
+export async function getProducts(params: GetProductsParams = {}): Promise<ProductListItem[]> {
+  try {
+    const supabase = await createServerSupabaseClient();
 
-  let query = supabase
-    .from("products")
-    .select(`
-      id,
-      category_id,
-      segment,
-      name,
-      slug,
-      description,
-      fabric,
-      lining,
-      craft_work,
-      set_includes,
-      wash_care,
-      care_instructions,
-      model_height,
-      model_size_worn,
-      size_chart,
-      is_featured,
-      created_at,
-      categories!inner(id, name, slug, segment, is_active),
-      product_variants!inner(
+    let query = supabase
+      .from("products")
+      .select(`
         id,
-        size_group,
-        size_name,
-        size_age,
-        bust_inches,
-        bust_cm,
-        waist_inches,
-        waist_cm,
-        hip_inches,
-        hip_cm,
-        length_inches,
-        length_cm,
-        color_name,
-        color_hex,
-        sku,
-        price,
-        mrp,
-        stock,
-        is_active
-      ),
-      product_images(id, image_url, alt_text, display_order, is_primary)
-    `)
-    .eq("is_active", true)
-    .eq("categories.is_active", true)
-    .eq("product_variants.is_active", true);
+        category_id,
+        segment,
+        name,
+        slug,
+        description,
+        fabric,
+        lining,
+        craft_work,
+        set_includes,
+        wash_care,
+        care_instructions,
+        model_height,
+        model_size_worn,
+        size_chart,
+        is_featured,
+        created_at,
+        categories!inner(id, name, slug, segment, is_active),
+        product_variants!inner(
+          id,
+          size_group,
+          size_name,
+          size_age,
+          bust_inches,
+          bust_cm,
+          waist_inches,
+          waist_cm,
+          hip_inches,
+          hip_cm,
+          length_inches,
+          length_cm,
+          color_name,
+          color_hex,
+          sku,
+          price,
+          mrp,
+          stock,
+          is_active
+        ),
+        product_images(id, image_url, alt_text, display_order, is_primary)
+      `)
+      .eq("is_active", true)
+      .eq("categories.is_active", true)
+      .eq("product_variants.is_active", true);
 
+    if (params.categorySlug) {
+      query = query.eq("categories.slug", params.categorySlug);
+    }
+
+    if (params.segment) {
+      query = query.eq("segment", params.segment);
+    }
+
+    if (params.sizeGroup) {
+      query = query.eq("product_variants.size_group", params.sizeGroup);
+    }
+
+    const targetSize = params.sizeName || params.ageSize;
+    if (targetSize) {
+      query = query.eq("product_variants.size_name", targetSize);
+    }
+
+    if (params.isFeatured) {
+      query = query.eq("is_featured", true);
+    }
+
+    if (params.sort === "newest") {
+      query = query.order("created_at", { ascending: false });
+    }
+
+    if (params.limit) {
+      query = query.limit(params.limit);
+    }
+
+    const { data, error } = await query;
+
+    if (!error && data && data.length > 0) {
+      const results = [...data];
+      if (params.sort === "price_asc") {
+        results.sort((a, b) => {
+          const minA = Math.min(...a.product_variants.map((v) => v.price));
+          const minB = Math.min(...b.product_variants.map((v) => v.price));
+          return minA - minB;
+        });
+      } else if (params.sort === "price_desc") {
+        results.sort((a, b) => {
+          const minA = Math.min(...a.product_variants.map((v) => v.price));
+          const minB = Math.min(...b.product_variants.map((v) => v.price));
+          return minB - minA;
+        });
+      }
+      return (results as unknown) as ProductListItem[];
+    }
+  } catch (err) {
+    console.warn("Error fetching products from DB, using fallback:", err);
+  }
+
+  // Filter fallback catalog
+  let filtered = [...FALLBACK_PRODUCTS];
   if (params.categorySlug) {
-    query = query.eq("categories.slug", params.categorySlug);
+    filtered = filtered.filter((p) => p.categories.slug === params.categorySlug);
   }
-
   if (params.segment) {
-    query = query.eq("segment", params.segment);
+    filtered = filtered.filter((p) => p.segment === params.segment);
   }
-
   if (params.sizeGroup) {
-    query = query.eq("product_variants.size_group", params.sizeGroup);
+    filtered = filtered.filter((p) =>
+      p.product_variants.some((v) => v.size_group === params.sizeGroup)
+    );
   }
-
   const targetSize = params.sizeName || params.ageSize;
   if (targetSize) {
-    query = query.eq("product_variants.size_name", targetSize);
+    filtered = filtered.filter((p) =>
+      p.product_variants.some((v) => v.size_name === targetSize)
+    );
   }
-
   if (params.isFeatured) {
-    query = query.eq("is_featured", true);
+    filtered = filtered.filter((p) => p.is_featured);
   }
-
-  if (params.sort === "newest") {
-    query = query.order("created_at", { ascending: false });
-  }
-
-  if (params.limit) {
-    query = query.limit(params.limit);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error("Error fetching products:", error);
-    return [];
-  }
-
-  // Client-side sort for price if requested
-  const results = data || [];
   if (params.sort === "price_asc") {
-    results.sort((a, b) => {
+    filtered.sort((a, b) => {
       const minA = Math.min(...a.product_variants.map((v) => v.price));
       const minB = Math.min(...b.product_variants.map((v) => v.price));
       return minA - minB;
     });
   } else if (params.sort === "price_desc") {
-    results.sort((a, b) => {
+    filtered.sort((a, b) => {
       const minA = Math.min(...a.product_variants.map((v) => v.price));
       const minB = Math.min(...b.product_variants.map((v) => v.price));
       return minB - minA;
     });
   }
-
-  return results;
+  if (params.limit) {
+    filtered = filtered.slice(0, params.limit);
+  }
+  return (filtered as unknown) as ProductListItem[];
 }
 
-export async function getProductBySlug(slug: string) {
-  const supabase = await createServerSupabaseClient();
+export async function getProductBySlug(slug: string): Promise<ProductWithDetails | null> {
+  try {
+    const supabase = await createServerSupabaseClient();
 
-  const { data, error } = await supabase
-    .from("products")
-    .select(`
-      id,
-      category_id,
-      segment,
-      name,
-      slug,
-      description,
-      fabric,
-      lining,
-      craft_work,
-      set_includes,
-      wash_care,
-      care_instructions,
-      model_height,
-      model_size_worn,
-      size_chart,
-      is_featured,
-      created_at,
-      categories!inner(id, name, slug, segment),
-      product_variants(
+    const { data, error } = await supabase
+      .from("products")
+      .select(`
         id,
-        size_group,
-        size_name,
-        size_age,
-        bust_inches,
-        bust_cm,
-        waist_inches,
-        waist_cm,
-        hip_inches,
-        hip_cm,
-        length_inches,
-        length_cm,
-        color_name,
-        color_hex,
-        sku,
-        price,
-        mrp,
-        stock,
-        is_active
-      ),
-      product_images(id, image_url, alt_text, display_order, is_primary)
-    `)
-    .eq("slug", slug)
-    .eq("is_active", true)
-    .eq("categories.is_active", true)
-    .single();
+        category_id,
+        segment,
+        name,
+        slug,
+        description,
+        fabric,
+        lining,
+        craft_work,
+        set_includes,
+        wash_care,
+        care_instructions,
+        model_height,
+        model_size_worn,
+        size_chart,
+        is_featured,
+        created_at,
+        categories!inner(id, name, slug, segment),
+        product_variants(
+          id,
+          size_group,
+          size_name,
+          size_age,
+          bust_inches,
+          bust_cm,
+          waist_inches,
+          waist_cm,
+          hip_inches,
+          hip_cm,
+          length_inches,
+          length_cm,
+          color_name,
+          color_hex,
+          sku,
+          price,
+          mrp,
+          stock,
+          is_active
+        ),
+        product_images(id, image_url, alt_text, display_order, is_primary)
+      `)
+      .eq("slug", slug)
+      .eq("is_active", true)
+      .eq("categories.is_active", true)
+      .single();
 
-  if (error || !data) {
-    return null;
+    if (!error && data) {
+      data.product_variants = (data.product_variants || []).filter((v) => v.is_active);
+      data.product_images = (data.product_images || []).sort(
+        (a, b) => a.display_order - b.display_order
+      );
+      return (data as unknown) as ProductWithDetails;
+    }
+  } catch (err) {
+    console.warn("Error fetching product by slug from DB, using fallback:", err);
   }
 
-  // Filter only active variants and sort images
-  data.product_variants = (data.product_variants || []).filter((v) => v.is_active);
-  data.product_images = (data.product_images || []).sort(
-    (a, b) => a.display_order - b.display_order
-  );
-
-  return data;
+  const fallback = FALLBACK_PRODUCTS.find((p) => p.slug === slug);
+  if (fallback) {
+    return fallback;
+  }
+  return null;
 }
 
 // ==========================================
