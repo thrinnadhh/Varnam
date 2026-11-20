@@ -7,7 +7,7 @@ import {
   TEEN_SIZES,
   WOMEN_SIZES,
 } from "@/lib/schemas";
-import { Filter, ArrowUpDown, Sparkles, X } from "lucide-react";
+import { ArrowUpDown, Sparkles, RefreshCw } from "lucide-react";
 
 interface CatalogVariant {
   id: string;
@@ -67,7 +67,6 @@ export function CatalogBrowser({
   );
   const [sortBy, setSortBy] = useState<string>("featured");
 
-  // Determine available size chips based on selected segment
   const sizeOptions = useMemo(() => {
     if (selectedSegment === "women") {
       return WOMEN_SIZES;
@@ -78,249 +77,202 @@ export function CatalogBrowser({
     if (selectedSegment === "girls") {
       return KIDS_AGE_SIZES;
     }
-    // If "all", combine distinct prominent sizes
-    return ["XS", "S", "M", "L", "XL", "13-14Y", "6-7Y", "8-9Y", "2-3Y"];
+    return ["2-3Y", "4-5Y", "6-7Y", "8-9Y", "10-11Y", "12Y", "13-14Y", "15-16Y", "XS", "S", "M", "L", "XL"];
   }, [selectedSegment]);
 
-  // Client-side instant filter for snappy mobile experience
   const filteredProducts = useMemo(() => {
     let list = [...initialProducts];
 
-    // 1. Segment filter
     if (selectedSegment !== "all") {
       list = list.filter((p) => p.segment === selectedSegment);
     }
 
-    // 2. Category filter
     if (selectedCategory !== "all") {
       list = list.filter((p) => p.categories?.slug === selectedCategory);
     }
 
-    // 3. Size filter
     if (selectedSize !== "all") {
       list = list.filter((p) =>
-        p.product_variants?.some(
-          (v) =>
-            v.size_name === selectedSize || v.size_age === selectedSize
+        p.product_variants.some(
+          (v) => (v.size_name === selectedSize || v.size_age === selectedSize) && v.stock > 0
         )
       );
     }
 
-    // 4. Sort
     if (sortBy === "price_asc") {
       list.sort((a, b) => {
-        const minA = Math.min(...(a.product_variants || []).map((v) => v.price));
-        const minB = Math.min(...(b.product_variants || []).map((v) => v.price));
+        const minA = Math.min(...a.product_variants.map((v) => v.price));
+        const minB = Math.min(...b.product_variants.map((v) => v.price));
         return minA - minB;
       });
     } else if (sortBy === "price_desc") {
       list.sort((a, b) => {
-        const minA = Math.min(...(a.product_variants || []).map((v) => v.price));
-        const minB = Math.min(...(b.product_variants || []).map((v) => v.price));
-        return minB - minA;
+        const maxA = Math.max(...a.product_variants.map((v) => v.price));
+        const maxB = Math.max(...b.product_variants.map((v) => v.price));
+        return maxB - maxA;
       });
     } else if (sortBy === "newest") {
-      list.sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
+      list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
 
     return list;
   }, [initialProducts, selectedSegment, selectedCategory, selectedSize, sortBy]);
 
-  const handleResetFilters = () => {
+  const resetFilters = () => {
     setSelectedSegment("all");
     setSelectedCategory("all");
     setSelectedSize("all");
+    setSortBy("featured");
   };
 
   const hasActiveFilters =
-    selectedSegment !== "all" ||
-    selectedCategory !== "all" ||
-    selectedSize !== "all";
+    selectedSegment !== "all" || selectedCategory !== "all" || selectedSize !== "all";
 
   return (
     <div className="space-y-6">
-      {/* Filter and Sort Toolbar */}
-      <div className="bg-surface rounded-2xl border border-border p-4 sm:p-5 shadow-warm-sm space-y-4">
-        {/* Row 1: Segment Switcher Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <span className="text-xs font-bold text-text-muted mr-1 shrink-0 flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-brand-primary" /> Segment:
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedSegment("all");
-              setSelectedSize("all");
-            }}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all ${
-              selectedSegment === "all"
-                ? "bg-brand-primary text-white shadow-sm"
-                : "bg-canvas text-text-body hover:bg-border"
-            }`}
-          >
-            All Segments
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedSegment("women");
-              setSelectedSize("all");
-            }}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all ${
-              selectedSegment === "women"
-                ? "bg-brand-primary text-white shadow-sm"
-                : "bg-canvas text-text-body hover:bg-border"
-            }`}
-          >
-            Women (XS–XXL)
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedSegment("teens");
-              setSelectedSize("all");
-            }}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all ${
-              selectedSegment === "teens"
-                ? "bg-brand-primary text-white shadow-sm"
-                : "bg-canvas text-text-body hover:bg-border"
-            }`}
-          >
-            Teens (13–18Y)
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedSegment("girls");
-              setSelectedSize("all");
-            }}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all ${
-              selectedSegment === "girls"
-                ? "bg-brand-primary text-white shadow-sm"
-                : "bg-canvas text-text-body hover:bg-border"
-            }`}
-          >
-            Girls (2–12Y)
-          </button>
-        </div>
-
-        {/* Row 2: Occasion Category Pills */}
-        <div className="pt-2 border-t border-border-subtle flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <span className="text-xs font-bold text-text-muted mr-1 shrink-0">
-            Occasion:
-          </span>
-          <button
-            type="button"
-            onClick={() => setSelectedCategory("all")}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold shrink-0 transition-all ${
-              selectedCategory === "all"
-                ? "bg-stone-800 text-white shadow-sm"
-                : "bg-canvas text-text-body hover:bg-border"
-            }`}
-          >
-            All Occasions
-          </button>
-          {categories.map((cat) => (
+      {/* Kraft Filter & Control Bar */}
+      <div className="rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] p-4 sm:p-5 shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Demographic Segment Tabs */}
+          <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-[#EFE6D5] border border-[#D8C7AE]/60">
             <button
-              key={cat.id}
               type="button"
-              onClick={() => setSelectedCategory(cat.slug)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold shrink-0 transition-all ${
-                selectedCategory === cat.slug
-                  ? "bg-stone-800 text-white shadow-sm"
-                  : "bg-canvas text-text-body hover:bg-border"
+              onClick={() => setSelectedSegment("all")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                selectedSegment === "all"
+                  ? "bg-[#8B1E3F] text-[#FAF5EB] shadow-sm"
+                  : "text-[#3B281E] hover:text-[#8B1E3F]"
               }`}
             >
-              {cat.name}
+              All Couture
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedSegment("girls")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                selectedSegment === "girls"
+                  ? "bg-[#8B1E3F] text-[#FAF5EB] shadow-sm"
+                  : "text-[#3B281E] hover:text-[#8B1E3F]"
+              }`}
+            >
+              Girls (2–12Y)
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedSegment("teens")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                selectedSegment === "teens"
+                  ? "bg-[#8B1E3F] text-[#FAF5EB] shadow-sm"
+                  : "text-[#3B281E] hover:text-[#8B1E3F]"
+              }`}
+            >
+              Teens (13–18Y)
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedSegment("women")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                selectedSegment === "women"
+                  ? "bg-[#8B1E3F] text-[#FAF5EB] shadow-sm"
+                  : "text-[#3B281E] hover:text-[#8B1E3F]"
+              }`}
+            >
+              Women (XS–XXL)
+            </button>
+          </div>
+
+          {/* Right Controls: Category filter & Sort by */}
+          <div className="flex flex-wrap items-center gap-3">
+            {categories.length > 0 && (
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="px-3 py-2 rounded-xl bg-[#FAF5EB] text-xs font-semibold text-[#261C17] border border-[#D8C7AE] focus:outline-none focus:ring-2 focus:ring-[#8B1E3F]"
+                aria-label="Filter by collection"
+              >
+                <option value="all">All Occasions &amp; Weaves</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.slug}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            <div className="flex items-center gap-1.5">
+              <ArrowUpDown className="w-4 h-4 text-[#C69214]" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-3 py-2 rounded-xl bg-[#FAF5EB] text-xs font-semibold text-[#261C17] border border-[#D8C7AE] focus:outline-none focus:ring-2 focus:ring-[#8B1E3F]"
+                aria-label="Sort dresses"
+              >
+                <option value="featured">Featured Curations</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="newest">Newest Festive Arrivals</option>
+              </select>
+            </div>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-[#EFE6D5] text-xs font-bold text-[#8B1E3F] hover:bg-[#D8C7AE] transition-colors"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Daughter's Age / Size Filter Bar */}
+        <div className="mt-4 pt-3 border-t border-[#D8C7AE]/60 flex items-center gap-2 overflow-x-auto pb-1">
+          <span className="text-[11px] font-bold text-[#6B574B] uppercase tracking-wider shrink-0 flex items-center gap-1">
+            <Sparkles className="w-3.5 h-3.5 text-[#C69214]" /> Quick Size:
+          </span>
+
+          <button
+            type="button"
+            onClick={() => setSelectedSize("all")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all shrink-0 ${
+              selectedSize === "all"
+                ? "bg-[#3B281E] text-[#FAF5EB]"
+                : "bg-[#EFE6D5] text-[#3B281E] hover:bg-[#D8C7AE]"
+            }`}
+          >
+            All Sizes
+          </button>
+
+          {sizeOptions.map((sz) => (
+            <button
+              key={sz}
+              type="button"
+              onClick={() => setSelectedSize(sz)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all shrink-0 border ${
+                selectedSize === sz
+                  ? "bg-[#8B1E3F] text-[#FAF5EB] border-[#8B1E3F] shadow-sm"
+                  : "bg-[#FAF5EB] text-[#3B281E] border-[#D8C7AE] hover:border-[#8B1E3F]"
+              }`}
+            >
+              {sz}
             </button>
           ))}
-        </div>
-
-        {/* Row 3: Sizing Pills & Sort Bar */}
-        <div className="pt-2 border-t border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            <span className="text-xs font-semibold text-text-muted mr-1 flex items-center gap-1 shrink-0">
-              <Filter className="w-3.5 h-3.5" />
-              {selectedSegment === "girls"
-                ? "Age:"
-                : selectedSegment === "women"
-                ? "Size:"
-                : "Size/Age:"}
-            </span>
-            <button
-              type="button"
-              onClick={() => setSelectedSize("all")}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                selectedSize === "all"
-                  ? "bg-brand-secondary text-white"
-                  : "bg-canvas text-text-muted hover:text-text-heading"
-              }`}
-            >
-              All Sizes
-            </button>
-            {sizeOptions.map((size) => (
-              <button
-                key={size}
-                type="button"
-                onClick={() => setSelectedSize(size)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                  selectedSize === size
-                    ? "bg-brand-secondary text-white shadow-sm"
-                    : "bg-canvas text-text-muted hover:text-text-heading"
-                }`}
-              >
-                {size}
-              </button>
-            ))}
-          </div>
-
-          {/* Sort Dropdown */}
-          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-            <ArrowUpDown className="w-3.5 h-3.5 text-text-muted" />
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="text-xs bg-canvas border border-border rounded-lg px-2.5 py-1.5 text-text-heading font-medium focus:outline-none focus:ring-1 focus:ring-brand-primary"
-            >
-              <option value="featured">Sort: Featured</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-              <option value="newest">Newest Additions</option>
-            </select>
-          </div>
         </div>
       </div>
 
       {/* Results Header */}
-      <div className="flex items-center justify-between text-xs text-text-muted px-1">
+      <div className="flex items-center justify-between text-xs text-[#6B574B] px-1">
         <span>
-          Showing <strong className="text-text-heading">{filteredProducts.length}</strong> styles
-          {selectedSegment !== "all" && (
-            <> in <span className="capitalize font-semibold text-brand-primary">{selectedSegment}</span></>
-          )}
-          {selectedCategory !== "all" && (
-            <> • {categories.find((c) => c.slug === selectedCategory)?.name || selectedCategory}</>
-          )}
-          {selectedSize !== "all" && (
-            <> • Size <strong className="text-brand-secondary">{selectedSize}</strong></>
-          )}
+          Showing <strong>{filteredProducts.length}</strong> handcrafted dresses
         </span>
-
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={handleResetFilters}
-            className="text-brand-primary hover:underline font-semibold flex items-center gap-1"
-          >
-            <X className="w-3.5 h-3.5" /> Clear All Filters
-          </button>
-        )}
+        <span className="text-[#145349] font-semibold">
+          1-Inch Growth Seam Allowance on All Dresses
+        </span>
       </div>
 
-      {/* Product Grid */}
+      {/* Products Grid */}
       {filteredProducts.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {filteredProducts.map((product) => (
@@ -328,19 +280,19 @@ export function CatalogBrowser({
           ))}
         </div>
       ) : (
-        <div className="p-12 text-center bg-surface rounded-2xl border border-border">
-          <p className="font-serif text-lg font-bold text-text-heading">
-            No styles found for selected filters
+        <div className="rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] p-12 text-center space-y-4">
+          <p className="font-serif text-xl font-bold text-[#261C17]">
+            No dresses found for the selected filter combination
           </p>
-          <p className="text-xs text-text-muted mt-1">
-            Try switching demographic segments or resetting your size and occasion filters.
+          <p className="text-xs text-[#6B574B] max-w-md mx-auto">
+            Try adjusting your age or occasion filters to explore our complete celebratory wardrobe.
           </p>
           <button
             type="button"
-            onClick={handleResetFilters}
-            className="mt-4 px-4 py-2 bg-brand-primary text-white text-xs font-semibold rounded-xl hover:bg-brand-primary-hover transition-colors"
+            onClick={resetFilters}
+            className="px-5 py-2.5 rounded-xl bg-[#8B1E3F] text-[#FAF5EB] text-xs font-bold hover:bg-[#721531] transition-all"
           >
-            Reset Filters
+            Reset All Filters
           </button>
         </div>
       )}

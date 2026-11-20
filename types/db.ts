@@ -165,8 +165,11 @@ export type Database = {
           image_url: string | null
           is_active: boolean
           name: string
+          parent_id: string | null
           segment: string | null
+          show_in_nav: boolean
           slug: string
+          sort_order: number
           updated_at: string
         }
         Insert: {
@@ -177,8 +180,11 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           name: string
+          parent_id?: string | null
           segment?: string | null
+          show_in_nav?: boolean
           slug: string
+          sort_order?: number
           updated_at?: string
         }
         Update: {
@@ -189,11 +195,22 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           name?: string
+          parent_id?: string | null
           segment?: string | null
+          show_in_nav?: boolean
           slug?: string
+          sort_order?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       coupons: {
         Row: {
@@ -234,6 +251,51 @@ export type Database = {
           min_order_amount?: number
           updated_at?: string
           usage_count?: number
+        }
+        Relationships: []
+      }
+      hero_banners: {
+        Row: {
+          created_at: string
+          cta_href: string
+          cta_label: string
+          desktop_image_url: string
+          eyebrow_text: string | null
+          id: string
+          is_active: boolean
+          mobile_image_url: string | null
+          sort_order: number
+          subtitle: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cta_href?: string
+          cta_label?: string
+          desktop_image_url: string
+          eyebrow_text?: string | null
+          id?: string
+          is_active?: boolean
+          mobile_image_url?: string | null
+          sort_order?: number
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cta_href?: string
+          cta_label?: string
+          desktop_image_url?: string
+          eyebrow_text?: string | null
+          id?: string
+          is_active?: boolean
+          mobile_image_url?: string | null
+          sort_order?: number
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -603,7 +665,7 @@ export type Database = {
       products: {
         Row: {
           care_instructions: string
-          category_id: string
+          category_id: string | null
           craft_work: string | null
           created_at: string
           description: string
@@ -619,12 +681,13 @@ export type Database = {
           set_includes: string | null
           size_chart: Json | null
           slug: string
+          subcategory_id: string | null
           updated_at: string
           wash_care: string | null
         }
         Insert: {
           care_instructions: string
-          category_id: string
+          category_id?: string | null
           craft_work?: string | null
           created_at?: string
           description: string
@@ -640,12 +703,13 @@ export type Database = {
           set_includes?: string | null
           size_chart?: Json | null
           slug: string
+          subcategory_id?: string | null
           updated_at?: string
           wash_care?: string | null
         }
         Update: {
           care_instructions?: string
-          category_id?: string
+          category_id?: string | null
           craft_work?: string | null
           created_at?: string
           description?: string
@@ -661,6 +725,7 @@ export type Database = {
           set_includes?: string | null
           size_chart?: Json | null
           slug?: string
+          subcategory_id?: string | null
           updated_at?: string
           wash_care?: string | null
         }
@@ -668,6 +733,13 @@ export type Database = {
           {
             foreignKeyName: "products_category_id_fkey"
             columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_subcategory_id_fkey"
+            columns: ["subcategory_id"]
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
@@ -700,6 +772,33 @@ export type Database = {
           id?: string
           phone?: string | null
           role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      store_settings: {
+        Row: {
+          active_theme: string
+          announcement_bar_text: string | null
+          created_at: string
+          hero_banner_duration_sec: number
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          active_theme?: string
+          announcement_bar_text?: string | null
+          created_at?: string
+          hero_banner_duration_sec?: number
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          active_theme?: string
+          announcement_bar_text?: string | null
+          created_at?: string
+          hero_banner_duration_sec?: number
+          id?: string
           updated_at?: string
         }
         Relationships: []

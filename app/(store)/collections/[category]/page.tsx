@@ -9,14 +9,19 @@ export default async function CategoryPage({
   searchParams,
 }: {
   params: Promise<{ category: string }>;
-  searchParams: Promise<{ segment?: "girls" | "teens" | "women"; age?: string; size?: string }>;
+  searchParams: Promise<{ segment?: "girls" | "teens" | "women"; age?: string; size?: string; ageSize?: string }>;
 }) {
   const { category: categorySlug } = await params;
-  const { segment, age, size } = await searchParams;
+  const { segment, age, size, ageSize } = await searchParams;
+  const targetAgeSize = ageSize || age || size;
 
   const [categories, products] = await Promise.all([
     getCategories(),
-    getProducts(),
+    getProducts({
+      categorySlug,
+      segment,
+      sizeName: targetAgeSize,
+    }),
   ]);
 
   const currentCategory = categories.find((c) => c.slug === categorySlug);
@@ -25,19 +30,21 @@ export default async function CategoryPage({
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      <div className="mb-6">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-brand-secondary">
+    <div className="space-y-6">
+      <div className="rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] p-6 sm:p-8 shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)]">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-[#8B1E3F]">
           {currentCategory.segment === "all"
-            ? "Women • Teens • Girls Collection"
-            : `${currentCategory.segment} Collection`}
+            ? "Indian Festive Couture Collection"
+            : `${currentCategory.segment} Celebratory Collection`}
         </span>
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-text-heading mt-0.5">
+        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#261C17] mt-1">
           {currentCategory.name}
         </h1>
-        <p className="text-xs sm:text-sm text-text-muted mt-1">
-          {currentCategory.description}
-        </p>
+        {currentCategory.description && (
+          <p className="text-xs sm:text-sm text-[#6B574B] mt-2 max-w-2xl leading-relaxed">
+            {currentCategory.description}
+          </p>
+        )}
       </div>
 
       <CatalogBrowser
@@ -45,8 +52,8 @@ export default async function CategoryPage({
         categories={categories}
         currentCategorySlug={categorySlug}
         initialSegment={segment}
-        initialSize={size}
-        initialAge={age}
+        initialSize={targetAgeSize}
+        initialAge={targetAgeSize}
       />
     </div>
   );

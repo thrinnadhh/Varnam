@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createAdminProduct } from "@/app/admin/actions";
+import { getCategories } from "@/lib/db/actions";
 import {
   KIDS_AGE_SIZES,
   TEEN_SIZES,
@@ -45,7 +46,24 @@ export default function NewProductPage() {
   const [slug, setSlug] = useState("");
   const [segment, setSegment] = useState<Segment>("girls");
   const [categoryId, setCategoryId] = useState("11111111-1111-1111-1111-111111111111"); // Festive & Wedding default
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([
+    { id: "11111111-1111-1111-1111-111111111111", name: "Festive & Wedding" },
+    { id: "22222222-2222-2222-2222-222222222222", name: "Party & Evening Gowns" },
+    { id: "33333333-3333-3333-3333-333333333333", name: "Cotton Twirl Frocks & Day Dresses" },
+    { id: "44444444-4444-4444-4444-444444444444", name: "Casuals & Co-ords" },
+  ]);
   const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    getCategories()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setCategories(data);
+          setCategoryId(data[0].id);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   // Authentic Craft Specifications
   const [fabric, setFabric] = useState("Pure Kanchipuram Silk & Velvet");
@@ -407,10 +425,11 @@ export default function NewProductPage() {
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-sm rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-rose-800 bg-white"
               >
-                <option value="11111111-1111-1111-1111-111111111111">Festive &amp; Wedding</option>
-                <option value="22222222-2222-2222-2222-222222222222">Party &amp; Evening Gowns</option>
-                <option value="33333333-3333-3333-3333-333333333333">Cotton Twirl Frocks &amp; Day Dresses</option>
-                <option value="44444444-4444-4444-4444-444444444444">Casuals &amp; Co-ords</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </div>
 

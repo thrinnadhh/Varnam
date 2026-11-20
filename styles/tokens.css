@@ -1,69 +1,79 @@
 /**
- * Varnam Design Tokens — Warm Bloom Palette & Sizing System
- * Hardened for WCAG AA High Contrast Accessibility
+ * Varnam Design Tokens — Warm Kraft-Cardboard & Festive Indian Luxury
+ * Precise Color Tokens & WCAG AA High-Contrast Accessibility
  */
 
 :root {
-  /* Brand Core Palette */
-  --varnam-primary: #881337;         /* Deep Berry Rose — Joyful, premium luxury (Contrast 8.5:1 against canvas) */
-  --varnam-primary-hover: #700d2b;
-  --varnam-primary-subtle: #fff1f2;  /* Soft blush background */
-  --varnam-primary-border: #fecdd3;
+  /* Page Canvas: Warm Unbleached Kraft Cardboard */
+  --varnam-canvas: #EFE6D5;
+  --varnam-canvas-subtle: #E8DDCA;
 
-  /* Secondary: Marigold Amber (WCAG AA Compliant for text ≥ 4.5:1) */
-  --varnam-secondary: #b45309;       /* Deep Marigold Amber — Contrast 4.8:1 against white */
-  --varnam-secondary-hover: #92400e; /* Amber 800 — Contrast 6.5:1 */
-  --varnam-secondary-subtle: #fef3c7;
-  --varnam-secondary-border: #fde68a;
-  --varnam-marigold-text: #92400e;   /* Dedicated high-contrast text color for marigold labels */
+  /* Elevated Cards & Product Surfaces: Handloom Ivory Cardstock */
+  --varnam-surface: #FAF5EB;
+  --varnam-surface-raised: #FFFFFF;
+  --varnam-surface-card: #FAF5EB;
+  --varnam-surface-card-border: #D8C7AE;
+  --varnam-border: #D8C7AE;
+  --varnam-border-subtle: #E4D7C3;
 
-  --varnam-accent: #e11d48;          /* Vibrant Rose Coral — Contrast 4.7:1 */
-  --varnam-accent-hover: #be123c;
+  /* Sticky Header, Footer & Top Welcome Ribbon: Roasted Chestnut */
+  --varnam-chestnut: #3B281E;
+  --varnam-chestnut-dark: #2A1C15;
+  --varnam-chestnut-light: #4D3528;
+  --varnam-chestnut-text: #FAF5EB;
 
-  /* Neutrals & Surfaces */
-  --varnam-canvas: #faf6f0;          /* Warm Cream Canvas */
-  --varnam-surface: #ffffff;         /* Pure Card White */
-  --varnam-surface-raised: #f5efe6;  /* Elevated surface */
-  --varnam-border: #e7dfd5;          /* Warm hairline border */
-  --varnam-border-subtle: #f0eae1;
+  /* Primary Festive CTA Accent: Kumkum Crimson */
+  --varnam-primary: #8B1E3F;
+  --varnam-primary-hover: #721531;
+  --varnam-primary-subtle: #FDF2F4;
+  --varnam-primary-border: #F3C4CF;
 
-  /* High-Contrast Typography (Strict WCAG AA) */
-  --varnam-text-heading: #1c1917;    /* Stone 900 — Maximum readability (Contrast 15.8:1) */
-  --varnam-text-body: #292524;       /* Stone 800 — Ultra-crisp (Contrast 12.6:1) */
-  --varnam-text-muted: #57534e;      /* Stone 600 — Fully WCAG AA compliant (Contrast 5.6:1) */
-  --varnam-text-inverse: #ffffff;
+  /* Secondary Heritage Accent: Antique Temple Gold / Zari */
+  --varnam-gold: #C69214;
+  --varnam-gold-hover: #AA7B0C;
+  --varnam-gold-subtle: #FEF9EC;
+  --varnam-marigold: #D97706;
+  --varnam-marigold-hover: #B45309;
+
+  /* Craft & Stock Trust Badge: Peacock Emerald */
+  --varnam-emerald: #145349;
+  --varnam-emerald-hover: #0E3E37;
+  --varnam-emerald-subtle: #E9F4F2;
+
+  /* Primary Readable Ink: Espresso Charcoal */
+  --varnam-text-heading: #261C17;
+  --varnam-text-body: #3B281E;
+  --varnam-text-muted: #6B574B;
+  --varnam-text-inverse: #FAF5EB;
 
   /* Status Colors */
-  --varnam-success: #047857;         /* Emerald 700 (Contrast 4.9:1) */
-  --varnam-success-bg: #ecfdf5;
-  --varnam-warning: #b45309;         /* Amber 700 */
-  --varnam-warning-bg: #fffbeb;
-  --varnam-error: #b91c1c;           /* Red 700 (Contrast 5.4:1) */
-  --varnam-error-bg: #fef2f2;
+  --varnam-success: #145349;
+  --varnam-success-bg: #E9F4F2;
+  --varnam-warning: #D97706;
+  --varnam-warning-bg: #FEF9EC;
+  --varnam-error: #8B1E3F;
+  --varnam-error-bg: #FDF2F4;
 
   /* Corner Radius */
-  --radius-sm: 0.375rem;             /* 6px */
-  --radius-md: 0.625rem;             /* 10px */
-  --radius-lg: 1rem;                 /* 16px */
-  --radius-xl: 1.5rem;               /* 24px */
+  --radius-sm: 0.375rem;    /* 6px */
+  --radius-md: 0.625rem;    /* 10px */
+  --radius-lg: 1rem;        /* 16px */
+  --radius-xl: 1.5rem;      /* 24px */
   --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-warm-sm: 0 1px 2px 0 rgba(28, 25, 23, 0.05);
-  --shadow-warm-md: 0 4px 6px -1px rgba(28, 25, 23, 0.07), 0 2px 4px -2px rgba(28, 25, 23, 0.05);
-  --shadow-warm-lg: 0 10px 15px -3px rgba(28, 25, 23, 0.08), 0 4px 6px -4px rgba(28, 25, 23, 0.04);
+  /* Tactile Shadows */
+  --shadow-kraft: 0 8px 24px -6px rgba(59, 40, 30, 0.12);
+  --shadow-kraft-lg: 0 16px 36px -8px rgba(59, 40, 30, 0.18);
+  --shadow-warm-sm: 0 2px 6px 0 rgba(59, 40, 30, 0.06);
 
-  /* Motion & Animation Tokens */
+  /* Transitions */
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 400ms;
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --varnam-transition-speed: var(--duration-normal);
 }
 
-/* Reduced motion preference token: instant transitions */
 @media (prefers-reduced-motion: reduce) {
   :root {
     --duration-fast: 0ms;

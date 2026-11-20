@@ -5,11 +5,15 @@
   --color-brand-primary: var(--varnam-primary);
   --color-brand-primary-hover: var(--varnam-primary-hover);
   --color-brand-primary-subtle: var(--varnam-primary-subtle);
-  --color-brand-secondary: var(--varnam-secondary);
-  --color-brand-secondary-hover: var(--varnam-secondary-hover);
-  --color-brand-secondary-subtle: var(--varnam-secondary-subtle);
-  --color-brand-accent: var(--varnam-accent);
+  --color-brand-secondary: var(--varnam-gold);
+  --color-brand-secondary-hover: var(--varnam-gold-hover);
+  --color-brand-secondary-subtle: var(--varnam-gold-subtle);
+  --color-brand-gold: var(--varnam-gold);
+  --color-brand-marigold: var(--varnam-marigold);
+  --color-brand-emerald: var(--varnam-emerald);
+  --color-brand-chestnut: var(--varnam-chestnut);
   --color-canvas: var(--varnam-canvas);
+  --color-canvas-subtle: var(--varnam-canvas-subtle);
   --color-surface: var(--varnam-surface);
   --color-surface-raised: var(--varnam-surface-raised);
   --color-border: var(--varnam-border);
@@ -38,4 +42,34 @@ body {
 :focus-visible {
   outline: 2px solid var(--varnam-primary);
   outline-offset: 2px;
+}
+
+/* Cardstock tactile elevation */
+.card-kraft {
+  background-color: var(--varnam-surface);
+  border: 1px solid var(--varnam-border);
+  box-shadow: var(--shadow-kraft);
+}
+
+.card-kraft-hover {
+  transition: transform 0.25s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.card-kraft-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-kraft-lg);
+}
+
+/* Tabular numbers for Indian Rupee prices */
+.price-tabular {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Subtle Marigold Toran Garland Ribbon */
+.toran-garland {
+  background-image: radial-gradient(circle at 10px 0, #D97706 6px, transparent 7px),
+                    radial-gradient(circle at 20px 0, #C69214 4px, transparent 5px);
+  background-size: 24px 10px;
+  background-repeat: repeat-x;
 }

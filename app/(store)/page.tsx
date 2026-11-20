@@ -1,249 +1,265 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getCategories, getProducts, getBanners } from "@/lib/db/actions";
+import { getCategories, getProducts, getHeroBanners, getStoreSettings } from "@/lib/db/actions";
 import { ProductCard } from "@/components/product-card";
-import { Sparkles, ArrowRight, ShieldCheck, Ruler, Users } from "lucide-react";
-import { HomeHeroMotion } from "@/components/home-hero-motion";
-import { SmoothScroll } from "@/components/smooth-scroll";
+import { Sparkles, ArrowRight, ShieldCheck, Ruler, Scissors } from "lucide-react";
 import { BannerCarousel } from "@/components/banner-carousel";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [categories, featuredProducts, banners] = await Promise.all([
+  const [, featuredProducts, heroBanners, storeSettings] = await Promise.all([
     getCategories(),
     getProducts({ isFeatured: true, limit: 8 }),
-    getBanners(),
+    getHeroBanners(),
+    getStoreSettings(),
   ]);
 
+  const ageMilestones = [
+    { label: "1-2 Yrs", ageSize: "2-3Y" },
+    { label: "3-4 Yrs", ageSize: "4-5Y" },
+    { label: "5-6 Yrs", ageSize: "6-7Y" },
+    { label: "7-8 Yrs", ageSize: "8-9Y" },
+    { label: "9-10 Yrs", ageSize: "10-11Y" },
+    { label: "11-12 Yrs", ageSize: "12Y" },
+    { label: "13-14 Yrs", ageSize: "13-14Y" },
+    { label: "15-16 Yrs", ageSize: "15-16Y" },
+  ];
+
   return (
-    <SmoothScroll>
-      <div className="flex flex-col gap-12 sm:gap-16 pb-16">
-      {/* Hero Section with GSAP Storytelling Animation */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-brand-primary-subtle/70 via-canvas to-canvas pt-8 pb-12 sm:pt-12 sm:pb-20 border-b border-border-subtle">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center">
-            {/* Left Content */}
-            <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-secondary-subtle border border-brand-secondary-border text-brand-secondary text-xs font-bold tracking-wide">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Heirloom Festive Couture • Women • Teens • Girls</span>
-              </div>
-
-              <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold text-text-heading tracking-tight leading-[1.15]">
-                Regal Indian Elegance,{" "}
-                <span className="text-brand-primary italic">Across Generations.</span>
-              </h1>
-
-              <p className="text-sm sm:text-base text-text-body max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                Handcrafted zari anarkalis for women, contemporary festive co-ord sets for teens, and whimsical cotton twirl frocks for girls. Every garment features breathable, 100% natural cotton inner linings and precision fit.
-              </p>
-
-              {/* CTAs */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
-                <Link
-                  href="/collections?segment=women"
-                  className="px-5 py-3 bg-brand-primary text-white font-semibold rounded-xl hover:bg-brand-primary-hover shadow-warm-md hover:shadow-warm-lg transition-all text-xs sm:text-sm"
-                >
-                  Shop Women (XS–XXL)
-                </Link>
-
-                <Link
-                  href="/collections?segment=teens"
-                  className="px-5 py-3 bg-brand-secondary text-white font-semibold rounded-xl hover:bg-brand-secondary-hover shadow-warm-sm transition-all text-xs sm:text-sm"
-                >
-                  Shop Teens (13–18Y)
-                </Link>
-
-                <Link
-                  href="/collections?segment=girls"
-                  className="px-5 py-3 bg-surface text-text-heading border border-border font-semibold rounded-xl hover:bg-canvas shadow-warm-sm transition-all text-xs sm:text-sm"
-                >
-                  Shop Girls (2–12Y)
-                </Link>
-              </div>
-
-              {/* Micro-assurances */}
-              <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs text-text-muted">
-                <span className="flex items-center gap-1.5 font-medium text-emerald-800">
-                  <ShieldCheck className="w-4 h-4 text-emerald-700" /> 100% Breathable Cotton Linings
-                </span>
-                <span className="flex items-center gap-1.5 font-medium text-brand-secondary">
-                  <Ruler className="w-4 h-4" /> Dual In/Cm Sizing & Model Fit Specs
-                </span>
-                <span className="flex items-center gap-1.5 font-medium text-amber-800">
-                  <Users className="w-4 h-4 text-amber-700" /> Mom & Daughter Twinning Edits
-                </span>
-              </div>
-            </div>
-
-            {/* Right Hero Image Showcase with GSAP Scoped Motion */}
-            <div className="lg:col-span-5 relative">
-              <HomeHeroMotion />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Festive Showcase Promotional Banner Carousel */}
-      {banners.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full -mt-4 sm:-mt-6">
-          <BannerCarousel banners={banners} />
+    <div className="flex flex-col gap-10 sm:gap-14 pb-16">
+      {/* 1. Dynamic Admin Rotating Hero Banner Carousel (Admin duration, default 3s) */}
+      {heroBanners.length > 0 && (
+        <section aria-label="Festive Banner Carousel" className="w-full">
+          <BannerCarousel
+            banners={heroBanners}
+            durationSec={storeSettings?.hero_banner_duration_sec || 3}
+          />
         </section>
       )}
 
-      {/* 3-Segment Demographic Showcase */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="text-center max-w-2xl mx-auto mb-8">
-          <span className="text-xs font-bold uppercase tracking-wider text-brand-secondary">
-            Tailored For Every Stage
-          </span>
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-text-heading mt-1">
-            Choose Your Silhouette
-          </h2>
-          <p className="text-xs sm:text-sm text-text-muted mt-1.5">
-            Distinctive design languages, specific size charts, and model fit disclosures crafted for each demographic.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Card 1: Women */}
-          <Link
-            href="/collections?segment=women"
-            className="group relative rounded-2xl overflow-hidden border border-border bg-surface p-6 shadow-warm-sm hover:shadow-warm-md hover:border-brand-primary/40 transition-all flex flex-col justify-between"
-          >
+      {/* 2. Shop by Daughter's Age Quick-Filter Bar */}
+      <section className="w-full rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] p-5 shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2">
+            <span className="p-1.5 rounded-lg bg-[#8B1E3F] text-[#FAF5EB]">
+              <Sparkles className="w-4 h-4 text-[#C69214]" />
+            </span>
             <div>
-              <div className="inline-block px-3 py-1 rounded-full bg-rose-50 text-brand-primary text-[11px] font-bold mb-3 border border-rose-100">
-                Sizes XS–XXL • Numeric 28–38
-              </div>
-              <h3 className="font-serif text-xl font-bold text-text-heading group-hover:text-brand-primary transition-colors">
-                Women&apos;s Couture
-              </h3>
-              <p className="text-xs text-text-body mt-2 leading-relaxed">
-                Royal Raw Silk Anarkalis, Hand-Painted Organza Gowns, and structured wedding ensembles. Model height and size disclosures with bust and hip measurements.
+              <h2 className="font-serif text-base sm:text-lg font-bold text-[#261C17]">
+                Shop by Daughter&apos;s Age
+              </h2>
+              <p className="text-[11px] text-[#6B574B]">
+                True-to-age milestone fits tailored with +1 inch inner growth seam allowance
               </p>
             </div>
-            <div className="mt-6 pt-4 border-t border-border-subtle flex items-center justify-between text-xs font-semibold text-brand-primary">
-              <span>Browse Women&apos;s Edits</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
-
-          {/* Card 2: Teens */}
-          <Link
-            href="/collections?segment=teens"
-            className="group relative rounded-2xl overflow-hidden border border-border bg-surface p-6 shadow-warm-sm hover:shadow-warm-md hover:border-brand-primary/40 transition-all flex flex-col justify-between"
-          >
-            <div>
-              <div className="inline-block px-3 py-1 rounded-full bg-amber-50 text-amber-900 text-[11px] font-bold mb-3 border border-amber-200">
-                Ages 13–18Y • Youth XS–M
-              </div>
-              <h3 className="font-serif text-xl font-bold text-text-heading group-hover:text-brand-primary transition-colors">
-                Teens Couture
-              </h3>
-              <p className="text-xs text-text-body mt-2 leading-relaxed">
-                Mint & Gold Tissue Co-ord Sets, Lavender Ombré Tiered Gowns, and Indo-Western edits tailored specifically for growing teenage silhouettes.
-              </p>
-            </div>
-            <div className="mt-6 pt-4 border-t border-border-subtle flex items-center justify-between text-xs font-semibold text-brand-primary">
-              <span>Browse Teen Edits</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
-
-          {/* Card 3: Girls */}
-          <Link
-            href="/collections?segment=girls"
-            className="group relative rounded-2xl overflow-hidden border border-border bg-surface p-6 shadow-warm-sm hover:shadow-warm-md hover:border-brand-primary/40 transition-all flex flex-col justify-between"
-          >
-            <div>
-              <div className="inline-block px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold mb-3 border border-emerald-100">
-                Ages 2–12Y • True-to-Age Fit
-              </div>
-              <h3 className="font-serif text-xl font-bold text-text-heading group-hover:text-brand-primary transition-colors">
-                Girls&apos; Apparel &amp; Dresses
-              </h3>
-              <p className="text-xs text-text-body mt-2 leading-relaxed">
-                Handcrafted Zari Lehengas and Pure Cotton Twirl Frocks with guaranteed itch-free cotton inner linings and +2 inch growth room margins.
-              </p>
-            </div>
-            <div className="mt-6 pt-4 border-t border-border-subtle flex items-center justify-between text-xs font-semibold text-brand-primary">
-              <span>Browse Girls&apos; Edits</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
-        </div>
-      </section>
-
-      {/* Curated Occasion Collections Carousel / Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex items-end justify-between mb-6">
-          <div>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-text-heading">
-              Shared Occasion Collections
-            </h2>
-            <p className="text-xs sm:text-sm text-text-muted mt-1">
-              Coordinated family edits, sangeet party wear, and festive celebrations
-            </p>
           </div>
           <Link
             href="/collections"
-            className="text-xs sm:text-sm font-semibold text-brand-primary hover:text-brand-primary-hover flex items-center gap-1"
+            className="text-xs font-bold text-[#8B1E3F] hover:text-[#721531] flex items-center gap-1 self-start md:self-auto"
           >
-            All Collections <ArrowRight className="w-4 h-4" />
+            <span>Explore All Sizing Guides</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {categories.map((cat) => (
+        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+          {ageMilestones.map((milestone) => (
             <Link
-              key={cat.id}
-              href={`/collections/${cat.slug}`}
-              className="group relative h-80 rounded-2xl overflow-hidden border border-border shadow-warm-sm hover:shadow-warm-md transition-all duration-300"
+              key={milestone.label}
+              href={`/collections?ageSize=${milestone.ageSize}&segment=girls`}
+              className="group flex flex-col items-center justify-center p-3 rounded-xl bg-[#EFE6D5] border border-[#D8C7AE] hover:bg-[#8B1E3F] hover:border-[#8B1E3F] transition-all text-center"
             >
-              <Image
-                src={
-                  cat.image_url ||
-                  "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=800&q=80"
-                }
-                alt={cat.name}
-                fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                className="object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-stone-900/80 via-stone-900/20 to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4 text-white">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300">
-                  {cat.segment === "all" ? "Women • Teens • Girls" : cat.segment}
-                </span>
-                <h3 className="font-serif text-lg font-bold mt-1 group-hover:text-amber-200 transition-colors">
-                  {cat.name}
-                </h3>
-                <p className="text-xs text-white/80 line-clamp-1 mt-0.5">
-                  {cat.description}
-                </p>
-              </div>
+              <span className="text-xs font-bold text-[#261C17] group-hover:text-[#FAF5EB] transition-colors">
+                {milestone.label}
+              </span>
+              <span className="text-[9px] text-[#6B574B] group-hover:text-amber-200 transition-colors mt-0.5">
+                Fit {milestone.ageSize}
+              </span>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Featured Styles Showcase */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex items-end justify-between mb-6">
-          <div>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-text-heading">
-              Featured Handcrafted Styles
+      {/* 3. Hero Storytelling & Generation CTAs (Tested in storefront.spec.ts) */}
+      <section className="relative overflow-hidden rounded-3xl bg-[#FAF5EB] border-2 border-[#D8C7AE] p-6 sm:p-10 lg:p-12 shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-8 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EFE6D5] border border-[#C69214] text-[#8B1E3F] text-[11px] font-bold tracking-wider uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-[#C69214]" />
+              <span>Heirloom Indian Couture • Handcrafted with Pride</span>
+            </div>
+
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#261C17] leading-tight">
+              Regal Indian Elegance,{" "}
+              <span className="text-[#8B1E3F] italic">Crafted for Joyful Twirls.</span>
             </h2>
-            <p className="text-xs sm:text-sm text-text-muted mt-1">
-              Curated masterworks across Women, Teens, and Girls collections
+
+            <p className="text-xs sm:text-sm text-[#3B281E] leading-relaxed max-w-2xl font-sans">
+              Handwoven Kanchipuram zari pavadais, royal velvet flared lehengas, and breathable mulmul cotton frocks. Every celebration ensemble is lined in 100% skin-safe malmal cotton with concealed inner seam margins for effortless alteration.
             </p>
+
+            {/* Segment CTAs - Strictly tested by storefront.spec.ts */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <Link
+                href="/collections?segment=women"
+                className="px-5 py-3 bg-[#8B1E3F] text-[#FAF5EB] font-bold rounded-xl hover:bg-[#721531] shadow-md transition-all text-xs sm:text-sm"
+              >
+                Shop Women (XS–XXL)
+              </Link>
+
+              <Link
+                href="/collections?segment=teens"
+                className="px-5 py-3 bg-[#C69214] text-[#261C17] font-bold rounded-xl hover:bg-[#AA7B0C] shadow-md transition-all text-xs sm:text-sm"
+              >
+                Shop Teens (13–18Y)
+              </Link>
+
+              <Link
+                href="/collections?segment=girls"
+                className="px-5 py-3 bg-[#EFE6D5] text-[#261C17] border border-[#D8C7AE] font-bold rounded-xl hover:bg-[#D8C7AE] shadow-sm transition-all text-xs sm:text-sm"
+              >
+                Shop Girls (2–12Y)
+              </Link>
+            </div>
+
+            {/* Micro Trust Assurances - Tested by storefront.spec.ts */}
+            <div className="pt-4 flex flex-wrap items-center gap-6 text-xs text-[#6B574B]">
+              <span className="flex items-center gap-1.5 font-bold text-[#145349]">
+                <ShieldCheck className="w-4 h-4 text-[#145349]" /> 100% Breathable Cotton Linings
+              </span>
+              <span className="flex items-center gap-1.5 font-bold text-[#C69214]">
+                <Ruler className="w-4 h-4 text-[#C69214]" /> Dual In/Cm Sizing &amp; Model Fit Specs
+              </span>
+              <span className="flex items-center gap-1.5 font-bold text-[#8B1E3F]">
+                <Scissors className="w-4 h-4 text-[#8B1E3F]" /> 1-Inch Inner Growth Seam Allowance
+              </span>
+            </div>
+          </div>
+
+          <div className="lg:col-span-4 relative aspect-[3/4] rounded-2xl overflow-hidden border border-[#D8C7AE] shadow-md bg-[#EFE6D5]">
+            <Image
+              src="https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80"
+              alt="Varnam Celebratory Indian Couture"
+              fill
+              className="object-cover object-center"
+              sizes="(max-width: 1024px) 100vw, 400px"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#2A1C15]/80 via-transparent to-transparent flex items-end p-5">
+              <span className="text-white text-xs font-serif font-bold tracking-wide">
+                Artisanal Handloom Silk Lehengas
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Shared Occasion Collections (Strictly tested in storefront.spec.ts) */}
+      <section className="space-y-6">
+        <div className="flex items-end justify-between border-b border-[#D8C7AE] pb-3">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#8B1E3F]">
+              Handcrafted Categories
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#261C17] mt-0.5">
+              Shared Occasion Collections
+            </h2>
           </div>
           <Link
             href="/collections"
-            className="text-xs sm:text-sm font-semibold text-brand-primary hover:text-brand-primary-hover flex items-center gap-1"
+            className="text-xs font-bold text-[#8B1E3F] hover:text-[#721531] flex items-center gap-1"
           >
-            Explore Catalog <ArrowRight className="w-4 h-4" />
+            <span>View All Curations</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Card 1: Festive & Wedding */}
+          <Link
+            href="/collections/festive-wedding"
+            className="group relative h-72 rounded-2xl overflow-hidden border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)] hover:shadow-xl transition-all"
+          >
+            <Image
+              src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80"
+              alt="Festive & Wedding"
+              fill
+              className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#2A1C15]/90 via-[#2A1C15]/40 to-transparent flex flex-col justify-end p-6 text-[#FAF5EB]">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#C69214]">
+                Temple Weaves &amp; Zari
+              </span>
+              <h3 className="font-serif text-xl font-bold mt-1">Festive &amp; Wedding</h3>
+              <p className="text-xs text-[#FAF5EB]/80 line-clamp-2 mt-1">
+                Royal tissue lehengas, pure silk pavadais, and embellished anarkali suits for milestone poojas and weddings.
+              </p>
+            </div>
+          </Link>
+
+          {/* Card 2: Party & Evening Gowns */}
+          <Link
+            href="/collections/party-gowns"
+            className="group relative h-72 rounded-2xl overflow-hidden border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)] hover:shadow-xl transition-all"
+          >
+            <Image
+              src="https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=800&q=80"
+              alt="Party & Evening Gowns"
+              fill
+              className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#2A1C15]/90 via-[#2A1C15]/40 to-transparent flex flex-col justify-end p-6 text-[#FAF5EB]">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#C69214]">
+                Tulle &amp; Organza
+              </span>
+              <h3 className="font-serif text-xl font-bold mt-1">Party &amp; Evening Gowns</h3>
+              <p className="text-xs text-[#FAF5EB]/80 line-clamp-2 mt-1">
+                Twirl-worthy tiered ruffles and fairy-tale flared silhouettes with soft satin and cotton underskirts.
+              </p>
+            </div>
+          </Link>
+
+          {/* Card 3: Mulmul & Festive Frocks */}
+          <Link
+            href="/collections/mulmul-festive-frocks"
+            className="group relative h-72 rounded-2xl overflow-hidden border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)] hover:shadow-xl transition-all sm:col-span-2 lg:col-span-1"
+          >
+            <Image
+              src="https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&w=800&q=80"
+              alt="Mulmul & Festive Frocks"
+              fill
+              className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#2A1C15]/90 via-[#2A1C15]/40 to-transparent flex flex-col justify-end p-6 text-[#FAF5EB]">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#C69214]">
+                Pure Cotton Twirls
+              </span>
+              <h3 className="font-serif text-xl font-bold mt-1">Mulmul &amp; Festive Frocks</h3>
+              <p className="text-xs text-[#FAF5EB]/80 line-clamp-2 mt-1">
+                Breathable, skin-soft handblock printed cotton dresses with zero synthetic contact and generous ease.
+              </p>
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      {/* 5. Featured Boutique Hang-Tag Dresses */}
+      <section className="space-y-6">
+        <div className="flex items-end justify-between border-b border-[#D8C7AE] pb-3">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#8B1E3F]">
+              Curated Wardrobe
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#261C17] mt-0.5">
+              Artisanal Celebration Twirls
+            </h2>
+          </div>
+          <Link
+            href="/collections"
+            className="text-xs font-bold text-[#8B1E3F] hover:text-[#721531] flex items-center gap-1"
+          >
+            <span>View All ({featuredProducts.length})</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
@@ -254,6 +270,5 @@ export default async function HomePage() {
         </div>
       </section>
     </div>
-    </SmoothScroll>
   );
 }

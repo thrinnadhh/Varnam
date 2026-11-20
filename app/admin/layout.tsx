@@ -99,6 +99,22 @@ export default async function AdminLayout({
             </Link>
 
             <Link
+              href="/admin/banners"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-stone-300 hover:text-white hover:bg-stone-800 transition-colors"
+            >
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>Hero Banners & Timer</span>
+            </Link>
+
+            <Link
+              href="/admin/categories"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-stone-300 hover:text-white hover:bg-stone-800 transition-colors"
+            >
+              <Store className="w-4 h-4 text-rose-400" />
+              <span>Navigation Subheadings</span>
+            </Link>
+
+            <Link
               href="/admin/merchandising"
               className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-stone-300 hover:text-white hover:bg-stone-800 transition-colors"
             >

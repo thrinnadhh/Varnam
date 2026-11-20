@@ -1,24 +1,45 @@
 export interface FallbackCategory {
   id: string;
+  parent_id?: string | null;
   name: string;
   slug: string;
   segment: string;
   description: string;
   image_url: string;
   display_order: number;
+  sort_order?: number;
   is_active: boolean;
+  show_in_nav?: boolean;
 }
 
 export interface FallbackBanner {
   id: string;
+  eyebrow_text?: string | null;
   title: string;
   subtitle: string;
   cta_label: string;
   cta_link: string;
+  cta_href?: string;
   image_url: string;
+  desktop_image_url?: string;
+  mobile_image_url?: string | null;
   is_active: boolean;
   sort_order: number;
 }
+
+export interface FallbackStoreSettings {
+  id: string;
+  hero_banner_duration_sec: number;
+  announcement_bar_text: string;
+  active_theme: string;
+}
+
+export const FALLBACK_STORE_SETTINGS: FallbackStoreSettings = {
+  id: "default",
+  hero_banner_duration_sec: 3,
+  announcement_bar_text: "✨ Festive Special: Free Shipping across India on prepaid orders above ₹1,499 | Handcrafted with 1-inch inner growth seam allowance",
+  active_theme: "warm_kraft",
+};
 
 export interface FallbackProductVariant {
   id: string;
@@ -122,28 +143,52 @@ export const FALLBACK_CATEGORIES: FallbackCategory[] = [
   },
 ];
 
-export const FALLBACK_BANNERS: FallbackBanner[] = [
+export const FALLBACK_HERO_BANNERS: FallbackBanner[] = [
   {
-    id: "eeeeeeee-1111-eeee-eeee-eeeeeeeeeeee",
-    title: "Festive & Wedding Couture 2026",
-    subtitle: "Pure Kanchipuram Silks, Velvet Lehengas & Handwoven Brocades for Little Princesses",
-    cta_label: "Shop Festive Lehengas",
-    cta_link: "/collections/festive-wedding",
-    image_url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80",
+    id: "e1a00001-0000-0000-0000-000000000001",
+    eyebrow_text: "Diwali & Wedding Celebrations",
+    title: "Royal Zari & Handloom Tissue Lehengas",
+    subtitle: "Pure Kanchi tissue weaves and velvet lehengas lined in 100% breathable malmal with 1-inch inner growth seam allowance.",
+    cta_label: "Explore Lehengas",
+    cta_link: "/collections/pattu-lehengas",
+    cta_href: "/collections/pattu-lehengas",
+    image_url: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1600&q=80",
+    desktop_image_url: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1600&q=80",
+    mobile_image_url: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80",
     is_active: true,
     sort_order: 1,
   },
   {
-    id: "eeeeeeee-2222-eeee-eeee-eeeeeeeeeeee",
-    title: "Pure Mulmul Cotton Everyday Frocks",
-    subtitle: "Breathable, Skin-Soft Handblock Prints with Zero Synthetic Contact",
-    cta_label: "Explore Cotton Comfort",
-    cta_link: "/collections/cotton-dresses",
-    image_url: "https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&w=1200&q=80",
+    id: "e1a00001-0000-0000-0000-000000000002",
+    eyebrow_text: "Joyful Heritage Twirls",
+    title: "Artisanal Anarkalis & Festive Shararas",
+    subtitle: "Floor-sweeping pure raw silk flared silhouettes crafted with artisanal gota patti and heritage marigold borders.",
+    cta_label: "Shop Anarkalis",
+    cta_link: "/collections/anarkali-shararas",
+    cta_href: "/collections/anarkali-shararas",
+    image_url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1600&q=80",
+    desktop_image_url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1600&q=80",
+    mobile_image_url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80",
     is_active: true,
     sort_order: 2,
   },
+  {
+    id: "e1a00001-0000-0000-0000-000000000003",
+    eyebrow_text: "Comfort Meets Celebration",
+    title: "Breathable Mulmul & Festive Frocks",
+    subtitle: "Ultra-soft tiered cotton twirl frocks with delicate handwork for girls of all ages from 1 to 16 years.",
+    cta_label: "Discover Frocks",
+    cta_link: "/collections/mulmul-festive-frocks",
+    cta_href: "/collections/mulmul-festive-frocks",
+    image_url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1600&q=80",
+    desktop_image_url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1600&q=80",
+    mobile_image_url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80",
+    is_active: true,
+    sort_order: 3,
+  },
 ];
+
+export const FALLBACK_BANNERS: FallbackBanner[] = FALLBACK_HERO_BANNERS;
 
 export const FALLBACK_PRODUCTS: FallbackProduct[] = [
   {

@@ -5,7 +5,6 @@ import Image from "next/image";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { addToCart, toggleWishlist } from "@/lib/db/actions";
 import { SizeGuideModal, type SizeChartItem } from "@/components/size-guide-modal";
-import { motion } from "motion/react";
 import { POLICY_CONFIG } from "@/lib/constants";
 import type { Segment } from "@/lib/schemas";
 import {
@@ -14,10 +13,11 @@ import {
   Check,
   ShieldCheck,
   Truck,
-  Sparkles,
   Clock,
   Plus,
   Minus,
+  Scissors,
+  Gift,
 } from "lucide-react";
 
 interface PDPClientProps {
@@ -77,6 +77,8 @@ export function PDPClient({ product }: PDPClientProps) {
   const [isFavorited, setIsFavorited] = useState(false);
   const [pincode, setPincode] = useState("");
   const [pincodeStatus, setPincodeStatus] = useState<string | null>(null);
+  const [giftMessage, setGiftMessage] = useState("");
+  const [showGiftBox, setShowGiftBox] = useState(false);
 
   const selectedVariant =
     product.product_variants.find((v) => v.id === selectedVariantId) ||
@@ -88,7 +90,7 @@ export function PDPClient({ product }: PDPClientProps) {
         {
           id: "default",
           image_url:
-            "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=1000&q=80",
+            "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1000&q=80",
           alt_text: product.name,
           is_primary: true,
         },
@@ -104,12 +106,12 @@ export function PDPClient({ product }: PDPClientProps) {
     if (!selectedVariant || selectedVariant.stock <= 0) return;
 
     startTransition(async () => {
-      // Sync with client guest cart for instant responsiveness
       try {
         const guestCart = JSON.parse(localStorage.getItem("varnam_guest_cart") || "[]");
         const existingIdx = guestCart.findIndex((i: { variant_id?: string }) => i.variant_id === selectedVariant.id);
         if (existingIdx >= 0) {
           guestCart[existingIdx].quantity += quantity;
+          if (giftMessage) guestCart[existingIdx].gift_message = giftMessage;
         } else {
           guestCart.push({
             variant_id: selectedVariant.id,
@@ -124,6 +126,7 @@ export function PDPClient({ product }: PDPClientProps) {
             mrp: selectedVariant.mrp,
             image_url: currentImage.image_url,
             quantity: quantity,
+            gift_message: giftMessage || undefined,
           });
         }
         localStorage.setItem("varnam_guest_cart", JSON.stringify(guestCart));
@@ -150,44 +153,47 @@ export function PDPClient({ product }: PDPClientProps) {
   const handleCheckPincode = (e: React.FormEvent) => {
     e.preventDefault();
     if (pincode.length === 6 && /^\d+$/.test(pincode)) {
-      setPincodeStatus("Delivery available in 3-4 business days. Cash on Delivery supported.");
+      setPincodeStatus("✓ Delivery available in 2–4 business days via Blue Dart / Delhivery Express. Cash on Delivery supported.");
     } else {
-      setPincodeStatus("Please enter a valid 6-digit Indian postal code.");
+      setPincodeStatus("Please enter a valid 6-digit Indian PIN code.");
     }
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-      {/* Left Column: Image Gallery Carousel */}
+      {/* Left Column: Multi-Angle Gallery */}
       <div className="lg:col-span-7 space-y-4">
-        {/* Main Image with LCP Optimization (priority, static) */}
-        <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden border border-border bg-surface shadow-warm-sm">
+        {/* Main Stage Image */}
+        <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden border-2 border-[#D8C7AE] bg-[#EFE6D5] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)]">
           <Image
             src={currentImage.image_url}
             alt={currentImage.alt_text || product.name}
             fill
             priority
-            sizes="(max-width: 1024px) 100vw, 600px"
+            sizes="(max-width: 1024px) 100vw, 700px"
             className="object-cover object-center"
           />
 
-          {/* Demographic segment and comfort badges */}
-          <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
-            <span className="bg-stone-900/90 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm capitalize">
+          {/* Badges Overlay */}
+          <div className="absolute top-3.5 left-3.5 flex flex-wrap gap-2 z-10">
+            <span className="bg-[#3B281E] text-[#FAF5EB] text-xs font-bold px-3 py-1 rounded-full shadow-sm capitalize border border-[#D8C7AE]/40">
               {product.segment || "Couture"}
             </span>
-            <span className="bg-emerald-800 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm">
-              🌿 {product.lining || "100% Breathable Cotton"}
+            <span className="bg-[#145349] text-[#FAF5EB] text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
+              🌿 {product.lining || "100% Breathable Malmal Cotton"}
+            </span>
+            <span className="bg-[#C69214] text-[#261C17] text-xs font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
+              <Scissors className="w-3 h-3" /> 1-Inch Growth Margin
             </span>
           </div>
 
           <button
             type="button"
             onClick={handleWishlist}
-            className={`absolute top-3 right-3 p-2.5 rounded-full backdrop-blur-md transition-all z-10 ${
+            className={`absolute top-3.5 right-3.5 p-3 rounded-full backdrop-blur-md transition-all z-10 shadow-md ${
               isFavorited
-                ? "bg-brand-primary text-white"
-                : "bg-surface/85 text-text-heading hover:text-brand-primary"
+                ? "bg-[#8B1E3F] text-white"
+                : "bg-[#FAF5EB]/90 text-[#3B281E] hover:text-[#8B1E3F] border border-[#D8C7AE]"
             }`}
             aria-label="Add to favorites"
           >
@@ -195,9 +201,9 @@ export function PDPClient({ product }: PDPClientProps) {
           </button>
         </div>
 
-        {/* Thumbnails Row */}
+        {/* Thumbnails */}
         {images.length > 1 && (
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+          <div className="flex gap-3 overflow-x-auto pb-2">
             {images.map((img, idx) => (
               <button
                 key={img.id}
@@ -205,8 +211,8 @@ export function PDPClient({ product }: PDPClientProps) {
                 onClick={() => setSelectedImageIdx(idx)}
                 className={`relative w-20 h-24 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
                   selectedImageIdx === idx
-                    ? "border-brand-primary shadow-sm"
-                    : "border-border opacity-70 hover:opacity-100"
+                    ? "border-[#8B1E3F] shadow-md scale-105"
+                    : "border-[#D8C7AE] opacity-70 hover:opacity-100"
                 }`}
               >
                 <Image
@@ -222,60 +228,60 @@ export function PDPClient({ product }: PDPClientProps) {
         )}
       </div>
 
-      {/* Right Column: Garment Details & Sizing */}
+      {/* Right Column: Garment Details & Actions */}
       <div className="lg:col-span-5 space-y-6">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-secondary">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#8B1E3F]">
               {product.categories?.name}
             </span>
-            <span className="text-text-muted text-xs">•</span>
-            <span className="text-xs font-semibold text-text-muted capitalize">
+            <span className="text-[#D8C7AE] text-xs">•</span>
+            <span className="text-xs font-semibold text-[#6B574B] capitalize">
               {product.segment} Edition
             </span>
           </div>
 
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-text-heading">
+          <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#261C17] leading-tight">
             {product.name}
           </h1>
 
-          {/* Model Height & Size Worn Callout */}
+          {/* Model Fit Disclosures (Tested by E2E: 5'8" (173 cm)) */}
           {product.model_height && product.model_size_worn && (
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-border text-xs text-text-heading shadow-warm-sm">
-              <span className="font-bold text-brand-primary">Model Fit:</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#FAF5EB] border border-[#D8C7AE] text-xs text-[#261C17] shadow-sm">
+              <span className="font-bold text-[#8B1E3F]">Model Fit:</span>
               <span>Model is {product.model_height} wearing {product.model_size_worn}</span>
             </div>
           )}
 
-          <p className="text-xs text-text-muted">SKU: {selectedVariant?.sku}</p>
+          <p className="text-[11px] text-[#6B574B] font-mono">SKU: {selectedVariant?.sku}</p>
         </div>
 
-        {/* Price & Scarcity */}
-        <div className="p-4 bg-surface rounded-xl border border-border shadow-warm-sm space-y-2">
+        {/* Pricing Card */}
+        <div className="p-4 sm:p-5 bg-[#FAF5EB] rounded-2xl border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)] space-y-2">
           <div className="flex items-baseline gap-3">
-            <span className="text-2xl sm:text-3xl font-bold text-text-heading">
+            <span className="text-2xl sm:text-3xl font-bold text-[#261C17] price-tabular">
               {formatPrice(selectedVariant?.price || 0)}
             </span>
             {selectedVariant?.mrp > selectedVariant?.price && (
-              <span className="text-sm text-text-muted line-through">
+              <span className="text-base text-[#6B574B] line-through price-tabular">
                 {formatPrice(selectedVariant.mrp)}
               </span>
             )}
             {discount > 0 && (
-              <span className="bg-brand-secondary text-white text-xs font-bold px-2 py-0.5 rounded-full">
+              <span className="bg-[#8B1E3F] text-[#FAF5EB] text-xs font-extrabold px-2.5 py-0.5 rounded-full uppercase">
                 {discount}% OFF
               </span>
             )}
           </div>
-          <p className="text-[11px] text-text-muted">
+          <p className="text-[11px] text-[#6B574B]">
             Inclusive of all taxes • Free express shipping on orders above {POLICY_CONFIG.FREE_SHIPPING_THRESHOLD_LABEL}
           </p>
 
-          {/* Stock Scarcity Indicator */}
+          {/* Scarcity Indicator */}
           {selectedVariant && selectedVariant.stock > 0 && selectedVariant.stock <= 5 && (
-            <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200">
-              <Clock className="w-3.5 h-3.5 text-brand-secondary" />
-              <span>Limited Stock: Only {selectedVariant.stock} left in this size!</span>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-[#D97706] bg-[#FEF9EC] p-2.5 rounded-xl border border-[#C69214]/40">
+              <Clock className="w-4 h-4 text-[#C69214]" />
+              <span>Artisanal Batch: Only {selectedVariant.stock} left in size {selectedVariant.size_name}!</span>
             </div>
           )}
         </div>
@@ -283,12 +289,12 @@ export function PDPClient({ product }: PDPClientProps) {
         {/* Size Selection Chips */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-text-heading uppercase tracking-wider">
+            <label className="text-xs font-bold text-[#261C17] uppercase tracking-wider">
               {product.segment === "women"
-                ? "Select Alpha / Numeric Size:"
+                ? "Select Size (Alpha/Numeric):"
                 : product.segment === "teens"
                 ? "Select Youth Size:"
-                : "Select Age Milestone:"}
+                : "Select Age / Size:"}
             </label>
             <SizeGuideModal segment={product.segment as Segment} sizeChart={product.size_chart} />
           </div>
@@ -297,106 +303,107 @@ export function PDPClient({ product }: PDPClientProps) {
             {product.product_variants.map((v) => {
               const isSelected = v.id === selectedVariantId;
               const isOutOfStock = v.stock <= 0;
+              const label = v.size_name || v.size_age || "Standard";
 
               return (
-                <motion.button
+                <button
                   key={v.id}
                   type="button"
-                  whileTap={!isOutOfStock ? { scale: 0.95 } : undefined}
                   disabled={isOutOfStock}
                   onClick={() => {
                     setSelectedVariantId(v.id);
                     setQuantity(1);
                   }}
-                  className={`py-2.5 px-2 rounded-xl text-xs font-bold border transition-all text-center flex flex-col items-center justify-center ${
+                  className={`py-3 px-2 rounded-xl text-xs font-bold border transition-all text-center flex flex-col items-center justify-center ${
                     isSelected
-                      ? "bg-brand-primary text-white border-brand-primary shadow-sm"
+                      ? "bg-[#8B1E3F] text-[#FAF5EB] border-[#8B1E3F] shadow-md ring-2 ring-[#8B1E3F]/30"
                       : isOutOfStock
-                      ? "bg-canvas text-stone-300 border-border line-through cursor-not-allowed"
-                      : "bg-surface text-text-heading border-border hover:border-brand-primary/50"
+                      ? "bg-[#EFE6D5]/60 text-stone-400 border-[#D8C7AE] line-through cursor-not-allowed"
+                      : "bg-[#FAF5EB] text-[#261C17] border-[#D8C7AE] hover:border-[#8B1E3F]"
                   }`}
                 >
-                  <span>{v.size_name || v.size_age}</span>
+                  <span>{label}</span>
                   {v.stock <= 3 && v.stock > 0 && (
-                    <span className={`text-[9px] font-normal ${isSelected ? "text-amber-200" : "text-amber-700"}`}>
+                    <span className={`text-[9px] font-normal ${isSelected ? "text-amber-200" : "text-[#D97706]"}`}>
                       {v.stock} left
                     </span>
                   )}
-                </motion.button>
+                </button>
               );
             })}
           </div>
 
-          {/* Selected Size Measurements Callout */}
+          {/* Measurements for Selected Size */}
           {selectedVariant && (selectedVariant.bust_inches || selectedVariant.waist_inches) && (
-            <div className="p-3 bg-surface rounded-xl border border-border text-xs space-y-1">
-              <div className="font-semibold text-text-heading">
-                Measurements for Size {selectedVariant.size_name || selectedVariant.size_age}:
+            <div className="p-3.5 bg-[#FAF5EB] rounded-xl border border-[#D8C7AE] text-xs space-y-1">
+              <div className="font-bold text-[#261C17]">
+                Stitched Dimensions for Size {selectedVariant.size_name || selectedVariant.size_age}:
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-text-muted font-mono text-[11px]">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[#6B574B] price-tabular text-[11px]">
                 {selectedVariant.bust_inches && (
                   <span>
                     {product.segment === "girls" ? "Chest" : "Bust"}:{" "}
-                    <strong className="text-text-heading">{selectedVariant.bust_inches}&quot; ({selectedVariant.bust_cm} cm)</strong>
+                    <strong className="text-[#261C17]">{selectedVariant.bust_inches}&quot; ({selectedVariant.bust_cm} cm)</strong>
                   </span>
                 )}
                 {selectedVariant.waist_inches && (
                   <span>
                     Waist:{" "}
-                    <strong className="text-text-heading">{selectedVariant.waist_inches}&quot; ({selectedVariant.waist_cm} cm)</strong>
+                    <strong className="text-[#261C17]">{selectedVariant.waist_inches}&quot; ({selectedVariant.waist_cm} cm)</strong>
                   </span>
                 )}
                 {selectedVariant.hip_inches && (
                   <span>
                     Hip:{" "}
-                    <strong className="text-text-heading">{selectedVariant.hip_inches}&quot; ({selectedVariant.hip_cm} cm)</strong>
+                    <strong className="text-[#261C17]">{selectedVariant.hip_inches}&quot; ({selectedVariant.hip_cm} cm)</strong>
                   </span>
                 )}
                 {selectedVariant.length_inches && (
                   <span>
                     Length:{" "}
-                    <strong className="text-text-heading">{selectedVariant.length_inches}&quot; ({selectedVariant.length_cm} cm)</strong>
+                    <strong className="text-[#261C17]">{selectedVariant.length_inches}&quot; ({selectedVariant.length_cm} cm)</strong>
                   </span>
                 )}
               </div>
             </div>
           )}
 
-          <p className="text-[11px] text-brand-secondary font-medium flex items-center gap-1">
-            <Sparkles className="w-3 h-3" /> Includes concealed +2 to 3 inch side margins for easy alterations.
-          </p>
+          <div className="p-3 rounded-xl bg-[#FEF9EC] border border-[#C69214]/50 flex items-center gap-2 text-xs text-[#3B281E]">
+            <Scissors className="w-4 h-4 text-[#C69214] shrink-0" />
+            <span><strong>1-Inch Inner Growth Seam Allowance:</strong> Internal seam allowance included for future alterations.</span>
+          </div>
         </div>
 
-        {/* Quantity Selector */}
-        <div className="flex items-center justify-between p-3.5 bg-surface rounded-xl border border-border">
+        {/* Quantity Stepper */}
+        <div className="flex items-center justify-between p-3.5 bg-[#FAF5EB] rounded-xl border border-[#D8C7AE]">
           <div>
-            <label className="text-xs font-bold text-text-heading uppercase tracking-wider block">
+            <label className="text-xs font-bold text-[#261C17] uppercase tracking-wider block">
               Quantity
             </label>
             {selectedVariant && selectedVariant.stock <= 5 && (
-              <span className="text-[10px] text-amber-700 font-semibold">
-                Max {selectedVariant.stock} in stock
+              <span className="text-[10px] text-[#D97706] font-semibold">
+                Max {selectedVariant.stock} available
               </span>
             )}
           </div>
-          <div className="flex items-center border border-border rounded-xl bg-canvas overflow-hidden shadow-sm">
+          <div className="flex items-center border border-[#D8C7AE] rounded-xl bg-[#EFE6D5] overflow-hidden">
             <button
               type="button"
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               disabled={quantity <= 1}
-              className="px-3.5 py-2 text-text-heading hover:bg-surface disabled:opacity-30 transition-colors"
+              className="px-3.5 py-2 text-[#3B281E] hover:bg-[#FAF5EB] disabled:opacity-30 transition-colors"
               aria-label="Decrease quantity"
             >
               <Minus className="w-3.5 h-3.5" />
             </button>
-            <span className="px-4 py-1 text-sm font-bold font-mono text-text-heading min-w-[36px] text-center">
+            <span className="px-4 py-1 text-sm font-bold font-mono text-[#261C17] min-w-[36px] text-center">
               {quantity}
             </span>
             <button
               type="button"
               onClick={() => setQuantity((q) => Math.min(selectedVariant?.stock || 10, q + 1))}
               disabled={quantity >= (selectedVariant?.stock || 10)}
-              className="px-3.5 py-2 text-text-heading hover:bg-surface disabled:opacity-30 transition-colors"
+              className="px-3.5 py-2 text-[#3B281E] hover:bg-[#FAF5EB] disabled:opacity-30 transition-colors"
               aria-label="Increase quantity"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -404,19 +411,42 @@ export function PDPClient({ product }: PDPClientProps) {
           </div>
         </div>
 
-        {/* Add to Bag CTA */}
-        <div className="space-y-3 pt-2">
-          <motion.button
+        {/* Handwritten Kraft Gift Card Message Box */}
+        <div className="p-3.5 bg-[#FAF5EB] rounded-xl border border-[#D8C7AE] space-y-2">
+          <button
             type="button"
-            whileTap={!(isPending || selectedVariant?.stock <= 0) ? { scale: 0.98 } : undefined}
+            onClick={() => setShowGiftBox(!showGiftBox)}
+            className="flex items-center justify-between w-full text-xs font-bold text-[#8B1E3F] hover:underline"
+          >
+            <span className="flex items-center gap-1.5">
+              <Gift className="w-4 h-4 text-[#C69214]" /> Include Handwritten Kraft Gift Note (Free)
+            </span>
+            <span>{showGiftBox ? "▲ Hide" : "▼ Add"}</span>
+          </button>
+          {showGiftBox && (
+            <textarea
+              value={giftMessage}
+              onChange={(e) => setGiftMessage(e.target.value)}
+              placeholder="e.g. Dearest Anya, Wishing you joy, laughter, and sparkles on your special day! With all our love, Dadi & Dadu"
+              maxLength={200}
+              className="w-full p-2.5 text-xs rounded-lg border border-[#D8C7AE] bg-[#EFE6D5]/60 text-[#261C17] focus:outline-none focus:ring-2 focus:ring-[#8B1E3F]"
+              rows={3}
+            />
+          )}
+        </div>
+
+        {/* Add to Bag CTA Button */}
+        <div className="space-y-3 pt-2">
+          <button
+            type="button"
             disabled={isPending || selectedVariant?.stock <= 0}
             onClick={handleAddToCart}
-            className={`w-full py-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-warm-md hover:shadow-warm-lg transition-all ${
+            className={`w-full py-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all ${
               selectedVariant?.stock <= 0
                 ? "bg-stone-300 text-stone-500 cursor-not-allowed"
                 : addedSuccess
-                ? "bg-emerald-600 text-white"
-                : "bg-brand-primary text-white hover:bg-brand-primary-hover"
+                ? "bg-[#145349] text-white"
+                : "bg-[#8B1E3F] text-[#FAF5EB] hover:bg-[#721531] active:scale-[0.99]"
             }`}
           >
             {addedSuccess ? (
@@ -430,14 +460,14 @@ export function PDPClient({ product }: PDPClientProps) {
                 <ShoppingBag className="w-5 h-5" /> Add {quantity > 1 ? `${quantity} ` : ""}to Bag • {formatPrice((selectedVariant?.price || 0) * quantity)}
               </>
             )}
-          </motion.button>
+          </button>
         </div>
 
-        {/* Pincode Delivery Estimator */}
-        <div className="p-4 bg-surface rounded-xl border border-border space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-text-heading uppercase tracking-wider">
-            <Truck className="w-4 h-4 text-brand-primary" />
-            <span>Check Estimated Delivery & COD</span>
+        {/* Pincode Estimator */}
+        <div className="p-4 bg-[#FAF5EB] rounded-xl border border-[#D8C7AE] space-y-2">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#261C17] uppercase tracking-wider">
+            <Truck className="w-4 h-4 text-[#8B1E3F]" />
+            <span>Check Estimated Delivery &amp; COD</span>
           </div>
           <form onSubmit={handleCheckPincode} className="flex gap-2">
             <input
@@ -445,53 +475,53 @@ export function PDPClient({ product }: PDPClientProps) {
               maxLength={6}
               value={pincode}
               onChange={(e) => setPincode(e.target.value)}
-              placeholder="Enter 6-digit postal code"
-              className="flex-1 px-3 py-2 text-xs rounded-lg border border-border bg-canvas focus:outline-none focus:ring-2 focus:ring-brand-primary font-mono"
+              placeholder="Enter 6-digit Indian PIN code"
+              className="flex-1 px-3 py-2 text-xs rounded-lg border border-[#D8C7AE] bg-[#EFE6D5]/50 focus:outline-none focus:ring-2 focus:ring-[#8B1E3F] font-mono text-[#261C17]"
             />
             <button
               type="submit"
-              className="px-4 py-2 bg-surface text-brand-primary border border-brand-primary text-xs font-bold rounded-lg hover:bg-brand-primary hover:text-white transition-colors"
+              className="px-4 py-2 bg-[#8B1E3F] text-[#FAF5EB] text-xs font-bold rounded-lg hover:bg-[#721531] transition-colors"
             >
               Verify
             </button>
           </form>
           {pincodeStatus && (
-            <p className="text-xs text-emerald-800 font-medium pt-1">
+            <p className="text-xs text-[#145349] font-medium pt-1">
               {pincodeStatus}
             </p>
           )}
         </div>
 
-        {/* Fabric & Lining Disclosures */}
-        <div className="p-4 rounded-xl bg-surface border border-border space-y-3 text-xs">
-          <div className="flex items-center gap-2 font-bold text-text-heading border-b border-border pb-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-700" />
-            <span>Garment Transparency & Fabric Disclosures</span>
+        {/* Fabric & Lining Transparency Card */}
+        <div className="p-4 rounded-xl bg-[#FAF5EB] border border-[#D8C7AE] space-y-3 text-xs">
+          <div className="flex items-center gap-2 font-bold text-[#261C17] border-b border-[#D8C7AE] pb-2">
+            <ShieldCheck className="w-4 h-4 text-[#145349]" />
+            <span>Artisanal Craft &amp; Lining Disclosures</span>
           </div>
-          <div className="space-y-1.5 text-text-body">
+          <div className="space-y-1.5 text-[#3B281E]">
             <p>
-              <strong className="text-text-heading">Outer Shell:</strong> {product.fabric}
+              <strong className="text-[#261C17]">Outer Shell:</strong> {product.fabric}
             </p>
             {product.craft_work && (
               <p>
-                <strong className="text-text-heading">Handcraft &amp; Work:</strong> {product.craft_work}
+                <strong className="text-[#261C17]">Handcraft &amp; Weave:</strong> {product.craft_work}
               </p>
             )}
             {product.set_includes && (
               <p>
-                <strong className="text-text-heading">Set Includes:</strong> {product.set_includes}
+                <strong className="text-[#261C17]">Ensemble Includes:</strong> {product.set_includes}
               </p>
             )}
-            <p className="text-emerald-900 font-medium">
-              <strong className="text-emerald-950">Inner Lining:</strong> {product.lining} (Skin-Safe &amp; Breathable)
+            <p className="text-[#145349] font-semibold">
+              <strong className="text-[#261C17]">Inner Lining:</strong> {product.lining}
             </p>
             {product.wash_care && (
               <p>
-                <strong className="text-text-heading">Wash &amp; Care:</strong> {product.wash_care}
+                <strong className="text-[#261C17]">Wash &amp; Care:</strong> {product.wash_care}
               </p>
             )}
             <p>
-              <strong className="text-text-heading">Care &amp; Maintenance:</strong> {product.care_instructions}
+              <strong className="text-[#261C17]">Care Instructions:</strong> {product.care_instructions}
             </p>
           </div>
         </div>

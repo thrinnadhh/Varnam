@@ -248,3 +248,58 @@ export const couponSchema = z.object({
 
 export type BannerInput = z.infer<typeof bannerSchema>;
 export type CouponInput = z.infer<typeof couponSchema>;
+
+// ==========================================
+// Store Settings & Rotating Hero Banners Schemas
+// ==========================================
+export const storeSettingsSchema = z.object({
+  id: z.literal("default").default("default"),
+  hero_banner_duration_sec: z
+    .number()
+    .int("Duration must be an integer")
+    .min(1, "Duration must be at least 1 second")
+    .max(30, "Duration cannot exceed 30 seconds")
+    .default(3),
+  announcement_bar_text: z.string().max(300).optional().nullable(),
+  active_theme: z.string().default("warm_kraft"),
+});
+
+export type StoreSettingsInput = z.infer<typeof storeSettingsSchema>;
+
+export const heroBannerSchema = z.object({
+  id: z.string().uuid().optional(),
+  eyebrow_text: z.string().max(100).optional().nullable(),
+  title: z.string().min(2, "Title is required").max(150),
+  subtitle: z.string().max(300).optional().nullable(),
+  cta_label: z.string().max(50).optional().default("Explore Collection"),
+  cta_href: z.string().max(255).optional().default("/collections"),
+  desktop_image_url: z.string().url("Valid desktop image URL required"),
+  mobile_image_url: z.string().url("Valid mobile image URL").optional().nullable().or(z.literal("")),
+  sort_order: z.number().int().default(0),
+  is_active: z.boolean().default(true),
+});
+
+export type HeroBannerInput = z.infer<typeof heroBannerSchema>;
+
+// ==========================================
+// Dynamic Category & Navigation Tree Schemas
+// ==========================================
+export const categoryNodeSchema = z.object({
+  id: z.string().uuid().optional(),
+  parent_id: z.string().uuid().optional().nullable(),
+  name: z.string().min(2, "Name must be at least 2 characters").max(100),
+  slug: z
+    .string()
+    .min(2, "Slug must be at least 2 characters")
+    .max(100)
+    .regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase alphanumeric characters and hyphens"),
+  description: z.string().max(500).optional().nullable(),
+  image_url: z.string().url().optional().nullable().or(z.literal("")),
+  sort_order: z.number().int().default(0),
+  is_active: z.boolean().default(true),
+  show_in_nav: z.boolean().default(true),
+  segment: z.enum(["girls", "teens", "women", "all"]).optional().default("all"),
+});
+
+export type CategoryNodeInput = z.infer<typeof categoryNodeSchema>;
+

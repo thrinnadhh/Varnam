@@ -44,8 +44,8 @@ export async function generateMetadata({
       : "Girls' Apparel";
 
   return {
-    title: `${product.name} ${segmentSuffix}`,
-    description: `${product.description} Handcrafted in ${product.fabric} with ${product.lining}.`,
+    title: `${product.name} ${segmentSuffix} | Varnam`,
+    description: `${product.description} Handcrafted in ${product.fabric} with ${product.lining}. 1-inch inner growth seam allowance included.`,
     openGraph: {
       title: `${product.name} | Varnam ${segmentBrand}`,
       description: product.description,
@@ -62,25 +62,19 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  // Fetch related designs from the same category
   const relatedProducts = await getProducts({
-    categorySlug: product.categories.slug,
+    categorySlug: product.categories?.slug,
     limit: 4,
   });
 
   const filteredRelated = relatedProducts.filter((p) => p.id !== product.id).slice(0, 3);
 
-  // Construct JSON-LD Schema
   const primaryImage =
     product.product_images.find((img) => img.is_primary) ||
     product.product_images[0];
 
-  const minPrice = Math.min(
-    ...product.product_variants.map((v) => v.price)
-  );
-  const maxPrice = Math.max(
-    ...product.product_variants.map((v) => v.price)
-  );
+  const minPrice = Math.min(...product.product_variants.map((v) => v.price));
+  const maxPrice = Math.max(...product.product_variants.map((v) => v.price));
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -88,7 +82,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     name: product.name,
     description: product.description,
     image: primaryImage ? [primaryImage.image_url] : [],
-    category: product.categories.name,
+    category: product.categories?.name,
     brand: {
       "@type": "Brand",
       name: "Varnam",
@@ -114,31 +108,35 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-12">
-        {/* Breadcrumbs */}
+      <div className="space-y-10">
+        {/* Breadcrumb Bar */}
         <nav
           aria-label="Breadcrumb"
-          className="flex items-center space-x-2 text-xs sm:text-sm text-text-muted"
+          className="flex items-center space-x-2 text-xs sm:text-sm text-[#6B574B] bg-[#FAF5EB] p-3 rounded-xl border border-[#D8C7AE]"
         >
-          <Link href="/" className="hover:text-brand-primary transition-colors">
+          <Link href="/" className="hover:text-[#8B1E3F] transition-colors font-medium">
             Home
           </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-border" />
+          <ChevronRight className="w-3.5 h-3.5 text-[#D8C7AE]" />
           <Link
             href="/collections"
-            className="hover:text-brand-primary transition-colors"
+            className="hover:text-[#8B1E3F] transition-colors font-medium"
           >
             Collections
           </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-border" />
-          <Link
-            href={`/collections/${product.categories.slug}`}
-            className="hover:text-brand-primary transition-colors capitalize"
-          >
-            {product.categories.name}
-          </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-border" />
-          <span className="text-text-heading font-medium truncate max-w-[200px] sm:max-w-none">
+          {product.categories && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5 text-[#D8C7AE]" />
+              <Link
+                href={`/collections/${product.categories.slug}`}
+                className="hover:text-[#8B1E3F] transition-colors font-medium capitalize"
+              >
+                {product.categories.name}
+              </Link>
+            </>
+          )}
+          <ChevronRight className="w-3.5 h-3.5 text-[#D8C7AE]" />
+          <span className="text-[#261C17] font-bold truncate max-w-[200px] sm:max-w-none">
             {product.name}
           </span>
         </nav>
@@ -153,25 +151,27 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           }}
         />
 
-        {/* Related Dresses Recommendation */}
+        {/* Curated Recommendations */}
         {filteredRelated.length > 0 && (
-          <section className="pt-12 border-t border-border space-y-6">
+          <section className="pt-8 border-t border-[#D8C7AE] space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="flex items-center gap-2 text-brand-secondary text-xs font-bold uppercase tracking-wider">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Curated for You</span>
+                <div className="flex items-center gap-2 text-[#8B1E3F] text-xs font-bold uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5 text-[#C69214]" />
+                  <span>Celebration Recommendations</span>
                 </div>
-                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-text-heading">
-                  More in {product.categories.name}
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#261C17]">
+                  More Handcrafted Styles
                 </h2>
               </div>
-              <Link
-                href={`/collections/${product.categories.slug}`}
-                className="text-xs sm:text-sm font-semibold text-brand-primary hover:text-brand-primary-hover underline"
-              >
-                View all styles &rarr;
-              </Link>
+              {product.categories && (
+                <Link
+                  href={`/collections/${product.categories.slug}`}
+                  className="text-xs sm:text-sm font-bold text-[#8B1E3F] hover:text-[#721531] underline"
+                >
+                  View all in {product.categories.name} &rarr;
+                </Link>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

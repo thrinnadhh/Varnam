@@ -6,7 +6,6 @@ import { useState, useTransition } from "react";
 import { Heart, ShoppingBag, Check, Eye } from "lucide-react";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { toggleWishlist, addToCart } from "@/lib/db/actions";
-import { motion } from "motion/react";
 import { QuickViewModal } from "@/components/quick-view-modal";
 
 interface ProductCardProps {
@@ -48,9 +47,9 @@ export function ProductCard({ product }: ProductCardProps) {
   const primaryImage =
     product.product_images?.find((img) => img.is_primary)?.image_url ||
     product.product_images?.[0]?.image_url ||
-    "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=800&q=80";
+    "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80";
 
-  // Find lowest price and highest MRP for display
+  // Calculate pricing
   const prices = product.product_variants.map((v) => v.price);
   const mrps = product.product_variants.map((v) => v.mrp);
   const minPrice = Math.min(...(prices.length ? prices : [0]));
@@ -61,15 +60,6 @@ export function ProductCard({ product }: ProductCardProps) {
   const sizeTags = Array.from(
     new Set(product.product_variants.map((v) => v.size_name || v.size_age || ""))
   ).filter(Boolean);
-
-  const segmentLabel =
-    product.segment === "women"
-      ? "Women (XS–XXL)"
-      : product.segment === "teens"
-      ? "Teens (13–18Y)"
-      : product.segment === "girls"
-      ? "Girls (2–12Y)"
-      : null;
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -85,30 +75,29 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const firstAvailableVariant = product.product_variants?.find((v) => v.stock > 0);
-    if (!firstAvailableVariant) {
+    const firstAvailable = product.product_variants.find((v) => v.stock > 0);
+    if (!firstAvailable) {
       setIsQuickViewOpen(true);
       return;
     }
 
     startTransition(async () => {
-      // Also update client guest cart in localStorage for guest visitors
       try {
         const guestCart = JSON.parse(localStorage.getItem("varnam_guest_cart") || "[]");
-        const existingIdx = guestCart.findIndex((i: { variant_id?: string }) => i.variant_id === firstAvailableVariant.id);
+        const existingIdx = guestCart.findIndex((i: { variant_id?: string }) => i.variant_id === firstAvailable.id);
         if (existingIdx >= 0) {
           guestCart[existingIdx].quantity += 1;
         } else {
           guestCart.push({
-            variant_id: firstAvailableVariant.id,
+            variant_id: firstAvailable.id,
             product_id: product.id,
             product_name: product.name,
             product_slug: product.slug,
-            size_name: firstAvailableVariant.size_name || firstAvailableVariant.size_age || "Standard",
-            size_age: firstAvailableVariant.size_age || firstAvailableVariant.size_name,
-            color_name: firstAvailableVariant.color_name,
-            price: firstAvailableVariant.price,
-            mrp: firstAvailableVariant.mrp,
+            size_name: firstAvailable.size_name || firstAvailable.size_age || "Standard",
+            size_age: firstAvailable.size_age || firstAvailable.size_name,
+            color_name: firstAvailable.color_name,
+            price: firstAvailable.price,
+            mrp: firstAvailable.mrp,
             image_url: primaryImage,
             quantity: 1,
           });
@@ -116,185 +105,164 @@ export function ProductCard({ product }: ProductCardProps) {
         localStorage.setItem("varnam_guest_cart", JSON.stringify(guestCart));
         window.dispatchEvent(new Event("varnam_cart_updated"));
       } catch (err) {
-        console.error("Local cart error:", err);
+        console.warn("Local cart save error:", err);
       }
 
-      await addToCart(firstAvailableVariant.id, 1);
+      await addToCart(firstAvailable.id, 1);
       setAddedFeedback(true);
       setTimeout(() => setAddedFeedback(false), 2000);
     });
   };
 
   return (
-    <div className="group relative bg-surface rounded-2xl border border-border hover:border-brand-primary/30 overflow-hidden shadow-warm-sm hover:shadow-warm-md transition-all duration-300 flex flex-col">
-      {/* Image Container with high-contrast segment and size pills */}
-      <Link href={`/products/${product.slug}`} className="relative aspect-[3/4] w-full overflow-hidden bg-canvas">
-        <Image
-          src={primaryImage}
-          alt={product.name}
-          fill
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
-        />
-
-        {/* High-contrast badges on top-left */}
-        <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">
-          {segmentLabel && (
-            <span className="bg-stone-900/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm shadow-sm">
-              {segmentLabel}
-            </span>
-          )}
-          {sizeTags.length > 0 && (
-            <span className="bg-surface/90 text-text-heading text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm shadow-sm border border-border/80">
-              {product.segment === "girls" ? "Ages " : "Sizes "}
-              {sizeTags[0]}
-              {sizeTags.length > 1 ? `–${sizeTags[sizeTags.length - 1]}` : ""}
-            </span>
-          )}
-          {discountPercent > 0 && (
-            <span className="bg-brand-secondary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
-              {discountPercent}% OFF
-            </span>
-          )}
-        </div>
-
-        {/* Action icons on top-right */}
-        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.85 }}
-            whileHover={{ scale: 1.1 }}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsQuickViewOpen(true);
-            }}
-            className="p-2 rounded-full backdrop-blur-md transition-all bg-surface/80 text-text-heading hover:bg-surface hover:text-brand-primary shadow-sm"
-            aria-label="Quick view product"
-            title="Quick View"
-          >
-            <Eye className="w-4 h-4" />
-          </motion.button>
-
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.85 }}
-            whileHover={{ scale: 1.1 }}
-            onClick={handleWishlistClick}
-            className={`p-2 rounded-full backdrop-blur-md transition-all shadow-sm ${
-              isFavorited
-                ? "bg-brand-primary text-white"
-                : "bg-surface/80 text-text-heading hover:bg-surface hover:text-brand-primary"
-            }`}
-            aria-label="Add to favorites"
-          >
-            <Heart className={`w-4 h-4 ${isFavorited ? "fill-current" : ""}`} />
-          </motion.button>
-        </div>
-
-        {/* Hover Quick View Pill (Desktop) */}
-        <div className="absolute inset-x-3 bottom-9 hidden sm:flex justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-10">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsQuickViewOpen(true);
-            }}
-            className="pointer-events-auto px-4 py-1.5 rounded-full bg-surface/95 hover:bg-surface text-brand-primary text-xs font-bold shadow-lg backdrop-blur-md border border-border flex items-center gap-1.5 transition-transform hover:scale-105"
-          >
-            <Eye className="w-3.5 h-3.5" /> Quick View
-          </button>
-        </div>
-
-        {/* Cotton Lining Indicator Tag */}
-        {product.lining && (
-          <div className="absolute bottom-2 left-2 right-2">
-            <span className="inline-block bg-surface/95 backdrop-blur-sm text-brand-primary text-[10px] font-semibold px-2 py-0.5 rounded-md border border-border/80 shadow-sm">
-              🌿 {product.lining}
-            </span>
+    <>
+      <div className="group relative flex flex-col rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)] hover:shadow-[0_16px_36px_-8px_rgba(59,40,30,0.18)] hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+        {/* Boutique Hang-Tag Perforation Header */}
+        <div className="flex items-center justify-between px-3.5 py-1.5 bg-[#FAF5EB] border-b border-[#D8C7AE]/60 text-[10px] text-[#6B574B] font-semibold tracking-wider">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full border border-[#C69214] bg-[#EFE6D5]" />
+            <span className="uppercase text-[#8B1E3F] truncate max-w-[140px]">{product.fabric}</span>
           </div>
-        )}
-      </Link>
-
-      {/* Product Content Details */}
-      <div className="p-3.5 sm:p-4 flex flex-col flex-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-secondary">
-          {product.fabric}
-        </p>
-
-        <h3 className="font-serif font-bold text-text-heading text-sm sm:text-base mt-1 line-clamp-2 group-hover:text-brand-primary transition-colors">
-          <Link href={`/products/${product.slug}`}>
-            {product.name}
-          </Link>
-        </h3>
-
-        {/* Pricing */}
-        <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-base sm:text-lg font-bold text-text-heading">
-            {formatPrice(minPrice)}
-          </span>
-          {maxMrp > minPrice && (
-            <span className="text-xs text-text-muted line-through">
-              {formatPrice(maxMrp)}
-            </span>
-          )}
+          <span className="text-[#C69214] font-medium">1-Inch Growth Seam</span>
         </div>
 
-        {/* Quick Add Button */}
-        <div className="mt-3 pt-3 border-t border-border-subtle flex items-center justify-between">
-          <span className="text-[11px] text-text-muted">
-            {sizeTags.length} sizes available
-          </span>
+        {/* Product Image Stage */}
+        <div className="relative aspect-[3/4] w-full bg-[#EFE6D5] overflow-hidden">
+          <Link href={`/products/${product.slug}`} className="block h-full w-full">
+            <Image
+              src={primaryImage}
+              alt={product.name}
+              fill
+              className="object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+          </Link>
 
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.95 }}
-            disabled={isPending}
-            onClick={handleQuickAdd}
-            className={`text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
-              addedFeedback
-                ? "bg-emerald-600 text-white"
-                : "bg-brand-primary-subtle text-brand-primary hover:bg-brand-primary hover:text-white"
-            }`}
-          >
-            {addedFeedback ? (
-              <>
-                <Check className="w-3.5 h-3.5" /> Added!
-              </>
-            ) : (
-              <>
-                <ShoppingBag className="w-3.5 h-3.5" /> Quick Add
-              </>
+          {/* Kumkum Crimson Discount Tag */}
+          {discountPercent > 0 && (
+            <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md bg-[#8B1E3F] text-[#FAF5EB] text-[10px] font-extrabold uppercase tracking-wider shadow-sm">
+              {discountPercent}% OFF
+            </div>
+          )}
+
+          {/* Action Buttons: Wishlist & Quick View */}
+          <div className="absolute top-2.5 right-2.5 flex flex-col gap-1.5 z-10">
+            <button
+              type="button"
+              onClick={handleWishlistClick}
+              disabled={isPending}
+              className={`p-2 rounded-full backdrop-blur-md transition-all shadow-sm ${
+                isFavorited
+                  ? "bg-[#8B1E3F] text-white"
+                  : "bg-[#FAF5EB]/90 text-[#3B281E] hover:bg-[#FAF5EB] hover:text-[#8B1E3F]"
+              }`}
+              aria-label={isFavorited ? "Remove from wishlist" : "Add to wishlist"}
+            >
+              <Heart className={`w-4 h-4 ${isFavorited ? "fill-current" : ""}`} />
+            </button>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsQuickViewOpen(true);
+              }}
+              className="p-2 rounded-full bg-[#FAF5EB]/90 text-[#3B281E] hover:bg-[#FAF5EB] hover:text-[#C69214] backdrop-blur-md transition-all shadow-sm opacity-90 group-hover:opacity-100"
+              aria-label="Quick preview dress details"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Malmal Lining Transparency Pill */}
+          <div className="absolute bottom-2.5 left-2.5 right-2.5 pointer-events-none">
+            <div className="px-2.5 py-1 rounded-md bg-[#3B281E]/85 backdrop-blur-sm text-[#FAF5EB] text-[10px] font-medium flex items-center justify-between">
+              <span className="truncate">Lining: {product.lining}</span>
+              <span className="text-[#C69214] text-[9px] font-bold uppercase shrink-0 ml-1">100% Cotton</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card Body: Name, Sizes, Pricing, Quick Add */}
+        <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between space-y-3 bg-[#FAF5EB]">
+          <div>
+            <Link href={`/products/${product.slug}`} className="block group-hover:text-[#8B1E3F] transition-colors">
+              <h3 className="font-serif text-sm sm:text-base font-bold text-[#261C17] line-clamp-1 leading-snug">
+                {product.name}
+              </h3>
+            </Link>
+
+            {/* Size Chips */}
+            {sizeTags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {sizeTags.slice(0, 5).map((size) => (
+                  <span
+                    key={size}
+                    className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#EFE6D5] text-[#3B281E] border border-[#D8C7AE]/60"
+                  >
+                    {size}
+                  </span>
+                ))}
+                {sizeTags.length > 5 && (
+                  <span className="px-1 py-0.5 text-[10px] text-[#6B574B] font-medium">
+                    +{sizeTags.length - 5}
+                  </span>
+                )}
+              </div>
             )}
-          </motion.button>
+          </div>
+
+          <div className="pt-2 border-t border-[#D8C7AE]/50 flex items-center justify-between gap-2">
+            <div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-sans font-bold text-sm sm:text-base text-[#261C17] price-tabular">
+                  {formatPrice(minPrice)}
+                </span>
+                {maxMrp > minPrice && (
+                  <span className="text-[11px] text-[#6B574B] line-through price-tabular">
+                    {formatPrice(maxMrp)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Add CTA */}
+            <button
+              type="button"
+              onClick={handleQuickAdd}
+              disabled={isPending}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                addedFeedback
+                  ? "bg-[#145349] text-white"
+                  : "bg-[#8B1E3F] text-[#FAF5EB] hover:bg-[#721531] active:scale-95"
+              }`}
+              aria-label={`Quick add ${product.name} to bag`}
+            >
+              {addedFeedback ? (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Added</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span>Quick Add</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
-      <QuickViewModal
-        isOpen={isQuickViewOpen}
-        onClose={() => setIsQuickViewOpen(false)}
-        product={{
-          id: product.id,
-          name: product.name,
-          slug: product.slug,
-          fabric: product.fabric,
-          lining: product.lining,
-          craft_work: product.craft_work,
-          set_includes: product.set_includes,
-          wash_care: product.wash_care,
-          product_images: product.product_images,
-          product_variants: product.product_variants.map((v) => ({
-            id: v.id,
-            size_name: v.size_name || v.size_age || "Standard",
-            size_age: v.size_age,
-            color_name: v.color_name,
-            price: v.price,
-            mrp: v.mrp,
-            stock: v.stock,
-          })),
-        }}
-      />
-    </div>
+      {/* Quick View Modal */}
+      {isQuickViewOpen && (
+        <QuickViewModal
+          product={product}
+          isOpen={isQuickViewOpen}
+          onClose={() => setIsQuickViewOpen(false)}
+        />
+      )}
+    </>
   );
 }

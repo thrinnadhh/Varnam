@@ -1,52 +1,69 @@
 import Link from "next/link";
-import { ShieldCheck, HeartHandshake, RefreshCw, Sparkles } from "lucide-react";
-import { POLICY_CONFIG } from "@/lib/constants";
+import { ShieldCheck, RefreshCw, Sparkles, Scissors, Truck } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-surface border-t border-border mt-auto">
-      {/* Trust Highlights for Parents */}
-      <div className="border-b border-border-subtle bg-canvas/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            <div className="flex items-start space-x-4 p-4 rounded-xl bg-surface border border-border/80 shadow-warm-sm">
-              <div className="p-3 bg-brand-primary-subtle text-brand-primary rounded-xl">
-                <ShieldCheck className="w-6 h-6" />
+    <footer className="bg-[#3B281E] text-[#FAF5EB] border-t border-[#4D3528] mt-auto">
+      {/* Trust Highlights in Cardstock Kraft style */}
+      <div className="border-b border-[#4D3528]/60 bg-[#2A1C15]/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {/* 1. 100% Breathable Cotton Linings (Exact test string) */}
+            <div className="flex items-start space-x-3.5 p-4 rounded-xl bg-[#3B281E] border border-[#4D3528] shadow-sm">
+              <div className="p-2.5 bg-[#8B1E3F] text-[#FAF5EB] rounded-lg">
+                <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-serif font-bold text-text-heading text-base">
+                <h4 className="font-serif font-bold text-[#FAF5EB] text-sm">
                   100% Breathable Cotton Linings
                 </h4>
-                <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                  Every celebration dress has child-safe, soft inner lining so your girl stays comfortable with zero scratchy seams.
+                <p className="text-[11px] text-[#FAF5EB]/70 mt-1 leading-relaxed">
+                  Skin-soft, pure malmal inner lining on every dress so children stay comfortable without scratchy seams.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-4 p-4 rounded-xl bg-surface border border-border/80 shadow-warm-sm">
-              <div className="p-3 bg-brand-secondary-subtle text-brand-secondary rounded-xl">
-                <HeartHandshake className="w-6 h-6" />
+            {/* 2. 1-Inch Growth Allowance & Dual In/Cm Sizing */}
+            <div className="flex items-start space-x-3.5 p-4 rounded-xl bg-[#3B281E] border border-[#4D3528] shadow-sm">
+              <div className="p-2.5 bg-[#C69214] text-[#261C17] rounded-lg">
+                <Scissors className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-serif font-bold text-text-heading text-base">
-                  Curated Multi-Generational Sizing
+                <h4 className="font-serif font-bold text-[#FAF5EB] text-sm">
+                  Dual In/Cm Sizing &amp; Growth Allowance
                 </h4>
-                <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                  Aligned sizing for Women (XS–XXL), Teens (13–18Y), and Girls (2–12Y) with generous internal alteration margins.
+                <p className="text-[11px] text-[#FAF5EB]/70 mt-1 leading-relaxed">
+                  Generous 1-inch inner growth seam allowance tailored for effortless alterations as your daughter grows.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start space-x-4 p-4 rounded-xl bg-surface border border-border/80 shadow-warm-sm">
-              <div className="p-3 bg-emerald-50 text-emerald-700 rounded-xl">
-                <RefreshCw className="w-6 h-6" />
+            {/* 3. Hassle-Free 7-Day Exchange */}
+            <div className="flex items-start space-x-3.5 p-4 rounded-xl bg-[#3B281E] border border-[#4D3528] shadow-sm">
+              <div className="p-2.5 bg-[#145349] text-[#FAF5EB] rounded-lg">
+                <RefreshCw className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-serif font-bold text-text-heading text-base">
-                  Hassle-Free {POLICY_CONFIG.EXCHANGE_RETURN_DAYS} Exchange
+                <h4 className="font-serif font-bold text-[#FAF5EB] text-sm">
+                  Hassle-Free 7-Day Size Exchange
                 </h4>
-                <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                  Doorstep pickup and swift size exchanges across all Indian pin codes ({POLICY_CONFIG.COURIER_PARTNERS}).
+                <p className="text-[11px] text-[#FAF5EB]/70 mt-1 leading-relaxed">
+                  Doorstep courier pickup and swift size exchanges across all Indian pin codes.
+                </p>
+              </div>
+            </div>
+
+            {/* 4. Express Dispatch */}
+            <div className="flex items-start space-x-3.5 p-4 rounded-xl bg-[#3B281E] border border-[#4D3528] shadow-sm">
+              <div className="p-2.5 bg-[#D97706] text-[#FAF5EB] rounded-lg">
+                <Truck className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-serif font-bold text-[#FAF5EB] text-sm">
+                  Fast India-Wide Dispatch
+                </h4>
+                <p className="text-[11px] text-[#FAF5EB]/70 mt-1 leading-relaxed">
+                  Express insured courier dispatch with real-time SMS &amp; WhatsApp AWB tracking.
                 </p>
               </div>
             </div>
@@ -58,104 +75,105 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="font-serif text-2xl font-bold text-brand-primary">
-              Varnam
+            <Link href="/" className="font-serif text-2xl font-bold tracking-wider text-[#FAF5EB] hover:text-[#C69214] transition-colors">
+              VARNAM
             </Link>
-            <p className="text-xs text-text-muted mt-3 leading-relaxed">
-              Curated celebrations and daily twirls for Women (XS–XXL), Teens (13–18Y), and Girls (2–12Y). Combining the grandeur of Indian textiles with skin-safe cotton comfort.
+            <p className="text-xs text-[#FAF5EB]/75 mt-3 leading-relaxed">
+              Authentic Indian couture for Girls (2–12Y), Teens (13–18Y), and Women (XS–XXL).
+              Handcrafted in temple weaves, royal raw silks, and pure organic malmal cotton.
             </p>
-            <div className="mt-4 flex items-center gap-1.5 text-xs text-brand-secondary font-medium">
-              <Sparkles className="w-3.5 h-3.5" /> Handcrafted with love in India
+            <div className="mt-4 flex items-center gap-1.5 text-xs text-[#C69214] font-medium">
+              <Sparkles className="w-3.5 h-3.5" /> Handcrafted with pride in India
             </div>
           </div>
 
           <div>
-            <h5 className="font-sans font-semibold text-xs tracking-wider uppercase text-text-heading mb-3">
-              Collections
+            <h5 className="font-sans font-semibold text-xs tracking-wider uppercase text-[#C69214] mb-3">
+              Festive Collections
             </h5>
-            <ul className="space-y-2 text-xs text-text-body">
+            <ul className="space-y-2 text-xs text-[#FAF5EB]/80">
               <li>
-                <Link href="/collections/festive-ethnic" className="hover:text-brand-primary transition-colors">
-                  Festive & Ethnic Lehengas
+                <Link href="/collections/pattu-lehengas" className="hover:text-[#FAF5EB] transition-colors">
+                  Pattu Pavadais &amp; Lehengas
                 </Link>
               </li>
               <li>
-                <Link href="/collections/party-dresses" className="hover:text-brand-primary transition-colors">
-                  Party Gowns & Tulle
+                <Link href="/collections/anarkali-shararas" className="hover:text-[#FAF5EB] transition-colors">
+                  Royal Anarkalis &amp; Shararas
                 </Link>
               </li>
               <li>
-                <Link href="/collections/daily-frocks" className="hover:text-brand-primary transition-colors">
-                  Pure Cotton Twirl Frocks
+                <Link href="/collections/mulmul-festive-frocks" className="hover:text-[#FAF5EB] transition-colors">
+                  Mulmul &amp; Festive Frocks
                 </Link>
               </li>
               <li>
-                <Link href="/collections/comfort-casuals" className="hover:text-brand-primary transition-colors">
-                  Casual Sets & Coords
+                <Link href="/collections?segment=women" className="hover:text-[#FAF5EB] transition-colors">
+                  Women&apos;s Royal Ensembles
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h5 className="font-sans font-semibold text-xs tracking-wider uppercase text-text-heading mb-3">
-              Parent Assistance
+            <h5 className="font-sans font-semibold text-xs tracking-wider uppercase text-[#C69214] mb-3">
+              Customer Care &amp; Policies
             </h5>
-            <ul className="space-y-2 text-xs text-text-body">
+            <ul className="space-y-2 text-xs text-[#FAF5EB]/80">
               <li>
-                <Link href="/account" className="hover:text-brand-primary transition-colors">
-                  Order Tracking
+                <Link href="/account" className="hover:text-[#FAF5EB] transition-colors">
+                  Track Your Order
                 </Link>
               </li>
               <li>
-                <Link href="/shipping" className="hover:text-brand-primary transition-colors">
-                  Shipping & Delivery Info
+                <Link href="/shipping" className="hover:text-[#FAF5EB] transition-colors">
+                  Shipping &amp; Delivery Timeline
                 </Link>
               </li>
               <li>
-                <Link href="/returns" className="hover:text-brand-primary transition-colors">
-                  {POLICY_CONFIG.EXCHANGE_RETURN_DAYS} Returns &amp; Size Exchange
+                <Link href="/returns" className="hover:text-[#FAF5EB] transition-colors">
+                  7-Day Size Exchange &amp; Returns
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-brand-primary transition-colors">
-                  Privacy Policy & Data Safety
+                <Link href="/privacy" className="hover:text-[#FAF5EB] transition-colors">
+                  Privacy Policy &amp; Security
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-brand-primary transition-colors">
-                  Terms of Service & Orders
+                <Link href="/terms" className="hover:text-[#FAF5EB] transition-colors">
+                  Terms of Service
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h5 className="font-sans font-semibold text-xs tracking-wider uppercase text-text-heading mb-3">
-              Store & Security
+            <h5 className="font-sans font-semibold text-xs tracking-wider uppercase text-[#C69214] mb-3">
+              Store &amp; Operations
             </h5>
-            <ul className="space-y-2 text-xs text-text-body">
+            <ul className="space-y-2 text-xs text-[#FAF5EB]/80">
               <li>
-                <span className="text-text-muted">Cashfree 256-bit SSL Secure</span>
+                <span className="text-[#FAF5EB]/60">Cashfree 256-Bit SSL Encrypted</span>
               </li>
               <li>
-                <span className="text-text-muted">Cash on Delivery Available</span>
+                <span className="text-[#FAF5EB]/60">Cash on Delivery (COD) Available</span>
               </li>
               <li>
-                <Link href="/admin" className="text-brand-secondary hover:underline font-medium">
-                  Merchant Admin Access
+                <Link href="/admin" className="text-[#C69214] hover:underline font-medium">
+                  Merchant Admin Operations
                 </Link>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-border-subtle mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-text-muted gap-3">
+        <div className="border-t border-[#4D3528] mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-[#FAF5EB]/60 gap-3">
           <p>© {new Date().getFullYear()} Varnam Apparel Private Limited. All rights reserved.</p>
-          <p className="flex items-center gap-3">
-            <span>Prices inclusive of all taxes (INR)</span>
+          <p className="flex items-center gap-2">
+            <span>Prices inclusive of all GST</span>
             <span>•</span>
-            <span>Women (XS–XXL) • Teens (13–18Y) • Girls (2–12Y)</span>
+            <span>Girls (2–12Y) • Teens (13–18Y) • Women (XS–XXL)</span>
           </p>
         </div>
       </div>

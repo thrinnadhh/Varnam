@@ -12,9 +12,10 @@ import {
   ShoppingBag,
   ArrowRight,
   ShieldCheck,
-  Clock,
   Sparkles,
   Truck,
+  Gift,
+  Scissors,
 } from "lucide-react";
 
 interface CartDisplayItem {
@@ -22,19 +23,21 @@ interface CartDisplayItem {
   product_id?: string;
   product_name: string;
   product_slug: string;
-  size_age: string;
+  size_name?: string;
+  size_age?: string;
   color_name: string;
   price: number;
   mrp: number;
   image_url: string;
   quantity: number;
-  stock?: number;
+  gift_message?: string;
 }
 
 export default function CartPage() {
   const [items, setItems] = useState<CartDisplayItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(15 * 60); // 15-minute reservation timer
+  const [globalGiftMessage, setGlobalGiftMessage] = useState("");
+  const [includeGiftBox, setIncludeGiftBox] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -51,28 +54,17 @@ export default function CartPage() {
       setIsLoaded(true);
     });
 
-    // Reservation timer logic
-    const timerKey = "varnam_cart_timer_expires";
-    let expiresAt = localStorage.getItem(timerKey);
-    if (!expiresAt) {
-      expiresAt = String(Date.now() + 15 * 60 * 1000);
-      localStorage.setItem(timerKey, expiresAt);
-    }
+    const handleCartUpdate = () => {
+      try {
+        const stored = localStorage.getItem("varnam_guest_cart");
+        if (stored) setItems(JSON.parse(stored));
+      } catch {}
+    };
 
-    const interval = setInterval(() => {
-      const remaining = Math.max(
-        0,
-        Math.floor((Number(expiresAt) - Date.now()) / 1000)
-      );
-      setTimeLeft(remaining);
-      if (remaining === 0) {
-        clearInterval(interval);
-      }
-    }, 1000);
-
+    window.addEventListener("varnam_cart_updated", handleCartUpdate);
     return () => {
       isMounted = false;
-      clearInterval(interval);
+      window.removeEventListener("varnam_cart_updated", handleCartUpdate);
     };
   }, []);
 
@@ -100,296 +92,266 @@ export default function CartPage() {
     syncCart(updated);
   };
 
-  const handleRemove = (variantId: string) => {
+  const handleRemoveItem = (variantId: string) => {
     const updated = items.filter((item) => item.variant_id !== variantId);
     syncCart(updated);
   };
 
-  const formatTimer = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s < 10 ? "0" : ""}${s}`;
-  };
-
-  const subtotalPaise = items.reduce(
+  const subtotal = items.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
   );
-  const freeShippingThresholdPaise = POLICY_CONFIG.FREE_SHIPPING_THRESHOLD_PAISE;
-  const isFreeShipping = subtotalPaise >= freeShippingThresholdPaise;
-  const shippingPaise = items.length === 0 ? 0 : isFreeShipping ? 0 : POLICY_CONFIG.STANDARD_SHIPPING_FEE_PAISE;
-  const totalPaise = subtotalPaise + shippingPaise;
-
-  const freeShippingDiff = freeShippingThresholdPaise - subtotalPaise;
-  const progressPercent = Math.min(
-    100,
-    Math.round((subtotalPaise / freeShippingThresholdPaise) * 100)
-  );
+  const threshold = POLICY_CONFIG.FREE_SHIPPING_THRESHOLD_PAISE;
+  const isFreeShipping = subtotal >= threshold;
+  const amountToFreeShipping = Math.max(0, threshold - subtotal);
+  const shippingFee = isFreeShipping ? 0 : POLICY_CONFIG.STANDARD_SHIPPING_FEE_PAISE;
+  const total = subtotal + shippingFee;
 
   if (!isLoaded) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center text-text-muted">
-        Loading your shopping bag...
-      </div>
-    );
-  }
-
-  if (items.length === 0) {
-    return (
-      <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-6">
-        <div className="w-20 h-20 bg-brand-primary-subtle text-brand-primary rounded-full flex items-center justify-center mx-auto">
-          <ShoppingBag className="w-10 h-10" />
-        </div>
-        <div className="space-y-2">
-          <h1 className="font-serif text-3xl font-bold text-text-heading">
-            Your Shopping Bag is Empty
-          </h1>
-          <p className="text-text-muted text-sm sm:text-base max-w-sm mx-auto">
-            Discover our handcrafted zari lehengas, twirl frocks, and festive dresses with child-safe cotton linings.
-          </p>
-        </div>
-        <div className="pt-2">
-          <Link
-            href="/collections"
-            className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-brand-primary text-white font-semibold rounded-xl hover:bg-brand-primary-hover shadow-warm-md transition-all text-sm"
-          >
-            Explore Collections <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
+      <div className="py-20 text-center text-[#6B574B]">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#8B1E3F]" />
+        <p className="mt-3 text-xs font-semibold">Loading your festive shopping bag...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      {/* Reservation Countdown Alert */}
-      <div className="mb-8 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between text-xs sm:text-sm">
-        <div className="flex items-center gap-2 font-medium">
-          <Clock className="w-4 h-4 text-amber-700 animate-spin" />
-          <span>
-            High Demand: Items in your bag are reserved for you for{" "}
-            <span className="font-bold text-amber-950 font-mono">
-              {formatTimer(timeLeft)}
-            </span>
+    <div className="space-y-8">
+      {/* Page Header */}
+      <div className="rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] p-6 shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)]">
+        <div className="flex items-center gap-2">
+          <span className="p-1.5 rounded-lg bg-[#8B1E3F] text-[#FAF5EB]">
+            <ShoppingBag className="w-5 h-5 text-[#C69214]" />
           </span>
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#261C17]">
+            Shopping Bag
+          </h1>
         </div>
-        <span className="hidden sm:inline-block text-xs font-semibold uppercase text-amber-800">
-          Stock Guaranteed
-        </span>
+        <p className="text-xs text-[#6B574B] mt-1.5">
+          Review your handcrafted couture, alterations margin, and complimentary gift packaging.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-        {/* Left Column: Items List */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-border">
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-text-heading">
-              Shopping Bag ({items.reduce((acc, i) => acc + i.quantity, 0)})
-            </h1>
-            <span className="text-xs text-text-muted">
-              Prices include GST
-            </span>
+      {items.length === 0 ? (
+        <div className="rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] p-12 text-center space-y-5 shadow-sm">
+          <div className="w-16 h-16 rounded-full bg-[#EFE6D5] flex items-center justify-center mx-auto text-[#8B1E3F]">
+            <ShoppingBag className="w-8 h-8" />
           </div>
-
-          {/* Free Shipping Progress Indicator */}
-          <div className="p-4 rounded-xl bg-surface border border-border space-y-2">
-            <div className="flex items-center justify-between text-xs sm:text-sm">
-              <span className="font-semibold text-text-heading flex items-center gap-1.5">
-                <Truck className="w-4 h-4 text-brand-primary" />
-                {isFreeShipping ? (
-                  <span className="text-emerald-700 font-bold">
-                    🎉 You have unlocked Free Express Delivery!
-                  </span>
-                ) : (
-                  <span>
-                    Add{" "}
-                    <strong className="text-brand-primary">
-                      {formatPrice(freeShippingDiff)}
-                    </strong>{" "}
-                    more for Free Delivery
-                  </span>
-                )}
-              </span>
-              <span className="text-text-muted font-mono text-xs">
-                {progressPercent}%
-              </span>
-            </div>
-            <div className="w-full bg-border-subtle h-2 rounded-full overflow-hidden">
-              <div
-                className="bg-brand-primary h-full transition-all duration-300 rounded-full"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
+          <div>
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#261C17]">
+              Your Shopping Bag is Empty
+            </h2>
+            <p className="text-xs text-[#6B574B] max-w-md mx-auto mt-1">
+              Explore our celebratory collection of handloom zari pavadais, flared anarkalis, and pure cotton twirl frocks.
+            </p>
           </div>
-
-          {/* Item Cards */}
-          <div className="divide-y divide-border border-y border-border">
-            {items.map((item) => (
-              <div
-                key={item.variant_id}
-                className="py-5 flex gap-4 sm:gap-6 items-start"
-              >
-                {/* Image */}
-                <div className="relative w-24 h-32 sm:w-28 sm:h-36 rounded-xl overflow-hidden border border-border bg-surface shrink-0">
-                  <Image
-                    src={item.image_url}
-                    alt={item.product_name}
-                    fill
-                    sizes="112px"
-                    className="object-cover object-center"
-                  />
-                </div>
-
-                {/* Info & Actions */}
-                <div className="flex-1 flex flex-col justify-between self-stretch">
-                  <div className="space-y-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <Link
-                        href={`/products/${item.product_slug}`}
-                        className="font-serif text-base sm:text-lg font-bold text-text-heading hover:text-brand-primary transition-colors"
-                      >
-                        {item.product_name}
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => handleRemove(item.variant_id)}
-                        className="p-1.5 text-text-muted hover:text-red-700 rounded-md transition-colors"
-                        aria-label="Remove item"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
-                      <span className="inline-block px-2 py-0.5 rounded bg-surface border border-border font-medium text-text-heading">
-                        Ages: {item.size_age}
-                      </span>
-                      <span>Color: {item.color_name}</span>
-                    </div>
-
-                    <div className="pt-1 flex items-center gap-1.5 text-xs text-emerald-800 font-medium">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-                      <span>100% Breathable Cotton Lining</span>
-                    </div>
-                  </div>
-
-                  {/* Quantity and Price */}
-                  <div className="flex items-center justify-between pt-3 mt-auto">
-                    {/* Stepper */}
-                    <div className="flex items-center border border-border rounded-lg bg-surface overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateQuantity(item.variant_id, -1)}
-                        className="p-2 text-text-body hover:bg-canvas transition-colors disabled:opacity-40"
-                        aria-label="Decrease quantity"
-                      >
-                        <Minus className="w-3.5 h-3.5" />
-                      </button>
-                      <span className="w-8 text-center text-xs sm:text-sm font-semibold font-mono text-text-heading">
-                        {item.quantity}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateQuantity(item.variant_id, 1)}
-                        className="p-2 text-text-body hover:bg-canvas transition-colors disabled:opacity-40"
-                        aria-label="Increase quantity"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    {/* Total for SKU */}
-                    <div className="text-right">
-                      <div className="font-bold text-sm sm:text-base text-text-heading">
-                        {formatPrice(item.price * item.quantity)}
-                      </div>
-                      {item.mrp > item.price && (
-                        <div className="text-xs text-text-muted line-through">
-                          {formatPrice(item.mrp * item.quantity)}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-between pt-2">
-            <Link
-              href="/collections"
-              className="text-xs sm:text-sm font-semibold text-brand-primary hover:text-brand-primary-hover flex items-center gap-1.5"
-            >
-              &larr; Continue Shopping
-            </Link>
-          </div>
-        </div>
-
-        {/* Right Column: Order Summary */}
-        <div className="lg:col-span-5 bg-surface border border-border rounded-2xl p-6 sm:p-8 space-y-6 shadow-warm-sm sticky top-28">
-          <h2 className="font-serif text-xl font-bold text-text-heading border-b border-border pb-4">
-            Order Summary
-          </h2>
-
-          <div className="space-y-3 text-sm text-text-body">
-            <div className="flex justify-between">
-              <span className="text-text-muted">Subtotal</span>
-              <span className="font-semibold text-text-heading">
-                {formatPrice(subtotalPaise)}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-1.5">
-                <span className="text-text-muted">Express Delivery</span>
-                {isFreeShipping && (
-                  <span className="text-[10px] uppercase font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
-                    Free
-                  </span>
-                )}
-              </div>
-              <span className="font-semibold text-text-heading">
-                {isFreeShipping ? "FREE" : formatPrice(shippingPaise)}
-              </span>
-            </div>
-
-            <div className="flex justify-between text-xs text-text-muted">
-              <span>Estimated Taxes & Packaging</span>
-              <span>Included</span>
-            </div>
-
-            <div className="border-t border-border pt-4 flex justify-between items-baseline text-base sm:text-lg font-bold text-text-heading">
-              <span>Total Amount</span>
-              <span className="text-xl sm:text-2xl text-brand-primary font-serif">
-                {formatPrice(totalPaise)}
-              </span>
-            </div>
-          </div>
-
           <Link
-            href="/checkout"
-            className="w-full py-4 bg-brand-primary text-white font-semibold rounded-xl hover:bg-brand-primary-hover shadow-warm-md hover:shadow-warm-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base group"
+            href="/collections"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#8B1E3F] text-[#FAF5EB] text-xs font-bold hover:bg-[#721531] shadow-md transition-all"
           >
-            Proceed to Checkout
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <span>Explore Collections</span>
+            <ArrowRight className="w-4 h-4" />
           </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Cart Items List */}
+          <div className="lg:col-span-8 space-y-4">
+            {/* Free Shipping Progress Indicator */}
+            <div className="p-4 rounded-xl bg-[#FAF5EB] border border-[#D8C7AE] shadow-sm space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold">
+                <span className="flex items-center gap-1.5 text-[#261C17]">
+                  <Truck className="w-4 h-4 text-[#145349]" />
+                  {isFreeShipping ? (
+                    <span className="text-[#145349]">Congratulations! You unlocked Free Shipping across India!</span>
+                  ) : (
+                    <span>Add {formatPrice(amountToFreeShipping)} more to qualify for Free Shipping</span>
+                  )}
+                </span>
+                <span className="text-[#8B1E3F]">{isFreeShipping ? "FREE" : formatPrice(POLICY_CONFIG.STANDARD_SHIPPING_FEE_PAISE)}</span>
+              </div>
+              <div className="w-full bg-[#EFE6D5] h-2 rounded-full overflow-hidden">
+                <div
+                  className="bg-[#145349] h-full transition-all duration-500 rounded-full"
+                  style={{
+                    width: `${Math.min(100, (subtotal / threshold) * 100)}%`,
+                  }}
+                />
+              </div>
+            </div>
 
-          {/* Micro assurances */}
-          <div className="space-y-2.5 pt-4 border-t border-border text-xs text-text-muted">
-            <div className="flex items-center gap-2 font-medium text-emerald-800">
-              <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
-              <span>Certified Child-Safe Fabrics & Stitching</span>
+            {/* Items */}
+            <div className="space-y-3">
+              {items.map((item) => (
+                <div
+                  key={item.variant_id}
+                  className="flex gap-4 p-4 rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)]"
+                >
+                  <div className="relative w-20 h-24 sm:w-24 sm:h-28 rounded-xl overflow-hidden border border-[#D8C7AE] bg-[#EFE6D5] shrink-0">
+                    <Image
+                      src={item.image_url}
+                      alt={item.product_name}
+                      fill
+                      className="object-cover object-center"
+                    />
+                  </div>
+
+                  <div className="flex-1 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <Link
+                          href={`/products/${item.product_slug}`}
+                          className="font-serif font-bold text-sm sm:text-base text-[#261C17] hover:text-[#8B1E3F] transition-colors line-clamp-1"
+                        >
+                          {item.product_name}
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveItem(item.variant_id)}
+                          className="text-[#6B574B] hover:text-[#8B1E3F] p-1 transition-colors"
+                          aria-label="Remove item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 mt-1 text-[11px] text-[#6B574B]">
+                        <span className="px-2 py-0.5 rounded bg-[#EFE6D5] font-semibold text-[#261C17]">
+                          Size: {item.size_name || item.size_age || "Standard"}
+                        </span>
+                        <span>•</span>
+                        <span>Color: {item.color_name}</span>
+                        <span>•</span>
+                        <span className="text-[#145349] font-medium flex items-center gap-1">
+                          <Scissors className="w-3 h-3 text-[#C69214]" /> +1&quot; Growth Margin
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-[#D8C7AE]/50">
+                      <div className="flex items-center border border-[#D8C7AE] rounded-lg bg-[#EFE6D5]">
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateQuantity(item.variant_id, -1)}
+                          className="p-1.5 text-[#3B281E] hover:bg-[#FAF5EB] rounded-l-lg"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="w-8 text-center text-xs font-bold text-[#261C17] price-tabular">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateQuantity(item.variant_id, 1)}
+                          className="p-1.5 text-[#3B281E] hover:bg-[#FAF5EB] rounded-r-lg"
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="font-sans font-bold text-sm sm:text-base text-[#261C17] price-tabular">
+                          {formatPrice(item.price * item.quantity)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="flex items-center gap-2">
-              <Truck className="w-4 h-4 text-brand-secondary shrink-0" />
-              <span>Fast Delivery via {POLICY_CONFIG.COURIER_PARTNERS}</span>
+
+            {/* Complimentary Handwritten Kraft Gift Card Option */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] shadow-sm space-y-3">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={includeGiftBox}
+                  onChange={(e) => setIncludeGiftBox(e.target.checked)}
+                  className="rounded border-[#D8C7AE] text-[#8B1E3F] focus:ring-[#8B1E3F] w-4 h-4"
+                />
+                <span className="font-serif font-bold text-sm text-[#261C17] flex items-center gap-1.5">
+                  <Gift className="w-4 h-4 text-[#C69214]" /> Include Complimentary Handwritten Kraft Gift Card
+                </span>
+              </label>
+
+              {includeGiftBox && (
+                <div className="pt-2 animate-in fade-in duration-200">
+                  <textarea
+                    value={globalGiftMessage}
+                    onChange={(e) => setGlobalGiftMessage(e.target.value)}
+                    placeholder="Compose your personalized festive note. Our team will handwrite this in gold ink onto unbleached cardstock..."
+                    maxLength={250}
+                    className="w-full p-3 text-xs rounded-xl border border-[#D8C7AE] bg-[#EFE6D5]/60 text-[#261C17] focus:outline-none focus:ring-2 focus:ring-[#8B1E3F]"
+                    rows={3}
+                  />
+                  <p className="text-[10px] text-[#6B574B] mt-1 text-right">
+                    {250 - globalGiftMessage.length} characters remaining
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-brand-primary shrink-0" />
-              <span>Cash on Delivery & Instant UPI Available</span>
+          </div>
+
+          {/* Order Summary Sidebar */}
+          <div className="lg:col-span-4 space-y-4">
+            <div className="p-5 sm:p-6 rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)] space-y-4">
+              <h2 className="font-serif text-lg font-bold text-[#261C17] border-b border-[#D8C7AE] pb-3">
+                Order Summary
+              </h2>
+
+              <div className="space-y-2.5 text-xs text-[#3B281E]">
+                <div className="flex justify-between">
+                  <span>Bag Subtotal ({items.length} designs)</span>
+                  <span className="font-bold price-tabular">{formatPrice(subtotal)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Estimated Shipping</span>
+                  <span className="font-bold price-tabular">
+                    {isFreeShipping ? (
+                      <span className="text-[#145349]">FREE</span>
+                    ) : (
+                      formatPrice(shippingFee)
+                    )}
+                  </span>
+                </div>
+                {includeGiftBox && (
+                  <div className="flex justify-between text-[#8B1E3F]">
+                    <span>Handwritten Kraft Card</span>
+                    <span className="font-bold">FREE</span>
+                  </div>
+                )}
+                <div className="pt-3 border-t border-[#D8C7AE] flex justify-between text-base font-bold text-[#261C17]">
+                  <span>Total Payable</span>
+                  <span className="price-tabular text-[#8B1E3F]">{formatPrice(total)}</span>
+                </div>
+                <p className="text-[10px] text-[#6B574B]">Inclusive of all GST &amp; Handcraft Levies</p>
+              </div>
+
+              <Link
+                href="/checkout"
+                className="w-full py-3.5 rounded-xl bg-[#8B1E3F] text-[#FAF5EB] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:bg-[#721531] shadow-md hover:shadow-lg transition-all"
+              >
+                <span>Proceed to Secure Checkout</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+
+              <div className="pt-2 border-t border-[#D8C7AE]/60 space-y-2 text-[11px] text-[#6B574B]">
+                <div className="flex items-center gap-1.5 text-[#145349] font-semibold">
+                  <ShieldCheck className="w-4 h-4 shrink-0" />
+                  <span>Doorstep 7-Day Size Exchange Across India</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-[#C69214] shrink-0" />
+                  <span>Cash on Delivery (COD) &amp; UPI Available</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

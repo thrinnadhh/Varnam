@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Ruler, Sparkles, ShieldCheck } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { X, Ruler, Scissors } from "lucide-react";
 
 export interface SizeChartItem {
   size?: string;
@@ -45,7 +44,6 @@ export function SizeGuideModal({
     { size: "XXL", bust_in: 42, bust_cm: 106.7, waist_in: 36, waist_cm: 91.4, hip_in: 46, hip_cm: 116.8, length_in: 55, length_cm: 139.7 },
   ];
 
-  // Teens: 13–18Y & Youth Sizes (Zero overlap with Girls)
   const defaultTeensRows: SizeChartItem[] = [
     { size: "13-14Y", bust_in: 31, bust_cm: 78.7, waist_in: 26, waist_cm: 66.0, hip_in: 34, hip_cm: 86.4, length_in: 40, length_cm: 101.6 },
     { size: "15-16Y", bust_in: 33, bust_cm: 83.8, waist_in: 27, waist_cm: 68.6, hip_in: 36, hip_cm: 91.4, length_in: 42, length_cm: 106.7 },
@@ -55,7 +53,6 @@ export function SizeGuideModal({
     { size: "M", bust_in: 35, bust_cm: 88.9, waist_in: 29, waist_cm: 73.7, hip_in: 38, hip_cm: 96.5, length_in: 44, length_cm: 111.8 },
   ];
 
-  // Girls: 2–12Y (Zero overlap with Teens)
   const defaultGirlsRows: SizeChartItem[] = [
     { size: "2-3Y", bust_in: 21, bust_cm: 53.3, waist_in: 20, waist_cm: 50.8, hip_in: 22, hip_cm: 55.9, length_in: 22, length_cm: 55.9 },
     { size: "4-5Y", bust_in: 23, bust_cm: 58.4, waist_in: 22, waist_cm: 55.9, hip_in: 24, hip_cm: 61.0, length_in: 26, length_cm: 66.0 },
@@ -89,7 +86,7 @@ export function SizeGuideModal({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-primary hover:text-brand-primary-hover underline underline-offset-2 transition-colors"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#8B1E3F] hover:text-[#721531] underline underline-offset-2 transition-colors"
       >
         <Ruler className="w-3.5 h-3.5" />
         <span>
@@ -101,84 +98,69 @@ export function SizeGuideModal({
         </span>
       </button>
 
-      <AnimatePresence>
-        {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm">
-            <motion.div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="size-guide-title"
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="relative w-full max-w-xl bg-surface rounded-2xl border border-border shadow-warm-lg p-6 max-h-[90vh] overflow-y-auto space-y-4"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-border">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-brand-primary-subtle text-brand-primary rounded-xl">
-                    <Ruler className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 id="size-guide-title" className="font-serif text-lg font-bold text-text-heading">
-                    {segment === "women"
-                      ? "Women's Couture Size Chart"
-                      : segment === "teens"
-                      ? "Teens Couture Size Chart (13–18Y)"
-                      : "Girls' Milestone Sizing Chart (2–12Y)"}
+      {isOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setIsOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-2xl rounded-2xl bg-[#FAF5EB] border-2 border-[#D8C7AE] shadow-2xl p-6 text-[#261C17] max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-[#D8C7AE]">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-[#EFE6D5] text-[#8B1E3F]">
+                  <Ruler className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-[#261C17]">
+                    Couture Size Chart
                   </h3>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-stone-100 text-stone-800 border border-stone-200">
-                      Chart Type: {activeMeasurementType === "garment" ? "Garment Dimensions (Laid Flat)" : "Body Measurements"}
-                    </span>
-                  </div>
+                  <p className="text-xs text-[#6B574B]">
+                    Garment Dimensions ({activeMeasurementType === "body" ? "Body Fit" : "Laid Flat"}) &amp; Alteration Guidance
+                  </p>
                 </div>
               </div>
-
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-2 text-text-muted hover:text-text-heading rounded-lg hover:bg-canvas transition-colors"
-                aria-label="Close size guide"
+                className="p-2 rounded-full text-[#6B574B] hover:text-[#261C17] hover:bg-[#EFE6D5] transition-colors"
+                aria-label="Close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Measurement Type & Transparency Note */}
-            <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs space-y-1 text-amber-950">
-              <div className="flex items-center gap-1.5 font-bold">
-                <ShieldCheck className="w-4 h-4 text-brand-primary" />
-                <span>
-                  {activeMeasurementType === "garment"
-                    ? "Garment Dimension Transparency"
-                    : "Body Fit Guidance"}
-                </span>
+            {/* Growth Allowance Transparency Callout */}
+            <div className="mt-4 p-3.5 rounded-xl bg-[#EFE6D5] border border-[#D8C7AE] space-y-1.5 text-xs text-[#3B281E]">
+              <div className="flex items-center gap-2 font-bold text-[#8B1E3F]">
+                <Scissors className="w-4 h-4 text-[#C69214]" />
+                <span>1-Inch Inner Growth Seam Allowance Included</span>
               </div>
-              <p className="text-[11px] leading-relaxed text-amber-900">
-                {activeMeasurementType === "garment"
-                  ? "All numbers in this chart reflect the exact stitched measurements of the garment laid flat. Our dresses feature +2 inches of inner seam growth margin for effortless alterations."
-                  : "These measurements represent actual body measurements. Each dress is tailored with 2 inches of comfortable movement ease."}
+              <p className="text-[11px] text-[#6B574B] leading-relaxed">
+                All measurements reflect exact Garment Dimensions laid flat. Every Varnam couture dress includes +1 inch of concealed inner seam margins on both sides, ensuring your growing daughter enjoys multiple celebration seasons.
               </p>
             </div>
 
             {/* In / Cm Unit Switcher */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-text-muted">
-                Display Units:
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-xs font-bold text-[#6B574B] uppercase tracking-wider">
+                Display Measurement Units:
               </span>
-              <div className="flex bg-canvas p-1 rounded-lg border border-border">
+              <div className="flex bg-[#EFE6D5] p-1 rounded-lg border border-[#D8C7AE]">
                 <button
                   type="button"
                   onClick={() => setUnit("in")}
                   className={`px-3 py-1 rounded text-xs font-bold transition-all ${
                     unit === "in"
                       ? "bg-brand-primary text-white shadow-sm"
-                      : "text-text-muted hover:text-text-heading"
+                      : "text-[#6B574B] hover:text-[#261C17]"
                   }`}
                 >
-                  Inches (in)
+                  Inches
                 </button>
                 <button
                   type="button"
@@ -186,46 +168,42 @@ export function SizeGuideModal({
                   className={`px-3 py-1 rounded text-xs font-bold transition-all ${
                     unit === "cm"
                       ? "bg-brand-primary text-white shadow-sm"
-                      : "text-text-muted hover:text-text-heading"
+                      : "text-[#6B574B] hover:text-[#261C17]"
                   }`}
                 >
-                  Centimeters (cm)
+                  Centimeters
                 </button>
               </div>
             </div>
 
-            {/* Size Table */}
-            <div className="border border-border rounded-xl overflow-hidden shadow-warm-sm">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-canvas border-b border-border text-text-heading uppercase font-bold">
-                  <tr>
-                    <th className="py-2.5 px-3">
-                      {segment === "girls" ? "Age Milestone" : "Size"}
-                    </th>
-                    <th className="py-2.5 px-3">
-                      {segment === "girls" ? "Chest" : "Bust"}
-                    </th>
-                    <th className="py-2.5 px-3">Waist</th>
-                    <th className="py-2.5 px-3">Hip</th>
-                    <th className="py-2.5 px-3 text-right">Length</th>
+            {/* Measurements Table */}
+            <div className="mt-4 overflow-x-auto rounded-xl border border-[#D8C7AE] bg-[#FAF5EB]">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-[#EFE6D5] border-b border-[#D8C7AE] text-[#3B281E] font-bold">
+                    <th className="p-3">Size / Age</th>
+                    <th className="p-3">Bust / Chest</th>
+                    <th className="p-3">Waist</th>
+                    <th className="p-3">Hip</th>
+                    <th className="p-3">Length</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border-subtle bg-surface">
+                <tbody className="divide-y divide-[#D8C7AE]/60 text-[#261C17]">
                   {rows.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-canvas/50">
-                      <td className="py-2.5 px-3 font-bold text-text-heading">
-                        {row.size || row.age}
+                    <tr key={idx} className="hover:bg-[#EFE6D5]/50 transition-colors">
+                      <td className="p-3 font-bold text-[#8B1E3F]">
+                        {row.size || row.age || "Standard"}
                       </td>
-                      <td className="py-2.5 px-3 text-text-body font-mono">
+                      <td className="p-3 price-tabular">
                         {formatMeasure(row.bust_in, row.bust_cm, row.chest)}
                       </td>
-                      <td className="py-2.5 px-3 text-text-body font-mono">
+                      <td className="p-3 price-tabular">
                         {formatMeasure(row.waist_in, row.waist_cm, row.waist)}
                       </td>
-                      <td className="py-2.5 px-3 text-text-body font-mono">
+                      <td className="p-3 price-tabular">
                         {formatMeasure(row.hip_in, row.hip_cm)}
                       </td>
-                      <td className="py-2.5 px-3 text-right text-text-body font-mono">
+                      <td className="p-3 price-tabular">
                         {formatMeasure(row.length_in, row.length_cm, row.length)}
                       </td>
                     </tr>
@@ -234,17 +212,19 @@ export function SizeGuideModal({
               </table>
             </div>
 
-            {/* Footer tips */}
-            <div className="pt-2 text-[11px] text-text-muted space-y-1">
-              <p className="flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-brand-secondary" />
-                <strong>Need custom tailoring?</strong> Contact our Atelier for personalized waist/length adjustments.
-              </p>
+            <div className="mt-4 pt-3 border-t border-[#D8C7AE] flex items-center justify-between text-[11px] text-[#6B574B]">
+              <span>Handcrafted in India • Non-Scratch 100% Breathable Malmal Linings</span>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="font-bold text-[#8B1E3F] hover:underline"
+              >
+                Close Window ✕
+              </button>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
-    </AnimatePresence>
-  </>
-);
+    </>
+  );
 }

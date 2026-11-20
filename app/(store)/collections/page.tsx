@@ -1,6 +1,5 @@
-import { getCategories, getProducts, getBanners } from "@/lib/db/actions";
+import { getCategories, getProducts, getHeroBanners, getStoreSettings } from "@/lib/db/actions";
 import { CatalogBrowser } from "@/components/catalog-browser";
-import { SmoothScroll } from "@/components/smooth-scroll";
 import { BannerCarousel } from "@/components/banner-carousel";
 
 export const dynamic = "force-dynamic";
@@ -8,13 +7,19 @@ export const dynamic = "force-dynamic";
 export default async function CollectionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ segment?: "girls" | "teens" | "women"; age?: string; size?: string }>;
+  searchParams: Promise<{ segment?: "girls" | "teens" | "women"; age?: string; size?: string; ageSize?: string }>;
 }) {
-  const { segment, age, size } = await searchParams;
-  const [categories, products, banners] = await Promise.all([
+  const { segment, age, size, ageSize } = await searchParams;
+  const targetAgeSize = ageSize || age || size;
+
+  const [categories, products, heroBanners, storeSettings] = await Promise.all([
     getCategories(),
-    getProducts(),
-    getBanners(),
+    getProducts({
+      segment,
+      sizeName: targetAgeSize,
+    }),
+    getHeroBanners(),
+    getStoreSettings(),
   ]);
 
   const segmentTitle =
@@ -33,23 +38,25 @@ export default async function CollectionsPage({
       ? "Contemporary festive co-ord sets, tiered gowns, and fusion partywear tailored for teenagers."
       : segment === "girls"
       ? "Handcrafted zari lehengas, pure cotton twirl frocks, and child-safe festive wear with guaranteed cotton linings."
-      : "Explore handcrafted lehengas, royal anarkalis, tiered party frocks, and breathable cotton dresses.";
+      : "Explore handcrafted lehengas, royal anarkalis, tiered party frocks, and breathable cotton dresses with 1-inch inner growth seam allowance.";
 
   return (
-    <SmoothScroll>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      <div className="mb-6">
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-text-heading">
+    <div className="space-y-6">
+      <div className="rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] p-6 shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)]">
+        <h1 className="font-serif text-2xl sm:text-4xl font-bold text-[#261C17]">
           {segmentTitle}
         </h1>
-        <p className="text-xs sm:text-sm text-text-muted mt-1">
+        <p className="text-xs sm:text-sm text-[#6B574B] mt-2 max-w-3xl leading-relaxed">
           {segmentSubtitle}
         </p>
       </div>
 
-      {banners.length > 0 && (
-        <div className="mb-8">
-          <BannerCarousel banners={banners} />
+      {heroBanners.length > 0 && (
+        <div className="w-full">
+          <BannerCarousel
+            banners={heroBanners}
+            durationSec={storeSettings?.hero_banner_duration_sec || 3}
+          />
         </div>
       )}
 
@@ -57,10 +64,9 @@ export default async function CollectionsPage({
         initialProducts={products}
         categories={categories}
         initialSegment={segment}
-        initialSize={size}
-        initialAge={age}
+        initialSize={targetAgeSize}
+        initialAge={targetAgeSize}
       />
     </div>
-    </SmoothScroll>
   );
 }
