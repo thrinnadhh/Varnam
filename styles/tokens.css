@@ -1,0 +1,72 @@
+/**
+ * Varnam Design Tokens — Warm Bloom Palette & Sizing System
+ * Generated from Stitch MCP & Tailored for Girls' Apparel E-Commerce (Ages 2-14)
+ */
+
+:root {
+  /* Brand Core Palette */
+  --varnam-primary: #881337;         /* Deep Berry Rose — Joyful, premium luxury */
+  --varnam-primary-hover: #700d2b;
+  --varnam-primary-subtle: #fff1f2;  /* Soft blush background */
+  --varnam-primary-border: #fecdd3;
+
+  --varnam-secondary: #d97706;       /* Festive Marigold Amber — Occasion accent */
+  --varnam-secondary-hover: #b45309;
+  --varnam-secondary-subtle: #fffbeb;
+  --varnam-secondary-border: #fde68a;
+
+  --varnam-accent: #f43f5e;          /* Vibrant Rose Coral */
+  --varnam-accent-hover: #e11d48;
+
+  /* Neutrals & Surfaces */
+  --varnam-canvas: #faf6f0;          /* Warm Cream Canvas */
+  --varnam-surface: #ffffff;         /* Pure Card White */
+  --varnam-surface-raised: #f5efe6;  /* Elevated surface */
+  --varnam-border: #e7dfd5;          /* Warm hairline border */
+  --varnam-border-subtle: #f0eae1;
+
+  /* High-Contrast Typography */
+  --varnam-text-heading: #1c1917;    /* Stone 900 — Maximum readability for parents */
+  --varnam-text-body: #44403c;       /* Stone 700 */
+  --varnam-text-muted: #78716c;      /* Stone 500 */
+  --varnam-text-inverse: #ffffff;
+
+  /* Status Colors */
+  --varnam-success: #059669;         /* Emerald 600 */
+  --varnam-success-bg: #ecfdf5;
+  --varnam-warning: #d97706;         /* Amber 600 */
+  --varnam-warning-bg: #fffbeb;
+  --varnam-error: #dc2626;           /* Red 600 */
+  --varnam-error-bg: #fef2f2;
+
+  /* Corner Radius */
+  --radius-sm: 0.375rem;             /* 6px */
+  --radius-md: 0.625rem;             /* 10px */
+  --radius-lg: 1rem;                 /* 16px */
+  --radius-xl: 1.5rem;               /* 24px */
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-warm-sm: 0 1px 2px 0 rgba(28, 25, 23, 0.05);
+  --shadow-warm-md: 0 4px 6px -1px rgba(28, 25, 23, 0.07), 0 2px 4px -2px rgba(28, 25, 23, 0.05);
+  --shadow-warm-lg: 0 10px 15px -3px rgba(28, 25, 23, 0.08), 0 4px 6px -4px rgba(28, 25, 23, 0.04);
+
+  /* Motion & Animation Tokens */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --varnam-transition-speed: var(--duration-normal);
+}
+
+/* Reduced motion preference token: instant transitions */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+    --varnam-transition-speed: 0ms;
+  }
+}
