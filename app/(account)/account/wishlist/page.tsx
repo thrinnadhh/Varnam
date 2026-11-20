@@ -78,6 +78,31 @@ export default function CustomerWishlistPage() {
 
     setMovingId(item.id);
     try {
+      try {
+        const guestCart = JSON.parse(localStorage.getItem("varnam_guest_cart") || "[]");
+        const existingIdx = guestCart.findIndex((i: { variant_id?: string }) => i.variant_id === variant.id);
+        if (existingIdx >= 0) {
+          guestCart[existingIdx].quantity += 1;
+        } else {
+          guestCart.push({
+            variant_id: variant.id,
+            product_id: item.products.id,
+            product_name: item.products.name,
+            product_slug: item.products.slug,
+            size_name: variant.size_name || variant.size_age || "Standard",
+            size_age: variant.size_age || variant.size_name,
+            color_name: variant.color_name,
+            price: variant.price,
+            mrp: variant.mrp,
+            image_url: item.products.product_images?.[0]?.image_url || "",
+            quantity: 1,
+          });
+        }
+        localStorage.setItem("varnam_guest_cart", JSON.stringify(guestCart));
+      } catch (e) {
+        console.error(e);
+      }
+
       await addToCart(variant.id, 1);
       // Remove from wishlist
       await toggleWishlist(item.product_id);

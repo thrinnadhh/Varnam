@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   Plus,
   AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
@@ -384,13 +385,23 @@ function AccountContent() {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleSignOut}
-          className="px-4 py-2 text-xs font-semibold text-text-muted hover:text-red-700 border border-border hover:border-red-200 rounded-lg transition-colors flex items-center gap-1.5"
-        >
-          <LogOut className="w-3.5 h-3.5" /> Sign Out
-        </button>
+        <div className="flex items-center gap-2.5">
+          {(user.email?.toLowerCase() === "mahalakshmipulluru@gmail.com" || user.user_metadata?.role === "admin") && (
+            <Link
+              href="/admin"
+              className="px-4 py-2 text-xs font-bold text-white bg-rose-900 hover:bg-rose-800 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Admin Portal
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="px-4 py-2 text-xs font-semibold text-text-muted hover:text-red-700 border border-border hover:border-red-200 rounded-lg transition-colors flex items-center gap-1.5"
+          >
+            <LogOut className="w-3.5 h-3.5" /> Sign Out
+          </button>
+        </div>
       </div>
 
       {/* Tabs Layout */}
@@ -587,9 +598,10 @@ function AccountContent() {
                         onChange={(e) =>
                           setNewAddr({
                             ...newAddr,
-                            phone: e.target.value.replace(/\D/g, ""),
+                            phone: e.target.value.replace(/\D/g, "").slice(0, 10),
                           })
                         }
+                        placeholder="9876543210"
                         className="w-full px-3 py-2 rounded-lg border border-border bg-canvas font-mono"
                       />
                     </div>

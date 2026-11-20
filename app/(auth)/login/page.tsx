@@ -24,7 +24,7 @@ function LoginForm() {
     startTransition(async () => {
       try {
         const supabase = createBrowserSupabaseClient();
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
@@ -32,6 +32,19 @@ function LoginForm() {
         if (signInError) {
           setError(signInError.message);
           return;
+        }
+
+        // Check if user is an admin
+        let isAdmin = false;
+        if (authData?.user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", authData.user.id)
+            .single();
+          if (profile?.role === "admin" || authData.user.email?.toLowerCase() === "mahalakshmipulluru@gmail.com") {
+            isAdmin = true;
+          }
         }
 
         // Sync local guest cart into authenticated DB cart
@@ -51,7 +64,12 @@ function LoginForm() {
           console.error("Guest cart merge error:", mergeErr);
         }
 
-        router.push(redirectTo);
+        const rawRedirect = searchParams.get("redirectTo");
+        if (isAdmin && (!rawRedirect || rawRedirect === "/account")) {
+          router.push("/admin");
+        } else {
+          router.push(redirectTo);
+        }
         router.refresh();
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Failed to sign in");

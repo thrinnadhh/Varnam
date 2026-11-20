@@ -12,6 +12,8 @@ import {
   ShieldCheck,
   Check,
   Ruler,
+  Plus,
+  Minus,
 } from "lucide-react";
 
 export interface QuickViewProduct {
@@ -49,6 +51,7 @@ export function QuickViewModal({
   onOpenSizeGuide,
 }: QuickViewModalProps) {
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [added, setAdded] = useState(false);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
@@ -74,11 +77,37 @@ export function QuickViewModal({
   const discount = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
   const handleAddToCart = async () => {
-    if (!activeVariant) return;
+    if (!activeVariant || activeVariant.stock <= 0) return;
     setIsAdding(true);
     try {
-      await addToCart(activeVariant.id, 1);
-      window.dispatchEvent(new Event("varnam_cart_updated"));
+      // Sync with client guest cart for instant responsiveness
+      try {
+        const guestCart = JSON.parse(localStorage.getItem("varnam_guest_cart") || "[]");
+        const existingIdx = guestCart.findIndex((i: { variant_id?: string }) => i.variant_id === activeVariant.id);
+        if (existingIdx >= 0) {
+          guestCart[existingIdx].quantity += quantity;
+        } else {
+          guestCart.push({
+            variant_id: activeVariant.id,
+            product_id: product.id,
+            product_name: product.name,
+            product_slug: product.slug,
+            size_name: activeVariant.size_name || activeVariant.size_age || "Standard",
+            size_age: activeVariant.size_age || activeVariant.size_name,
+            color_name: activeVariant.color_name,
+            price: activeVariant.price,
+            mrp: activeVariant.mrp,
+            image_url: images[0]?.image_url,
+            quantity: quantity,
+          });
+        }
+        localStorage.setItem("varnam_guest_cart", JSON.stringify(guestCart));
+        window.dispatchEvent(new Event("varnam_cart_updated"));
+      } catch (err) {
+        console.error("Guest cart error in modal:", err);
+      }
+
+      await addToCart(activeVariant.id, quantity);
       setAdded(true);
       setTimeout(() => {
         setAdded(false);
@@ -210,7 +239,10 @@ export function QuickViewModal({
                       <button
                         key={v.id}
                         type="button"
-                        onClick={() => setSelectedVariantId(v.id)}
+                        onClick={() => {
+                          setSelectedVariantId(v.id);
+                          setQuantity(1);
+                        }}
                         className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all font-mono ${
                           isSelected
                             ? "bg-brand-primary text-white border-brand-primary shadow-sm"
@@ -225,23 +257,59 @@ export function QuickViewModal({
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="pt-4 space-y-2.5 border-t border-border">
+            {/* Quantity Selector & Actions */}
+            <div className="pt-4 space-y-3 border-t border-border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-text-heading">Quantity:</span>
+                  {activeVariant?.stock && activeVariant.stock <= 5 && (
+                    <span className="ml-2 text-[10px] text-amber-700 font-semibold">
+                      (Only {activeVariant.stock} left)
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center border border-border rounded-xl bg-canvas overflow-hidden shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    disabled={quantity <= 1}
+                    className="px-3 py-1 text-text-heading hover:bg-surface disabled:opacity-30 transition-colors"
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="px-3.5 py-1 text-xs font-bold font-mono text-text-heading min-w-[28px] text-center">
+                    {quantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => Math.min(activeVariant?.stock || 10, q + 1))}
+                    disabled={quantity >= (activeVariant?.stock || 10)}
+                    className="px-3 py-1 text-text-heading hover:bg-surface disabled:opacity-30 transition-colors"
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
               <button
                 type="button"
                 onClick={handleAddToCart}
-                disabled={isAdding || added}
+                disabled={isAdding || added || (activeVariant?.stock || 0) <= 0}
                 className="w-full py-3.5 bg-brand-primary text-white font-semibold rounded-xl hover:bg-brand-primary-hover shadow-warm-md hover:shadow-warm-lg transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50"
               >
                 {added ? (
                   <>
                     <Check className="w-4 h-4 text-emerald-400" />
-                    Added to Bag!
+                    Added {quantity > 1 ? `${quantity} items ` : ""}to Bag!
                   </>
+                ) : (activeVariant?.stock || 0) <= 0 ? (
+                  "Sold Out in This Size"
                 ) : (
                   <>
                     <ShoppingBag className="w-4 h-4" />
-                    {isAdding ? "Adding..." : `Add to Bag • ${formatPrice(price)}`}
+                    {isAdding ? "Adding..." : `Add ${quantity > 1 ? `${quantity} ` : ""}to Bag • ${formatPrice(price * quantity)}`}
                   </>
                 )}
               </button>

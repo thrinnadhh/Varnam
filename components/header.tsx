@@ -135,6 +135,15 @@ export function Header() {
             </Link>
 
             <Link
+              href="/admin"
+              className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-amber-900 bg-amber-100/80 hover:bg-amber-200/80 border border-amber-300/70 shadow-xs transition-colors"
+              title="Merchant Operations Admin Portal"
+            >
+              <Sparkles className="w-3 h-3 text-amber-700" />
+              <span>Admin</span>
+            </Link>
+
+            <Link
               href="/account"
               className="p-2 text-text-heading hover:text-brand-primary hover:bg-canvas rounded-full transition-colors"
               aria-label="My Account"

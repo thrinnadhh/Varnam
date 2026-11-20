@@ -85,8 +85,11 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const firstAvailableVariant = product.product_variants.find((v) => v.stock > 0);
-    if (!firstAvailableVariant) return;
+    const firstAvailableVariant = product.product_variants?.find((v) => v.stock > 0);
+    if (!firstAvailableVariant) {
+      setIsQuickViewOpen(true);
+      return;
+    }
 
     startTransition(async () => {
       // Also update client guest cart in localStorage for guest visitors

@@ -16,6 +16,8 @@ import {
   Truck,
   Sparkles,
   Clock,
+  Plus,
+  Minus,
 } from "lucide-react";
 
 interface PDPClientProps {
@@ -69,6 +71,7 @@ export function PDPClient({ product }: PDPClientProps) {
     product.product_variants[0]?.id || ""
   );
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
+  const [quantity, setQuantity] = useState(1);
   const [isPending, startTransition] = useTransition();
   const [addedSuccess, setAddedSuccess] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
@@ -106,7 +109,7 @@ export function PDPClient({ product }: PDPClientProps) {
         const guestCart = JSON.parse(localStorage.getItem("varnam_guest_cart") || "[]");
         const existingIdx = guestCart.findIndex((i: { variant_id?: string }) => i.variant_id === selectedVariant.id);
         if (existingIdx >= 0) {
-          guestCart[existingIdx].quantity += 1;
+          guestCart[existingIdx].quantity += quantity;
         } else {
           guestCart.push({
             variant_id: selectedVariant.id,
@@ -120,7 +123,7 @@ export function PDPClient({ product }: PDPClientProps) {
             price: selectedVariant.price,
             mrp: selectedVariant.mrp,
             image_url: currentImage.image_url,
-            quantity: 1,
+            quantity: quantity,
           });
         }
         localStorage.setItem("varnam_guest_cart", JSON.stringify(guestCart));
@@ -129,7 +132,7 @@ export function PDPClient({ product }: PDPClientProps) {
         console.error("Local cart error:", err);
       }
 
-      await addToCart(selectedVariant.id, 1);
+      await addToCart(selectedVariant.id, quantity);
       setAddedSuccess(true);
       setTimeout(() => setAddedSuccess(false), 2500);
     });
@@ -301,7 +304,10 @@ export function PDPClient({ product }: PDPClientProps) {
                   type="button"
                   whileTap={!isOutOfStock ? { scale: 0.95 } : undefined}
                   disabled={isOutOfStock}
-                  onClick={() => setSelectedVariantId(v.id)}
+                  onClick={() => {
+                    setSelectedVariantId(v.id);
+                    setQuantity(1);
+                  }}
                   className={`py-2.5 px-2 rounded-xl text-xs font-bold border transition-all text-center flex flex-col items-center justify-center ${
                     isSelected
                       ? "bg-brand-primary text-white border-brand-primary shadow-sm"
@@ -361,6 +367,43 @@ export function PDPClient({ product }: PDPClientProps) {
           </p>
         </div>
 
+        {/* Quantity Selector */}
+        <div className="flex items-center justify-between p-3.5 bg-surface rounded-xl border border-border">
+          <div>
+            <label className="text-xs font-bold text-text-heading uppercase tracking-wider block">
+              Quantity
+            </label>
+            {selectedVariant && selectedVariant.stock <= 5 && (
+              <span className="text-[10px] text-amber-700 font-semibold">
+                Max {selectedVariant.stock} in stock
+              </span>
+            )}
+          </div>
+          <div className="flex items-center border border-border rounded-xl bg-canvas overflow-hidden shadow-sm">
+            <button
+              type="button"
+              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              disabled={quantity <= 1}
+              className="px-3.5 py-2 text-text-heading hover:bg-surface disabled:opacity-30 transition-colors"
+              aria-label="Decrease quantity"
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </button>
+            <span className="px-4 py-1 text-sm font-bold font-mono text-text-heading min-w-[36px] text-center">
+              {quantity}
+            </span>
+            <button
+              type="button"
+              onClick={() => setQuantity((q) => Math.min(selectedVariant?.stock || 10, q + 1))}
+              disabled={quantity >= (selectedVariant?.stock || 10)}
+              className="px-3.5 py-2 text-text-heading hover:bg-surface disabled:opacity-30 transition-colors"
+              aria-label="Increase quantity"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
         {/* Add to Bag CTA */}
         <div className="space-y-3 pt-2">
           <motion.button
@@ -378,13 +421,13 @@ export function PDPClient({ product }: PDPClientProps) {
           >
             {addedSuccess ? (
               <>
-                <Check className="w-5 h-5" /> Added to Shopping Bag!
+                <Check className="w-5 h-5" /> Added {quantity > 1 ? `${quantity} items` : ""} to Shopping Bag!
               </>
             ) : selectedVariant?.stock <= 0 ? (
               "Sold Out in This Size"
             ) : (
               <>
-                <ShoppingBag className="w-5 h-5" /> Add to Bag • {formatPrice(selectedVariant?.price || 0)}
+                <ShoppingBag className="w-5 h-5" /> Add {quantity > 1 ? `${quantity} ` : ""}to Bag • {formatPrice((selectedVariant?.price || 0) * quantity)}
               </>
             )}
           </motion.button>

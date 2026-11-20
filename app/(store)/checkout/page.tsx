@@ -507,7 +507,7 @@ export default function CheckoutPage() {
                       onChange={(e) =>
                         setAddressForm({
                           ...addressForm,
-                          phone: e.target.value.replace(/\D/g, ""),
+                          phone: e.target.value.replace(/\D/g, "").slice(0, 10),
                         })
                       }
                       placeholder="9876543210"

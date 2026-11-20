@@ -310,9 +310,10 @@ export default function CustomerAddressesPage() {
                   <input
                     type="tel"
                     required
+                    maxLength={10}
                     pattern="[6-9][0-9]{9}"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                     placeholder="9876543210"
                     className="w-full px-3 py-2.5 border border-stone-300 rounded-lg text-xs font-mono"
                   />

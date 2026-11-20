@@ -450,3 +450,49 @@ select
 from public.product_variants
 where sku = 'AADHYA-GIRLS-45Y'
 limit 1;
+
+-- ==========================================
+-- 8. Seed Store Admin User
+-- ==========================================
+insert into auth.users (
+  id,
+  instance_id,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at,
+  role,
+  aud
+)
+values (
+  '6778badb-d279-4527-bb38-010d482be265',
+  '00000000-0000-0000-0000-000000000000',
+  'mahalakshmipulluru@gmail.com',
+  extensions.crypt('9014068160', extensions.gen_salt('bf')),
+  now(),
+  '{"provider": "email", "providers": ["email"]}'::jsonb,
+  '{"role": "admin", "full_name": "Mahalakshmi Pulluru", "email_verified": true}'::jsonb,
+  now(),
+  now(),
+  'authenticated',
+  'authenticated'
+)
+on conflict (id) do update set
+  encrypted_password = excluded.encrypted_password,
+  email_confirmed_at = excluded.email_confirmed_at;
+
+insert into public.profiles (id, email, full_name, phone, role)
+values (
+  '6778badb-d279-4527-bb38-010d482be265',
+  'mahalakshmipulluru@gmail.com',
+  'Mahalakshmi Pulluru',
+  '9014068160',
+  'admin'
+)
+on conflict (id) do update set
+  role = 'admin',
+  full_name = 'Mahalakshmi Pulluru';
+
