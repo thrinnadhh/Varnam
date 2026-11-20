@@ -30,6 +30,11 @@
   --radius-xl: var(--radius-xl);
 }
 
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   background-color: var(--varnam-canvas);
   color: var(--varnam-text-body);

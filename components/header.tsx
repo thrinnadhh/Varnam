@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { ShoppingBag, Heart, User, Menu, X, ChevronDown, Sparkles } from "lucide-react";
+import { ShoppingBag, Heart, User, Menu, X, ChevronDown, Sparkles, ShieldCheck } from "lucide-react";
 import type { NavigationNode } from "@/lib/db/actions";
 
 interface HeaderProps {
@@ -59,6 +59,7 @@ export function AnnouncementRibbon({ message }: { message?: string }) {
 
 export function Header({ initialNavTree, announcementText }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [navTree, setNavTree] = useState<NavigationNode[]>(initialNavTree || []);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -91,12 +92,16 @@ export function Header({ initialNavTree, announcementText }: HeaderProps) {
     }
   }, [navTree.length]);
 
+  // Primary subheadings in top bar (4 on lg, 5 on xl) to prevent any screen overflow
+  const primaryNodes = navTree.slice(0, 4);
+  const moreNodes = navTree.slice(4);
+
   return (
-    <header className="sticky top-0 z-50 bg-[#3B281E] text-[#FAF5EB] shadow-md transition-colors">
+    <header className="sticky top-0 z-50 bg-[#3B281E] text-[#FAF5EB] shadow-md transition-colors w-full max-w-full overflow-x-clip">
       <AnnouncementRibbon message={announcementText} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-2">
           {/* Mobile menu trigger button */}
           <div className="flex items-center lg:hidden">
             <button
@@ -110,7 +115,7 @@ export function Header({ initialNavTree, announcementText }: HeaderProps) {
           </div>
 
           {/* Logo / Brand Wordmark: Crisp Editorial Serif (NO cursive/script calligraphy) */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <Link href="/" className="group flex items-baseline gap-2">
               <span className="font-serif text-2xl sm:text-3xl font-bold tracking-wider text-[#FAF5EB] group-hover:text-[#C69214] transition-colors">
                 VARNAM
@@ -121,35 +126,35 @@ export function Header({ initialNavTree, announcementText }: HeaderProps) {
             </Link>
           </div>
 
-          {/* Desktop Center Navigation: Admin-Controlled Dynamic Subheadings & Dropdowns */}
-          <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2 text-sm font-medium">
+          {/* Desktop Center Navigation: Perfectly sized to never overflow the screen */}
+          <nav className="hidden lg:flex items-center space-x-1 text-sm font-medium shrink min-w-0">
             <Link
               href="/collections"
-              className="px-3 py-2 rounded-md text-xs uppercase tracking-wider font-semibold text-[#FAF5EB]/90 hover:text-[#C69214] hover:bg-[#4D3528]/50 transition-colors"
+              className="px-2.5 py-1.5 rounded-md text-xs uppercase tracking-wider font-semibold text-[#FAF5EB]/90 hover:text-[#C69214] hover:bg-[#4D3528]/50 transition-colors shrink-0"
             >
               All Dresses
             </Link>
 
-            {/* Dynamic Admin Subheadings */}
-            {navTree.map((node) => {
+            {/* Primary Dynamic Subheadings */}
+            {primaryNodes.map((node) => {
               const hasChildren = node.children && node.children.length > 0;
               const isOpen = activeDropdown === node.id;
 
               return (
                 <div
                   key={node.id}
-                  className="relative group"
+                  className="relative group shrink-0"
                   onMouseEnter={() => hasChildren && setActiveDropdown(node.id)}
                   onMouseLeave={() => setActiveDropdown(null)}
                 >
                   <div className="flex items-center">
                     <Link
                       href={`/collections/${node.slug}`}
-                      className="px-3 py-2 rounded-md text-xs uppercase tracking-wider font-semibold text-[#FAF5EB]/90 hover:text-[#C69214] hover:bg-[#4D3528]/50 transition-colors flex items-center gap-1"
+                      className="px-2.5 py-1.5 rounded-md text-xs uppercase tracking-wider font-semibold text-[#FAF5EB]/90 hover:text-[#C69214] hover:bg-[#4D3528]/50 transition-colors flex items-center gap-1"
                     >
-                      {node.name}
+                      <span>{node.name}</span>
                       {hasChildren && (
-                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#C69214]" : ""}`} />
+                        <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#C69214]" : ""}`} />
                       )}
                     </Link>
                   </div>
@@ -199,8 +204,58 @@ export function Header({ initialNavTree, announcementText }: HeaderProps) {
               );
             })}
 
+            {/* "More Collections" Dropdown for Remaining Categories (Eliminates Screen Overflow) */}
+            {moreNodes.length > 0 && (
+              <div
+                className="relative group shrink-0"
+                onMouseEnter={() => setActiveDropdown("more-collections")}
+                onMouseLeave={() => setActiveDropdown(null)}
+              >
+                <button
+                  type="button"
+                  className="px-2.5 py-1.5 rounded-md text-xs uppercase tracking-wider font-semibold text-[#C69214] hover:bg-[#4D3528]/50 transition-colors flex items-center gap-1"
+                >
+                  <span>More Edits</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${activeDropdown === "more-collections" ? "rotate-180" : ""}`} />
+                </button>
+
+                {activeDropdown === "more-collections" && (
+                  <div className="absolute top-full left-0 w-80 pt-1 z-50">
+                    <div className="bg-[#FAF5EB] text-[#261C17] rounded-xl shadow-2xl border border-[#D8C7AE] p-3 overflow-hidden ring-1 ring-black/5 animate-in fade-in duration-150">
+                      <div className="px-2 pb-2 border-b border-[#D8C7AE]/60 mb-2">
+                        <p className="text-[10px] uppercase font-bold tracking-widest text-[#8B1E3F]">
+                          More Curated Occasions &amp; Collections
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1 max-h-72 overflow-y-auto">
+                        {moreNodes.map((cat) => (
+                          <Link
+                            key={cat.id}
+                            href={`/collections/${cat.slug}`}
+                            onClick={() => setActiveDropdown(null)}
+                            className="px-2 py-1.5 rounded-lg text-xs font-semibold text-[#261C17] hover:bg-[#EFE6D5] hover:text-[#8B1E3F] transition-colors line-clamp-1"
+                          >
+                            {cat.name}
+                          </Link>
+                        ))}
+                      </div>
+                      <div className="pt-2 mt-2 border-t border-[#D8C7AE]/60">
+                        <Link
+                          href="/collections"
+                          onClick={() => setActiveDropdown(null)}
+                          className="block text-center text-[11px] font-bold text-[#8B1E3F] hover:text-[#721531]"
+                        >
+                          Explore All 15 Collections &rarr;
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Quick Segment Filter Pill Bar */}
-            <div className="flex items-center space-x-1 ml-2 pl-2 border-l border-[#FAF5EB]/20">
+            <div className="flex items-center space-x-1 ml-1 pl-2 border-l border-[#FAF5EB]/20 shrink-0">
               <Link
                 href="/collections?segment=women"
                 className="px-2 py-1 rounded text-[11px] font-medium text-[#FAF5EB]/80 hover:text-[#FAF5EB] hover:bg-[#4D3528]/40 transition-colors"
@@ -222,8 +277,8 @@ export function Header({ initialNavTree, announcementText }: HeaderProps) {
             </div>
           </nav>
 
-          {/* Right Action Icons: Search, Wishlist, Account, Cart */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          {/* Right Action Area: Wishlist, Account & Login Dropdown, Cart */}
+          <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
             <Link
               href="/account/wishlist"
               className="p-2 rounded-full text-[#FAF5EB]/90 hover:text-[#C69214] hover:bg-[#4D3528] transition-colors"
@@ -232,17 +287,86 @@ export function Header({ initialNavTree, announcementText }: HeaderProps) {
               <Heart className="w-5 h-5" />
             </Link>
 
-            <Link
-              href="/account"
-              className="p-2 rounded-full text-[#FAF5EB]/90 hover:text-[#C69214] hover:bg-[#4D3528] transition-colors"
-              aria-label="My Account"
+            {/* Account & Login Dropdown (Customer Login + Admin Login) */}
+            <div
+              className="relative"
+              onMouseEnter={() => setAccountMenuOpen(true)}
+              onMouseLeave={() => setAccountMenuOpen(false)}
             >
-              <User className="w-5 h-5" />
-            </Link>
+              <button
+                type="button"
+                onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                className="flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-full text-[#FAF5EB]/90 hover:text-[#C69214] hover:bg-[#4D3528] transition-colors text-xs font-semibold"
+                aria-label="Account and Login menu"
+              >
+                <User className="w-5 h-5" />
+                <span className="hidden md:inline-block">Account</span>
+                <ChevronDown className="w-3 h-3 hidden md:inline-block text-[#C69214]" />
+              </button>
+
+              {accountMenuOpen && (
+                <div className="absolute right-0 top-full pt-1.5 z-50 w-64">
+                  <div className="bg-[#FAF5EB] text-[#261C17] rounded-xl shadow-2xl border border-[#D8C7AE] p-2.5 overflow-hidden ring-1 ring-black/5 animate-in fade-in duration-150">
+                    {/* Customer Login Section */}
+                    <div className="pb-2 mb-2 border-b border-[#D8C7AE]/60">
+                      <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-[#8B1E3F] px-2 py-0.5">
+                        <Sparkles className="w-3 h-3 text-[#C69214]" />
+                        <span>Customer Atelier</span>
+                      </div>
+                      <Link
+                        href="/login"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#261C17] hover:bg-[#EFE6D5] hover:text-[#8B1E3F] transition-colors mt-1"
+                      >
+                        <span>Customer Sign In</span>
+                        <span className="text-[10px] text-[#8B1E3F]">Login &rarr;</span>
+                      </Link>
+                      <Link
+                        href="/account"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#6B574B] hover:bg-[#EFE6D5] hover:text-[#261C17] transition-colors"
+                      >
+                        <span>My Wardrobe &amp; Orders</span>
+                      </Link>
+                      <Link
+                        href="/account/wishlist"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#6B574B] hover:bg-[#EFE6D5] hover:text-[#261C17] transition-colors"
+                      >
+                        <span>Saved Wishlist</span>
+                      </Link>
+                    </div>
+
+                    {/* Admin Login Section */}
+                    <div className="pt-0.5">
+                      <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-[#C69214] px-2 py-0.5">
+                        <ShieldCheck className="w-3 h-3 text-[#C69214]" />
+                        <span>Merchant Administration</span>
+                      </div>
+                      <Link
+                        href="/login?redirectTo=/admin&role=admin"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold text-[#3B281E] bg-[#EFE6D5] hover:bg-[#D8C7AE] transition-colors mt-1"
+                      >
+                        <span>Admin Portal Login</span>
+                        <span className="text-[10px] text-[#C69214] font-bold">&rarr;</span>
+                      </Link>
+                      <Link
+                        href="/admin"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="block px-2.5 py-1 text-[11px] text-[#6B574B] hover:text-[#8B1E3F]"
+                      >
+                        Dashboard • Banners • Categories
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <Link
               href="/cart"
-              className="relative p-2 rounded-full bg-[#8B1E3F] text-[#FAF5EB] hover:bg-[#721531] transition-colors shadow-sm flex items-center justify-center"
+              className="relative p-2 rounded-full bg-[#8B1E3F] text-[#FAF5EB] hover:bg-[#721531] transition-colors shadow-sm flex items-center justify-center shrink-0"
               aria-label={`Shopping bag with ${cartCount} items`}
             >
               <ShoppingBag className="w-5 h-5" />
@@ -262,9 +386,9 @@ export function Header({ initialNavTree, announcementText }: HeaderProps) {
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-[#FAF5EB] text-[#261C17] border-b border-[#D8C7AE] shadow-xl animate-in slide-in-from-top-2 duration-200">
-          <div className="px-4 py-4 space-y-3">
+          <div className="px-4 py-4 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#D8C7AE]">
-              <span className="font-serif text-lg font-bold text-[#8B1E3F]">Storefront Navigation</span>
+              <span className="font-serif text-lg font-bold text-[#8B1E3F]">Varnam Menu</span>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
@@ -272,6 +396,46 @@ export function Header({ initialNavTree, announcementText }: HeaderProps) {
               >
                 <X className="w-5 h-5" />
               </button>
+            </div>
+
+            {/* High-Visibility Account & Login Card for Mobile */}
+            <div className="p-3 bg-[#EFE6D5] rounded-xl border border-[#D8C7AE] space-y-2">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-[#6B574B] block">
+                Sign In &amp; Account Portals
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-3 py-2 text-center rounded-lg bg-[#FAF5EB] border border-[#D8C7AE] text-xs font-bold text-[#8B1E3F] hover:bg-[#8B1E3F] hover:text-[#FAF5EB] transition-colors shadow-xs"
+                >
+                  Customer Login
+                </Link>
+                <Link
+                  href="/login?redirectTo=/admin&role=admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-3 py-2 text-center rounded-lg bg-[#3B281E] text-xs font-bold text-[#FAF5EB] hover:bg-[#2A1C15] transition-colors shadow-xs flex items-center justify-center gap-1"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#C69214]" />
+                  <span>Admin Login</span>
+                </Link>
+              </div>
+              <div className="flex items-center justify-between pt-1 text-[11px] text-[#6B574B]">
+                <Link
+                  href="/account"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:text-[#8B1E3F] underline"
+                >
+                  My Wardrobe &amp; Orders
+                </Link>
+                <Link
+                  href="/account/wishlist"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:text-[#8B1E3F] underline"
+                >
+                  Wishlist
+                </Link>
+              </div>
             </div>
 
             <div className="space-y-1">

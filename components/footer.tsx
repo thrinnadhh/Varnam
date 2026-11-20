@@ -154,15 +154,21 @@ export function Footer() {
             </h5>
             <ul className="space-y-2 text-xs text-[#FAF5EB]/80">
               <li>
+                <Link href="/login" className="hover:text-[#FAF5EB] transition-colors font-medium">
+                  Customer Sign In
+                </Link>
+              </li>
+              <li>
+                <Link href="/login?redirectTo=/admin&role=admin" className="text-[#C69214] hover:underline font-semibold flex items-center gap-1">
+                  <span>Merchant Admin Portal</span>
+                  <span>&rarr;</span>
+                </Link>
+              </li>
+              <li>
                 <span className="text-[#FAF5EB]/60">Cashfree 256-Bit SSL Encrypted</span>
               </li>
               <li>
                 <span className="text-[#FAF5EB]/60">Cash on Delivery (COD) Available</span>
-              </li>
-              <li>
-                <Link href="/admin" className="text-[#C69214] hover:underline font-medium">
-                  Merchant Admin Operations
-                </Link>
               </li>
             </ul>
           </div>
