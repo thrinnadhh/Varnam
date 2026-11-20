@@ -50,9 +50,9 @@ export default async function HomePage() {
   const allCategories = (categories as unknown as CategoryItem[]) || [];
   const activeParents = allCategories.filter((c) => !c.parent_id && c.is_active !== false);
 
-  // Match target slugs in requested order, or fallback to active parents
+  // Match target slugs in requested order, searching all active categories
   const matchedCurated = targetCuratedSlugs
-    .map((slug) => activeParents.find((c) => c.slug === slug))
+    .map((slug) => allCategories.find((c) => c.slug === slug && c.is_active !== false))
     .filter((c): c is CategoryItem => !!c);
 
   const otherParents = activeParents.filter(

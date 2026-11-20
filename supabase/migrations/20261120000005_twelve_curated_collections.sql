@@ -141,6 +141,7 @@ insert into public.categories (
   'all'
 )
 on conflict (id) do update set
+  parent_id = null,
   name = excluded.name,
   slug = excluded.slug,
   description = excluded.description,

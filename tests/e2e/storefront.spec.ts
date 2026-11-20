@@ -112,4 +112,65 @@ test.describe("Varnam Multi-Segment Apparel Storefront E2E", () => {
     await expect(page.locator('input[name="password"]')).toBeVisible();
     await expect(page.getByRole("button", { name: /Create Account/i })).toBeVisible();
   });
+
+  test("6. Curated Occasions (12 items) and SliderRow interactive arrow buttons work seamlessly", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // 1. Verify Curated Occasions & Celebrations section exists
+    const curatedSection = page.locator("section", { hasText: "Curated Occasions & Celebrations" });
+    await expect(curatedSection).toBeVisible();
+
+    // 2. Verify all 12 occasions are present in the DOM
+    const expectedOccasions = [
+      "Xmas Collection",
+      "Daily Wear",
+      "Cottonwears",
+      "Tops",
+      "Trending Collections",
+      "New Arrivals",
+      "Pattu & Lehengas",
+      "Anarkali & Shararas",
+      "Festive & Wedding",
+      "Haldi & Mehendi",
+      "Party & Evening Gowns",
+      "Temple & Pooja Wear",
+    ];
+
+    for (const name of expectedOccasions) {
+      await expect(curatedSection.getByText(name, { exact: false }).first()).toBeAttached();
+    }
+
+    // 3. Test SliderRow navigation arrows in Curated Occasions section
+    const nextBtn = curatedSection.getByRole("button", { name: "Next items" });
+    await expect(nextBtn).toBeVisible();
+    await nextBtn.click();
+
+    // After scrolling right, Previous button should become visible
+    const prevBtn = curatedSection.getByRole("button", { name: "Previous items" });
+    await expect(prevBtn).toBeVisible();
+
+    // Click Previous to slide back
+    await prevBtn.click();
+
+    // 4. Test SliderRow navigation in Shared Occasion Collections
+    const sharedSection = page.locator("section", { hasText: "Shared Occasion Collections" });
+    await expect(sharedSection).toBeVisible();
+    const sharedNextBtn = sharedSection.getByRole("button", { name: "Next items" });
+    if (await sharedNextBtn.isVisible()) {
+      await sharedNextBtn.click();
+      const sharedPrevBtn = sharedSection.getByRole("button", { name: "Previous items" });
+      await expect(sharedPrevBtn).toBeVisible();
+      await sharedPrevBtn.click();
+    }
+
+    // 5. Test SliderRow navigation in Featured Dresses (Artisanal Celebration Twirls)
+    const featuredSection = page.locator("section", { hasText: "Artisanal Celebration Twirls" });
+    await expect(featuredSection).toBeVisible();
+    const featuredNextBtn = featuredSection.getByRole("button", { name: "Next items" });
+    if (await featuredNextBtn.isVisible()) {
+      await featuredNextBtn.click();
+    }
+  });
 });
