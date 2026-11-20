@@ -18,7 +18,7 @@ export function MarigoldToranGarland() {
         viewBox="0 0 1200 14"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        preserveAspectRatio="repeat-x"
+        preserveAspectRatio="none"
       >
         <defs>
           <pattern id="marigold-toran" width="60" height="14" patternUnits="userSpaceOnUse">
