@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getCategories, getProducts } from "@/lib/db/actions";
 import { ProductCard } from "@/components/product-card";
-import { Sparkles, ArrowRight, ShieldCheck, HeartHandshake, Ruler, Users } from "lucide-react";
+import { Sparkles, ArrowRight, ShieldCheck, Ruler, Users } from "lucide-react";
 import { HomeHeroMotion } from "@/components/home-hero-motion";
 import { SmoothScroll } from "@/components/smooth-scroll";
 
@@ -108,14 +108,14 @@ export default async function HomePage() {
                 Sizes XS–XXL • Numeric 28–38
               </div>
               <h3 className="font-serif text-xl font-bold text-text-heading group-hover:text-brand-primary transition-colors">
-                Women's Couture
+                Women&apos;s Couture
               </h3>
               <p className="text-xs text-text-body mt-2 leading-relaxed">
                 Royal Raw Silk Anarkalis, Hand-Painted Organza Gowns, and structured wedding ensembles. Model height and size disclosures with bust and hip measurements.
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-border-subtle flex items-center justify-between text-xs font-semibold text-brand-primary">
-              <span>Browse Women's Edits</span>
+              <span>Browse Women&apos;s Edits</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
@@ -152,14 +152,14 @@ export default async function HomePage() {
                 Ages 2–12Y • True-to-Age Fit
               </div>
               <h3 className="font-serif text-xl font-bold text-text-heading group-hover:text-brand-primary transition-colors">
-                Girls' Apparel & Dresses
+                Girls&apos; Apparel &amp; Dresses
               </h3>
               <p className="text-xs text-text-body mt-2 leading-relaxed">
                 Handcrafted Zari Lehengas and Pure Cotton Twirl Frocks with guaranteed itch-free cotton inner linings and +2 inch growth room margins.
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-border-subtle flex items-center justify-between text-xs font-semibold text-brand-primary">
-              <span>Browse Girls' Edits</span>
+              <span>Browse Girls&apos; Edits</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>

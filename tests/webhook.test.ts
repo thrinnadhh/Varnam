@@ -1,14 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
+import { assertTestCredentials } from "./test-env";
 
-const SUPABASE_URL = "http://127.0.0.1:54321";
-const SERVICE_ROLE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU";
-const WEBHOOK_SECRET = "test_webhook_secret_key_12345";
+assertTestCredentials();
 
-const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+const WEBHOOK_SECRET = process.env.CASHFREE_WEBHOOK_SECRET || "test_webhook_secret_key_12345";
 
 // Helper simulating the verification logic inside app/api/webhooks/cashfree/route.ts
 function verifyWebhook(
@@ -160,11 +155,11 @@ async function runWebhookTests() {
   console.log("\n▶ TEST 4b: Mismatched Length Signature (Length check protects timingSafeEqual)");
   const shortSignature = "short_invalid_sig";
   let threwRangeError = false;
-  let shortRes: any = null;
+  let shortRes: { status: number; error?: string } | null = null;
   try {
     shortRes = verifyWebhook(validPayload, validTimestamp, shortSignature, WEBHOOK_SECRET);
-  } catch (err: any) {
-    if (err.name === "RangeError") threwRangeError = true;
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === "RangeError") threwRangeError = true;
   }
 
   if (!threwRangeError && shortRes?.status === 401) {

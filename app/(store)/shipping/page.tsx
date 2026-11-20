@@ -1,11 +1,12 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { Truck, Clock, ShieldCheck, MapPin, ArrowLeft } from "lucide-react";
+import { POLICY_CONFIG } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Shipping & Delivery Policy | Varnam",
   description:
-    "Express delivery across 19,000+ Indian pin codes. Free shipping on orders above ₹999.",
+    `Express delivery across India. Free shipping on orders above ${POLICY_CONFIG.FREE_SHIPPING_THRESHOLD_LABEL}.`,
 };
 
 export default function ShippingPage() {
@@ -24,7 +25,7 @@ export default function ShippingPage() {
           <span>Pan-India Logistics</span>
         </div>
         <h1 className="font-serif text-3xl sm:text-4xl font-bold text-text-heading">
-          Shipping & Delivery Policy
+          Shipping &amp; Delivery Policy
         </h1>
         <p className="text-xs sm:text-sm text-text-muted">
           Fast, tamper-proof packaging and tracked dispatches across all Indian states.
@@ -37,10 +38,10 @@ export default function ShippingPage() {
             <Clock className="w-5 h-5" />
           </div>
           <h3 className="font-serif font-bold text-base text-text-heading">
-            24-Hour Dispatch
+            {POLICY_CONFIG.DISPATCH_TIMELINE}
           </h3>
           <p className="text-xs text-text-muted leading-relaxed">
-            All in-stock couture pieces and twirl dresses are steam-pressed, hand-inspected, and dispatched within 24 business hours.
+            All in-stock couture pieces and twirl dresses are steam-pressed, hand-inspected, and dispatched within {POLICY_CONFIG.DISPATCH_TIMELINE}.
           </p>
         </div>
 
@@ -49,10 +50,10 @@ export default function ShippingPage() {
             <ShieldCheck className="w-5 h-5" />
           </div>
           <h3 className="font-serif font-bold text-base text-text-heading">
-            Free Express Above ₹999
+            Free Express Above {POLICY_CONFIG.FREE_SHIPPING_THRESHOLD_LABEL}
           </h3>
           <p className="text-xs text-text-muted leading-relaxed">
-            Complimentary express courier on all carts above ₹999. A flat nominal shipping fee of ₹99 applies for smaller orders.
+            Complimentary express courier on all carts above {POLICY_CONFIG.FREE_SHIPPING_THRESHOLD_LABEL}. A flat nominal shipping fee of {POLICY_CONFIG.STANDARD_SHIPPING_FEE_LABEL} applies for smaller orders.
           </p>
         </div>
 
@@ -61,10 +62,10 @@ export default function ShippingPage() {
             <MapPin className="w-5 h-5" />
           </div>
           <h3 className="font-serif font-bold text-base text-text-heading">
-            19,000+ Pin Codes
+            Pan-India Coverage
           </h3>
           <p className="text-xs text-text-muted leading-relaxed">
-            Servicing metros, Tier 1, 2, and 3 towns via Blue Dart, Delhivery, and DTDC with end-to-end SMS & WhatsApp tracking.
+            Servicing metros, Tier 1, 2, and 3 towns via {POLICY_CONFIG.COURIER_PARTNERS} with end-to-end SMS &amp; WhatsApp tracking.
           </p>
         </div>
       </div>
@@ -87,17 +88,17 @@ export default function ShippingPage() {
                 <tr>
                   <td className="py-3 px-4 font-medium">Metros (Bengaluru, Mumbai, Delhi-NCR, Hyderabad, Chennai)</td>
                   <td className="py-3 px-4">2 – 3 Business Days</td>
-                  <td className="py-3 px-4">Blue Dart Air Express</td>
+                  <td className="py-3 px-4">{POLICY_CONFIG.COURIER_AIR_EXPRESS}</td>
                 </tr>
                 <tr>
-                  <td className="py-3 px-4 font-medium">Tier 1 & Tier 2 State Capitals</td>
+                  <td className="py-3 px-4 font-medium">Tier 1 &amp; Tier 2 State Capitals</td>
                   <td className="py-3 px-4">3 – 4 Business Days</td>
-                  <td className="py-3 px-4">Delhivery Express</td>
+                  <td className="py-3 px-4">{POLICY_CONFIG.COURIER_SURFACE_EXPRESS}</td>
                 </tr>
                 <tr>
-                  <td className="py-3 px-4 font-medium">Rest of India & Rural Outposts</td>
+                  <td className="py-3 px-4 font-medium">Rest of India &amp; Rural Outposts</td>
                   <td className="py-3 px-4">4 – 6 Business Days</td>
-                  <td className="py-3 px-4">Delhivery / Speed Post</td>
+                  <td className="py-3 px-4">{POLICY_CONFIG.COURIER_POSTAL}</td>
                 </tr>
               </tbody>
             </table>

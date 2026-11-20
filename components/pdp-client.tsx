@@ -4,8 +4,10 @@ import { useState, useTransition } from "react";
 import Image from "next/image";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { addToCart, toggleWishlist } from "@/lib/db/actions";
-import { SizeGuideModal } from "@/components/size-guide-modal";
+import { SizeGuideModal, type SizeChartItem } from "@/components/size-guide-modal";
 import { motion } from "motion/react";
+import { POLICY_CONFIG } from "@/lib/constants";
+import type { Segment } from "@/lib/schemas";
 import {
   Heart,
   ShoppingBag,
@@ -13,9 +15,7 @@ import {
   ShieldCheck,
   Truck,
   Sparkles,
-  Info,
   Clock,
-  Ruler,
 } from "lucide-react";
 
 interface PDPClientProps {
@@ -30,7 +30,7 @@ interface PDPClientProps {
     care_instructions: string;
     model_height?: string | null;
     model_size_worn?: string | null;
-    size_chart?: any;
+    size_chart?: SizeChartItem[] | null;
     categories: { name: string; slug: string; segment?: string | null };
     product_variants: Array<{
       id: string;
@@ -101,7 +101,7 @@ export function PDPClient({ product }: PDPClientProps) {
       // Sync with client guest cart for instant responsiveness
       try {
         const guestCart = JSON.parse(localStorage.getItem("varnam_guest_cart") || "[]");
-        const existingIdx = guestCart.findIndex((i: any) => i.variant_id === selectedVariant.id);
+        const existingIdx = guestCart.findIndex((i: { variant_id?: string }) => i.variant_id === selectedVariant.id);
         if (existingIdx >= 0) {
           guestCart[existingIdx].quantity += 1;
         } else {
@@ -262,7 +262,7 @@ export function PDPClient({ product }: PDPClientProps) {
             )}
           </div>
           <p className="text-[11px] text-text-muted">
-            Inclusive of all taxes • Free express shipping on orders above ₹999
+            Inclusive of all taxes • Free express shipping on orders above {POLICY_CONFIG.FREE_SHIPPING_THRESHOLD_LABEL}
           </p>
 
           {/* Stock Scarcity Indicator */}
@@ -284,7 +284,7 @@ export function PDPClient({ product }: PDPClientProps) {
                 ? "Select Youth Size:"
                 : "Select Age Milestone:"}
             </label>
-            <SizeGuideModal segment={product.segment as any} sizeChart={product.size_chart} />
+            <SizeGuideModal segment={product.segment as Segment} sizeChart={product.size_chart} />
           </div>
 
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">

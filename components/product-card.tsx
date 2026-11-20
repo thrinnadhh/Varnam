@@ -16,7 +16,7 @@ interface ProductCardProps {
     segment?: "girls" | "teens" | "women" | string;
     fabric: string;
     lining: string;
-    categories?: { name: string; slug: string };
+    categories?: { name: string; slug: string } | null;
     product_variants: Array<{
       id: string;
       size_group?: string;
@@ -29,7 +29,7 @@ interface ProductCardProps {
     }>;
     product_images?: Array<{
       image_url: string;
-      alt_text: string;
+      alt_text?: string;
       is_primary?: boolean;
     }>;
   };
@@ -87,7 +87,7 @@ export function ProductCard({ product }: ProductCardProps) {
       // Also update client guest cart in localStorage for guest visitors
       try {
         const guestCart = JSON.parse(localStorage.getItem("varnam_guest_cart") || "[]");
-        const existingIdx = guestCart.findIndex((i: any) => i.variant_id === firstAvailableVariant.id);
+        const existingIdx = guestCart.findIndex((i: { variant_id?: string }) => i.variant_id === firstAvailableVariant.id);
         if (existingIdx >= 0) {
           guestCart[existingIdx].quantity += 1;
         } else {

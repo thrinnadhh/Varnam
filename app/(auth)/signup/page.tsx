@@ -26,7 +26,7 @@ function SignupForm() {
     startTransition(async () => {
       try {
         const supabase = createBrowserSupabaseClient();
-        const { data, error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -48,7 +48,7 @@ function SignupForm() {
             localStorage.getItem("varnam_guest_cart") || "[]"
           );
           if (guestCart.length > 0) {
-            const formatted = guestCart.map((i: any) => ({
+            const formatted = guestCart.map((i: { variant_id: string; quantity: number }) => ({
               variant_id: i.variant_id,
               quantity: i.quantity,
             }));
@@ -61,8 +61,8 @@ function SignupForm() {
 
         router.push(redirectTo);
         router.refresh();
-      } catch (err: any) {
-        setError(err.message || "Failed to create account");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to create account");
       }
     });
   };

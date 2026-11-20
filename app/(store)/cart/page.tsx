@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { formatPrice } from "@/lib/utils";
+import { POLICY_CONFIG } from "@/lib/constants";
 import {
   Trash2,
   Plus,
@@ -34,19 +35,21 @@ export default function CartPage() {
   const [items, setItems] = useState<CartDisplayItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15 * 60); // 15-minute reservation timer
-  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    // Read cart from local storage
-    try {
-      const stored = localStorage.getItem("varnam_guest_cart");
-      if (stored) {
-        setItems(JSON.parse(stored));
+    let isMounted = true;
+    queueMicrotask(() => {
+      if (!isMounted) return;
+      try {
+        const stored = localStorage.getItem("varnam_guest_cart");
+        if (stored) {
+          setItems(JSON.parse(stored));
+        }
+      } catch (e) {
+        console.error("Failed to parse cart", e);
       }
-    } catch (e) {
-      console.error("Failed to parse cart", e);
-    }
-    setIsLoaded(true);
+      setIsLoaded(true);
+    });
 
     // Reservation timer logic
     const timerKey = "varnam_cart_timer_expires";
@@ -67,7 +70,10 @@ export default function CartPage() {
       }
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const syncCart = (updated: CartDisplayItem[]) => {
@@ -109,9 +115,9 @@ export default function CartPage() {
     (acc, item) => acc + item.price * item.quantity,
     0
   );
-  const freeShippingThresholdPaise = 99900; // ₹999.00
+  const freeShippingThresholdPaise = POLICY_CONFIG.FREE_SHIPPING_THRESHOLD_PAISE;
   const isFreeShipping = subtotalPaise >= freeShippingThresholdPaise;
-  const shippingPaise = items.length === 0 ? 0 : isFreeShipping ? 0 : 9900; // ₹99
+  const shippingPaise = items.length === 0 ? 0 : isFreeShipping ? 0 : POLICY_CONFIG.STANDARD_SHIPPING_FEE_PAISE;
   const totalPaise = subtotalPaise + shippingPaise;
 
   const freeShippingDiff = freeShippingThresholdPaise - subtotalPaise;
@@ -375,7 +381,7 @@ export default function CartPage() {
             </div>
             <div className="flex items-center gap-2">
               <Truck className="w-4 h-4 text-brand-secondary shrink-0" />
-              <span>Fast 3–4 Day Delivery via Express Couriers</span>
+              <span>Fast Delivery via {POLICY_CONFIG.COURIER_PARTNERS}</span>
             </div>
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-brand-primary shrink-0" />

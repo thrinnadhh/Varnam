@@ -1,11 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
+import { SUPABASE_URL, ANON_KEY, SERVICE_ROLE_KEY, assertTestCredentials } from "./test-env";
 
-const SUPABASE_URL = "http://127.0.0.1:54321";
-const ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
-const SERVICE_ROLE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU";
+assertTestCredentials();
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -34,8 +31,8 @@ async function runE2ETests() {
     slug: `unlined-${Date.now()}`,
     description: "Testing lining enforcement",
     fabric: "Raw Silk",
-    // lining omitted!
-  } as any);
+    // lining intentionally omitted to test not-null constraint
+  } as unknown as { category_id: string; segment: string; name: string; slug: string; description: string; fabric: string; lining: string });
 
   if (noLiningErr && noLiningErr.message.includes("null value in column \"lining\"")) {
     console.log("  ✅ PASS: Products table strictly rejects NULL lining (no default allowed).");
@@ -53,6 +50,7 @@ async function runE2ETests() {
     email_confirm: true,
     user_metadata: { full_name: "Ananya Parent", phone: "9876543210" },
   });
+  if (authErr) throw new Error(`Customer auth setup failed: ${authErr.message}`);
 
   const customerId = customerAuth.user!.id;
   const customer = createClient(SUPABASE_URL, ANON_KEY);
@@ -192,13 +190,15 @@ async function runE2ETests() {
     .update(signaturePayload)
     .digest("base64");
 
+  if (!generatedSignature) throw new Error("Signature generation failed");
+
   // Verifying the calculation: Math.round(order_amount * 100) === cfOrderTotalPaise
   const parsedPaise = Math.round(Number(cfOrderRupees) * 100);
   const matches = parsedPaise === cfOrderTotalPaise;
 
   const testPaymentId = "cf_pay_test_" + Date.now();
   // Insert payment record into DB
-  const { data: paymentRecord, error: payErr } = await admin.from("payments").insert({
+  const { error: payErr } = await admin.from("payments").insert({
     order_id: cfOrder.order_id,
     gateway_order_id: cfOrder.order_number,
     gateway_payment_id: testPaymentId,

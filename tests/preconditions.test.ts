@@ -1,10 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
+import { SUPABASE_URL, ANON_KEY, SERVICE_ROLE_KEY, assertTestCredentials } from "./test-env";
 
-const SUPABASE_URL = "http://127.0.0.1:54321";
-const ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
-const SERVICE_ROLE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU";
+assertTestCredentials();
 
 const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -20,12 +17,12 @@ async function runTests() {
   console.log("==================================================\n");
 
   let passedCount = 0;
-  const totalTests = 6;
+  const totalTests = 7;
 
   // -----------------------------------------------------------------
-  // 1. Role Self-Escalation Guard Test
+  // 1. Role Self-Escalation Guard Test (Client + REST API)
   // -----------------------------------------------------------------
-  console.log("▶ TEST 1: Role Self-Escalation Guard");
+  console.log("▶ TEST 1: Role Self-Escalation Guard (Client SDK)");
   const testCustomerEmail = `customer_${Date.now()}@example.com`;
   const { data: userAuth, error: authErr } = await adminClient.auth.admin.createUser({
     email: testCustomerEmail,
@@ -41,16 +38,16 @@ async function runTests() {
 
   // Sign in as customer to get customer auth context
   const customerClient = createClient(SUPABASE_URL, ANON_KEY);
-  const { data: sessionData, error: loginErr } = await customerClient.auth.signInWithPassword({
+  const { data: loginData, error: loginErr } = await customerClient.auth.signInWithPassword({
     email: testCustomerEmail,
     password: "Password123!",
   });
 
-  if (loginErr) {
-    throw new Error(`Failed to sign in as test user: ${loginErr.message}`);
+  if (loginErr || !loginData.session) {
+    throw new Error(`Failed to sign in as test user: ${loginErr?.message}`);
   }
 
-  // Attempt role self-escalation
+  // Attempt role self-escalation via Client SDK
   const { data: escalateData, error: escalateErr } = await customerClient
     .from("profiles")
     .update({ role: "admin" })
@@ -61,6 +58,33 @@ async function runTests() {
     passedCount++;
   } else {
     console.error("  ❌ FAIL: Self-escalation was not blocked!", escalateData, escalateErr);
+  }
+
+  // -----------------------------------------------------------------
+  // 1b. Role Self-Escalation Rejection via Direct REST API
+  // -----------------------------------------------------------------
+  console.log("\n▶ TEST 1b: Role Self-Escalation Rejection via Direct REST API");
+  const customerToken = loginData.session.access_token;
+  const apiEscalateRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${customerId}`, {
+    method: "PATCH",
+    headers: {
+      apikey: ANON_KEY,
+      Authorization: `Bearer ${customerToken}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({ role: "admin" }),
+  });
+
+  const apiErrBody = await apiEscalateRes.text();
+  if (
+    !apiEscalateRes.ok &&
+    apiErrBody.includes("Only an administrator can modify user roles")
+  ) {
+    console.log(`  ✅ PASS: Authenticated customer API PATCH rejected (HTTP ${apiEscalateRes.status}):`, apiErrBody.trim());
+    passedCount++;
+  } else {
+    console.error("  ❌ FAIL: Customer API PATCH was not rejected as expected!", apiEscalateRes.status, apiErrBody);
   }
 
   // -----------------------------------------------------------------
@@ -237,13 +261,15 @@ async function runTests() {
     }),
   ]);
 
-  let successfulOrder: any = null;
-  let failedOrderError: any = null;
+  let successfulOrder: unknown = null;
+  let failedOrderError: { message?: string } | null = null;
 
   if (res1.status === "fulfilled" && !res1.value.error) {
     successfulOrder = res1.value.data;
-  } else {
-    failedOrderError = (res1 as any).value?.error || (res1 as any).reason;
+  } else if (res1.status === "fulfilled" && res1.value.error) {
+    failedOrderError = res1.value.error;
+  } else if (res1.status === "rejected") {
+    failedOrderError = res1.reason as { message?: string };
   }
 
   if (res2.status === "fulfilled" && !res2.value.error) {
@@ -252,8 +278,10 @@ async function runTests() {
     } else {
       successfulOrder = res2.value.data;
     }
-  } else {
-    failedOrderError = (res2 as any).value?.error || (res2 as any).reason;
+  } else if (res2.status === "fulfilled" && res2.value.error) {
+    failedOrderError = res2.value.error;
+  } else if (res2.status === "rejected") {
+    failedOrderError = res2.reason as { message?: string };
   }
 
   // Check remaining stock
@@ -263,14 +291,21 @@ async function runTests() {
     .eq("id", limitedVariant!.id)
     .single();
 
+  interface OrderCreationResult {
+    order_id: string;
+    order_number: string;
+    total_amount: number;
+  }
+  const verifiedOrder = successfulOrder as OrderCreationResult;
+
   if (
     successfulOrder &&
     failedOrderError &&
-    failedOrderError.message.includes("Insufficient stock") &&
+    failedOrderError.message?.includes("Insufficient stock") &&
     updatedVariant?.stock === 0
   ) {
     console.log("  ✅ PASS: Concurrency race won by exactly 1 customer!");
-    console.log(`     Successful Order: ${successfulOrder.order_number}`);
+    console.log(`     Successful Order: ${verifiedOrder.order_number}`);
     console.log(`     Rejected Order Error: "${failedOrderError.message}"`);
     console.log(`     Final Stock in DB: ${updatedVariant.stock}`);
     passedCount++;
@@ -286,7 +321,7 @@ async function runTests() {
   // 4. Idempotent Restock on Cancellation
   // -----------------------------------------------------------------
   console.log("\n▶ TEST 4: Idempotent Stock Restoration on Cancellation");
-  const orderId = successfulOrder.order_id;
+  const orderId = verifiedOrder.order_id;
 
   // Cancel the order
   await adminClient

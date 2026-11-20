@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ShieldCheck, HeartHandshake, RefreshCw, Sparkles } from "lucide-react";
+import { POLICY_CONFIG } from "@/lib/constants";
 
 export function Footer() {
   return (
@@ -42,10 +43,10 @@ export function Footer() {
               </div>
               <div>
                 <h4 className="font-serif font-bold text-text-heading text-base">
-                  Hassle-Free 7-Day Exchange
+                  Hassle-Free {POLICY_CONFIG.EXCHANGE_RETURN_DAYS} Exchange
                 </h4>
                 <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                  Doorstep pickup and swift size exchanges across all Indian pin codes.
+                  Doorstep pickup and swift size exchanges across all Indian pin codes ({POLICY_CONFIG.COURIER_PARTNERS}).
                 </p>
               </div>
             </div>
@@ -113,7 +114,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/returns" className="hover:text-brand-primary transition-colors">
-                  7-Day Returns & Size Exchange
+                  {POLICY_CONFIG.EXCHANGE_RETURN_DAYS} Returns &amp; Size Exchange
                 </Link>
               </li>
               <li>

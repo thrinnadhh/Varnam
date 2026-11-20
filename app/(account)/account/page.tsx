@@ -15,19 +15,71 @@ import {
 } from "@/lib/db/actions";
 import { formatPrice, formatDate } from "@/lib/utils";
 import {
-  User,
+  User as UserIcon,
   Package,
   MapPin,
   Heart,
   LogOut,
-  ExternalLink,
   ShieldCheck,
-  CheckCircle2,
-  Clock,
-  Truck,
   Plus,
   AlertCircle,
 } from "lucide-react";
+import type { User } from "@supabase/supabase-js";
+
+interface AccountOrderItem {
+  id: string;
+  product_name: string;
+  size_age: string;
+  quantity: number;
+  price: number;
+}
+
+interface AccountOrder {
+  id: string;
+  order_number: string;
+  status: string;
+  payment_status: string;
+  total_amount: number;
+  created_at: string;
+  carrier?: string | null;
+  tracking_number?: string | null;
+  order_items: AccountOrderItem[];
+}
+
+interface AccountAddress {
+  id: string;
+  name: string;
+  phone: string;
+  address_line1: string;
+  address_line2?: string | null;
+  city: string;
+  state: string;
+  postal_code: string;
+  is_default?: boolean;
+}
+
+interface AccountWishlistItem {
+  id: string;
+  product_id: string;
+  products: {
+    id: string;
+    name: string;
+    slug: string;
+    segment?: string;
+    fabric?: string;
+    lining?: string;
+    product_images?: { image_url: string; is_primary?: boolean | null }[];
+    product_variants: {
+      id: string;
+      size_age: string | null;
+      size_name?: string;
+      color_name?: string;
+      price: number;
+      mrp: number;
+      stock: number;
+    }[];
+  };
+}
 
 function AccountContent() {
   const searchParams = useSearchParams();
@@ -35,7 +87,7 @@ function AccountContent() {
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [supabase] = useState(() => createBrowserSupabaseClient());
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   // Auth form states (for unauthenticated parents)
@@ -47,9 +99,9 @@ function AccountContent() {
   const [isAuthPending, setIsAuthPending] = useState(false);
 
   // Tab Data States
-  const [orders, setOrders] = useState<any[]>([]);
-  const [addresses, setAddresses] = useState<any[]>([]);
-  const [wishlist, setWishlist] = useState<any[]>([]);
+  const [orders, setOrders] = useState<AccountOrder[]>([]);
+  const [addresses, setAddresses] = useState<AccountAddress[]>([]);
+  const [wishlist, setWishlist] = useState<AccountWishlistItem[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(false);
 
   // New Address Modal / Form State
@@ -77,8 +129,8 @@ function AccountContent() {
         getWishlist(),
       ]);
       setOrders(userOrders);
-      setAddresses(userAddresses);
-      setWishlist(userWishlist);
+      setAddresses(userAddresses as AccountAddress[]);
+      setWishlist(userWishlist as unknown as AccountWishlistItem[]);
     } catch (err) {
       console.error("Error loading account data:", err);
     } finally {
@@ -126,8 +178,8 @@ function AccountContent() {
         setUser(data.user);
       }
       loadUserData();
-    } catch (err: any) {
-      setAuthError(err.message || "Failed to authenticate.");
+    } catch (err: unknown) {
+      setAuthError(err instanceof Error ? err.message : "Failed to authenticate.");
     } finally {
       setIsAuthPending(false);
     }
@@ -148,7 +200,7 @@ function AccountContent() {
       if (res.success) {
         setIsAddingAddress(false);
         const updated = await getAddresses();
-        setAddresses(updated);
+        setAddresses(updated as AccountAddress[]);
         setNewAddr({
           name: "",
           phone: "",
@@ -166,7 +218,7 @@ function AccountContent() {
     });
   };
 
-  const handleMoveToCart = async (item: any) => {
+  const handleMoveToCart = async (item: AccountWishlistItem) => {
     const variant = item.products.product_variants[0];
     if (!variant) return;
 
@@ -179,7 +231,7 @@ function AccountContent() {
           product_id: item.products.id,
           product_name: item.products.name,
           product_slug: item.products.slug,
-          size_age: variant.size_age,
+          size_age: variant.size_age || "Standard",
           color_name: "Original",
           price: variant.price,
           mrp: variant.mrp || variant.price,
@@ -197,7 +249,7 @@ function AccountContent() {
       await addToCart(variant.id, 1);
       await toggleWishlist(item.product_id);
       const updatedWishlist = await getWishlist();
-      setWishlist(updatedWishlist);
+      setWishlist(updatedWishlist as unknown as AccountWishlistItem[]);
     });
   };
 
@@ -216,7 +268,7 @@ function AccountContent() {
         <div className="bg-surface border border-border rounded-2xl p-6 sm:p-8 space-y-6 shadow-warm-sm">
           <div className="text-center space-y-2">
             <div className="w-12 h-12 bg-brand-primary-subtle text-brand-primary rounded-full flex items-center justify-center mx-auto">
-              <User className="w-6 h-6" />
+              <UserIcon className="w-6 h-6" />
             </div>
             <h1 className="font-serif text-2xl font-bold text-text-heading">
               {authMode === "signin" ? "Parent Portal Sign In" : "Create Parent Account"}
@@ -318,9 +370,16 @@ function AccountContent() {
             {user.email?.[0].toUpperCase()}
           </div>
           <div>
-            <h1 className="font-serif text-xl sm:text-2xl font-bold text-text-heading">
-              {user.user_metadata?.full_name || "Parent Account"}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="font-serif text-xl sm:text-2xl font-bold text-text-heading">
+                {user.user_metadata?.full_name || "Parent Account"}
+              </h1>
+              {isDataLoading && (
+                <span className="text-[10px] text-text-muted font-medium animate-pulse bg-brand-primary-subtle px-2 py-0.5 rounded-full">
+                  Syncing...
+                </span>
+              )}
+            </div>
             <p className="text-xs sm:text-sm text-text-muted">{user.email}</p>
           </div>
         </div>
@@ -396,7 +455,7 @@ function AccountContent() {
               {orders.length === 0 ? (
                 <div className="p-8 bg-surface border border-border rounded-2xl text-center space-y-3">
                   <Package className="w-10 h-10 text-text-muted mx-auto" />
-                  <p className="text-text-muted text-sm">You haven't placed any orders yet.</p>
+                  <p className="text-text-muted text-sm">You haven&apos;t placed any orders yet.</p>
                   <Link
                     href="/collections"
                     className="inline-block px-5 py-2.5 bg-brand-primary text-white text-xs font-semibold rounded-xl"
@@ -444,7 +503,7 @@ function AccountContent() {
 
                       {/* Items */}
                       <div className="divide-y divide-border text-xs">
-                        {ord.order_items.map((it: any) => (
+                        {ord.order_items.map((it) => (
                           <div
                             key={it.id}
                             className="py-2.5 flex justify-between items-center"
@@ -641,7 +700,7 @@ function AccountContent() {
                 <div className="p-8 bg-surface border border-border rounded-2xl text-center space-y-3">
                   <Heart className="w-10 h-10 text-text-muted mx-auto" />
                   <p className="text-text-muted text-sm">
-                    You haven't saved any favorite dresses yet.
+                    You haven&apos;t saved any favorite dresses yet.
                   </p>
                   <Link
                     href="/collections"

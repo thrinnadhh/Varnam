@@ -1,11 +1,12 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { RefreshCw, CheckCircle2, AlertCircle, ArrowLeft, HeartHandshake } from "lucide-react";
+import { RefreshCw, CheckCircle2, ArrowLeft, HeartHandshake } from "lucide-react";
+import { POLICY_CONFIG } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Returns & Size Exchanges | Varnam",
   description:
-    "7-day doorstep size exchange guarantee. Hassle-free pickups for Women, Teens, and Girls dresses.",
+    `${POLICY_CONFIG.EXCHANGE_RETURN_DAYS} doorstep size exchange guarantee. Hassle-free pickups for Women, Teens, and Girls dresses.`,
 };
 
 export default function ReturnsPage() {
@@ -21,10 +22,10 @@ export default function ReturnsPage() {
         </Link>
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-primary-subtle text-brand-primary text-xs font-bold">
           <HeartHandshake className="w-4 h-4" />
-          <span>Parent & Customer Guarantee</span>
+          <span>Parent &amp; Customer Guarantee</span>
         </div>
         <h1 className="font-serif text-3xl sm:text-4xl font-bold text-text-heading">
-          Returns & 7-Day Size Exchanges
+          Returns &amp; {POLICY_CONFIG.EXCHANGE_RETURN_DAYS} Size Exchanges
         </h1>
         <p className="text-xs sm:text-sm text-text-muted">
           We want your celebration to be joyful and perfectly fitted. If the dress does not fit like a dream, we make exchanging it effortless.
@@ -37,10 +38,10 @@ export default function ReturnsPage() {
             <RefreshCw className="w-6 h-6" />
           </div>
           <h3 className="font-serif font-bold text-lg text-text-heading">
-            7-Day Doorstep Size Exchange
+            {POLICY_CONFIG.EXCHANGE_RETURN_WINDOW}
           </h3>
           <p className="text-xs text-text-muted leading-relaxed">
-            Need a larger size for growth room or a more tailored fit for an upcoming wedding? Request a complimentary size exchange within 7 days of delivery directly through your account dashboard.
+            Need a larger size for growth room or a more tailored fit for an upcoming wedding? Request a complimentary size exchange within {POLICY_CONFIG.EXCHANGE_RETURN_DAYS} of delivery directly through your account dashboard.
           </p>
         </div>
 
@@ -52,7 +53,7 @@ export default function ReturnsPage() {
             Prompt 100% Refunds
           </h3>
           <p className="text-xs text-text-muted leading-relaxed">
-            If you prefer a return instead of an exchange, our courier partner will collect the unworn garment from your doorstep. Refunds are credited within 5 to 7 business days directly to your original payment method.
+            If you prefer a return instead of an exchange, our courier partner ({POLICY_CONFIG.COURIER_PARTNERS}) will collect the unworn garment from your doorstep. Refunds are credited within {POLICY_CONFIG.REFUND_CREDIT_TIMELINE} directly to your original payment method.
           </p>
         </div>
       </div>
@@ -79,7 +80,7 @@ export default function ReturnsPage() {
           <ol className="list-decimal pl-5 space-y-1.5 text-xs sm:text-sm">
             <li>Go to <Link href="/account" className="text-brand-primary underline font-medium">My Orders</Link> and select your delivered order.</li>
             <li>Click <strong>&quot;Request Exchange / Return&quot;</strong> and choose your desired replacement size or return reason.</li>
-            <li>Our courier partner will schedule a doorstep pickup within 24–48 hours.</li>
+            <li>Our courier partner will schedule a doorstep pickup within {POLICY_CONFIG.RETURN_PICKUP_TIMELINE}.</li>
             <li>Your replacement size is dispatched immediately upon pickup scan!</li>
           </ol>
         </section>

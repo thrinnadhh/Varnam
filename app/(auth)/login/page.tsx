@@ -4,7 +4,7 @@ import { useState, useTransition, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/db/client";
-import { Sparkles, ArrowRight, Lock, Mail, AlertCircle, ShoppingBag } from "lucide-react";
+import { Sparkles, ArrowRight, Lock, Mail, AlertCircle } from "lucide-react";
 import { getSafeRedirectUrl } from "@/lib/utils";
 
 function LoginForm() {
@@ -40,7 +40,7 @@ function LoginForm() {
             localStorage.getItem("varnam_guest_cart") || "[]"
           );
           if (guestCart.length > 0) {
-            const formatted = guestCart.map((i: any) => ({
+            const formatted = guestCart.map((i: { variant_id: string; quantity: number }) => ({
               variant_id: i.variant_id,
               quantity: i.quantity,
             }));
@@ -53,8 +53,8 @@ function LoginForm() {
 
         router.push(redirectTo);
         router.refresh();
-      } catch (err: any) {
-        setError(err.message || "Failed to sign in");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to sign in");
       }
     });
   };
@@ -130,7 +130,7 @@ function LoginForm() {
       </form>
 
       <div className="pt-4 border-t border-border-subtle text-center text-xs text-text-muted">
-        <span>Don't have a Varnam account? </span>
+        <span>Don&apos;t have a Varnam account? </span>
         <Link
           href={`/signup?redirectTo=${encodeURIComponent(redirectTo)}`}
           className="font-bold text-brand-primary hover:underline"

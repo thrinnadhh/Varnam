@@ -5,14 +5,38 @@ import { getAdminProducts, createAdminProduct } from "@/app/admin/actions";
 import { getCategories } from "@/lib/db/actions";
 import { formatPrice } from "@/lib/utils";
 import {
-  WOMEN_SIZES,
-  TEEN_SIZES,
   KIDS_AGE_SIZES,
   type Segment,
   type SizeGroup,
   type MeasurementType,
 } from "@/lib/schemas";
-import { Plus, ShoppingBag, ShieldCheck, Check, AlertCircle, Sparkles, Ruler } from "lucide-react";
+import { Plus, ShieldCheck, Ruler } from "lucide-react";
+
+interface CategoryOption {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface AdminProductVariant {
+  id: string;
+  size_name?: string;
+  price: number;
+  stock: number;
+}
+
+interface AdminProductItem {
+  id: string;
+  name: string;
+  slug: string;
+  segment?: string;
+  fabric?: string;
+  lining?: string;
+  model_height?: string | null;
+  model_size_worn?: string | null;
+  categories?: { name: string } | null;
+  product_variants?: AdminProductVariant[];
+}
 
 interface DraftVariant {
   size_name: string;
@@ -27,15 +51,14 @@ interface DraftVariant {
 }
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [products, setProducts] = useState<AdminProductItem[]>([]);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
 
   // New Product Form State
   const [segment, setSegment] = useState<Segment>("women");
-  const [sizeGroup, setSizeGroup] = useState<SizeGroup>("women");
   const [measurementType, setMeasurementType] = useState<MeasurementType>("garment");
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -57,20 +80,16 @@ export default function AdminProductsPage() {
   // Image URL
   const [imageUrl, setImageUrl] = useState("https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=1000&q=80");
 
-  const loadData = async () => {
-    try {
-      const [prods, cats] = await Promise.all([
-        getAdminProducts(),
-        getCategories(),
-      ]);
-      setProducts(prods);
-      setCategories(cats);
-      if (cats.length > 0) {
-        setCategoryId(cats[0].id);
-      }
-    } catch (e) {
-      console.error(e);
-    }
+  const loadData = () => {
+    Promise.all([getAdminProducts(), getCategories()])
+      .then(([prods, cats]) => {
+        setProducts(prods as unknown as AdminProductItem[]);
+        setCategories(cats as unknown as CategoryOption[]);
+        if (cats.length > 0) {
+          setCategoryId(cats[0].id);
+        }
+      })
+      .catch(console.error);
   };
 
   useEffect(() => {
@@ -78,7 +97,7 @@ export default function AdminProductsPage() {
   }, []);
 
   // Generate initial draft measurements based on segment
-  const generateDraftVariants = (targetSegment: Segment, targetSizeGroup: SizeGroup) => {
+  const generateDraftVariants = (targetSegment: Segment) => {
     setIsDraftConfirmed(false);
     if (targetSegment === "women") {
       const womenDefaults: Record<string, { bust: number; waist: number; hip: number; length: number }> = {
@@ -131,7 +150,7 @@ export default function AdminProductsPage() {
         "6-7Y": { bust: 25, waist: 24, hip: 26, length: 30 },
         "8-9Y": { bust: 27, waist: 26, hip: 28, length: 34 },
         "10-11Y": { bust: 29, waist: 28, hip: 30, length: 38 },
-        "11-12Y": { bust: 31, waist: 29, hip: 32, length: 41 },
+        "12Y": { bust: 31, waist: 29, hip: 32, length: 41 },
       };
       const drafts: DraftVariant[] = KIDS_AGE_SIZES.map((sz) => ({
         size_name: sz,
@@ -148,18 +167,15 @@ export default function AdminProductsPage() {
     }
   };
 
-  // When segment changes, adjust sizeGroup and re-generate draft
+  // When segment changes, re-generate draft
   const handleSegmentChange = (newSegment: Segment) => {
     setSegment(newSegment);
-    const newGroup: SizeGroup =
-      newSegment === "women" ? "women" : newSegment === "teens" ? "teen" : "kids";
-    setSizeGroup(newGroup);
-    generateDraftVariants(newSegment, newGroup);
+    generateDraftVariants(newSegment);
   };
 
   const handleOpenForm = () => {
     setIsAddingProduct(true);
-    generateDraftVariants(segment, sizeGroup);
+    generateDraftVariants(segment);
     if (!categoryId && categories.length > 0) {
       setCategoryId(categories[0].id);
     }
@@ -175,9 +191,9 @@ export default function AdminProductsPage() {
     );
   };
 
-  const handleUpdateDraft = (index: number, field: keyof DraftVariant, value: any) => {
+  const handleUpdateDraft = (index: number, field: keyof DraftVariant, value: string | number) => {
     const updated = [...draftVariants];
-    updated[index] = { ...updated[index], [field]: value };
+    updated[index] = { ...updated[index], [field]: value } as DraftVariant;
     setDraftVariants(updated);
     setIsDraftConfirmed(false); // Reset confirmation if measurements are touched
   };
@@ -360,7 +376,7 @@ export default function AdminProductsPage() {
                 onChange={(e) => setMeasurementType(e.target.value as MeasurementType)}
                 className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white font-semibold"
               >
-                <option value="garment">Garment Dimensions (Laid Flat with +2" Ease)</option>
+                <option value="garment">Garment Dimensions (Laid Flat with +2&quot; Ease)</option>
                 <option value="body">Body Measurements (Natural Body Fit)</option>
               </select>
             </div>
@@ -493,6 +509,19 @@ export default function AdminProductsPage() {
                 className="w-full px-3 py-2 border border-amber-300 rounded-lg bg-white font-medium"
               />
             </div>
+
+            <div className="sm:col-span-2">
+              <label className="block font-semibold text-amber-950 mb-1">
+                Care Instructions
+              </label>
+              <input
+                type="text"
+                value={careInstructions}
+                onChange={(e) => setCareInstructions(e.target.value)}
+                placeholder="e.g. Dry clean first wash; gentle hand wash cold."
+                className="w-full px-3 py-2 border border-amber-300 rounded-lg bg-white font-medium"
+              />
+            </div>
           </div>
 
           {/* Admin Draft Measurements Review & Confirmation */}
@@ -510,7 +539,7 @@ export default function AdminProductsPage() {
 
               <button
                 type="button"
-                onClick={() => generateDraftVariants(segment, sizeGroup)}
+                onClick={() => generateDraftVariants(segment)}
                 className="text-[11px] font-semibold text-rose-900 hover:underline self-start sm:self-auto"
               >
                 Reset to Standard Archetype
@@ -667,8 +696,9 @@ export default function AdminProductsPage() {
             </thead>
             <tbody className="divide-y divide-stone-100">
               {products.map((p) => {
-                const minPrice = Math.min(...(p.product_variants || []).map((v: any) => v.price));
-                const totalStock = (p.product_variants || []).reduce((acc: number, v: any) => acc + v.stock, 0);
+                const variants = p.product_variants || [];
+                const minPrice = variants.length > 0 ? Math.min(...variants.map((v) => v.price)) : 0;
+                const totalStock = variants.reduce((acc, v) => acc + v.stock, 0);
 
                 const segmentBadgeClass =
                   p.segment === "women"

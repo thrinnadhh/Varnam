@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { Scale, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Scale, ArrowLeft } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Terms of Service | Varnam",

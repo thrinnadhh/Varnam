@@ -5,18 +5,33 @@ import { createServerSupabaseClient } from "@/lib/db/supabase";
 import { formatPrice, formatDate } from "@/lib/utils";
 import {
   CheckCircle2,
-  Clock,
   Package,
   Truck,
   Home,
   ExternalLink,
   ShieldCheck,
-  ShoppingBag,
-  ArrowRight,
   Sparkles,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+interface OrderShippingAddress {
+  name?: string;
+  phone?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+}
+
+interface OrderItemDisplay {
+  id: string;
+  product_name: string;
+  size_age: string;
+  quantity: number;
+  price: number;
+}
 
 interface OrderPageProps {
   params: Promise<{ orderNumber: string }>;
@@ -54,7 +69,7 @@ export default async function OrderConfirmationPage({ params }: OrderPageProps) 
     notFound();
   }
 
-  const shippingAddr = (order.shipping_address as any) || {};
+  const shippingAddr = (order.shipping_address as unknown as OrderShippingAddress) || {};
 
   // 4-Stage Fulfillment Tracker
   const stages = [
@@ -93,7 +108,7 @@ export default async function OrderConfirmationPage({ params }: OrderPageProps) 
             Thank You For Trusting Varnam
           </h1>
           <p className="text-text-muted text-xs sm:text-sm max-w-md mx-auto">
-            We are preparing your daughter's handcrafted apparel with 100% breathable cotton linings.
+            We are preparing your handcrafted apparel with 100% breathable cotton linings.
           </p>
         </div>
 
@@ -215,7 +230,7 @@ export default async function OrderConfirmationPage({ params }: OrderPageProps) 
           </h2>
 
           <div className="divide-y divide-border">
-            {order.order_items.map((item: any) => (
+            {(order.order_items as unknown as OrderItemDisplay[]).map((item) => (
               <div key={item.id} className="py-3 flex justify-between items-start text-xs sm:text-sm">
                 <div className="space-y-0.5">
                   <p className="font-bold text-text-heading">

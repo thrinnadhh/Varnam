@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Ruler, Sparkles, Check, HelpCircle, ShieldCheck } from "lucide-react";
+import { X, Ruler, Sparkles, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 export interface SizeChartItem {
@@ -62,7 +62,7 @@ export function SizeGuideModal({
     { size: "6-7Y", bust_in: 25, bust_cm: 63.5, waist_in: 24, waist_cm: 61.0, hip_in: 26, hip_cm: 66.0, length_in: 30, length_cm: 76.2 },
     { size: "8-9Y", bust_in: 27, bust_cm: 68.6, waist_in: 26, waist_cm: 66.0, hip_in: 28, hip_cm: 71.1, length_in: 34, length_cm: 86.4 },
     { size: "10-11Y", bust_in: 29, bust_cm: 73.7, waist_in: 28, waist_cm: 71.1, hip_in: 30, hip_cm: 76.2, length_in: 38, length_cm: 96.5 },
-    { size: "11-12Y", bust_in: 31, bust_cm: 78.7, waist_in: 29, waist_cm: 73.7, hip_in: 32, hip_cm: 81.3, length_in: 41, length_cm: 104.1 },
+    { size: "12Y", bust_in: 31, bust_cm: 78.7, waist_in: 29, waist_cm: 73.7, hip_in: 32, hip_cm: 81.3, length_in: 41, length_cm: 104.1 },
   ];
 
   const getFallbackRows = () => {

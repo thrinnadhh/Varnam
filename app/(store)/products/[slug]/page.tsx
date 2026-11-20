@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getProductBySlug, getProducts } from "@/lib/db/actions";
 import { PDPClient } from "@/components/pdp-client";
 import { ProductCard } from "@/components/product-card";
+import type { SizeChartItem } from "@/components/size-guide-modal";
 import { ChevronRight, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -86,13 +87,18 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     "@type": "Product",
     name: product.name,
     description: product.description,
-    image: primaryImage?.image_url,
+    image: primaryImage ? [primaryImage.image_url] : [],
     category: product.categories.name,
+    brand: {
+      "@type": "Brand",
+      name: "Varnam",
+    },
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "INR",
       lowPrice: (minPrice / 100).toFixed(2),
       highPrice: (maxPrice / 100).toFixed(2),
+      offerCount: product.product_variants.length,
       availability: "https://schema.org/InStock",
       seller: {
         "@type": "Organization",
@@ -138,7 +144,14 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         </nav>
 
         {/* Interactive PDP Client Component */}
-        <PDPClient product={product} />
+        <PDPClient
+          product={{
+            ...product,
+            size_chart: Array.isArray(product.size_chart)
+              ? (product.size_chart as unknown as SizeChartItem[])
+              : null,
+          }}
+        />
 
         {/* Related Dresses Recommendation */}
         {filteredRelated.length > 0 && (

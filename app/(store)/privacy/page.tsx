@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { ShieldCheck, Lock, Eye, FileText, ArrowLeft } from "lucide-react";
+import { ShieldCheck, ArrowLeft } from "lucide-react";
+import { POLICY_CONFIG } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Varnam",
@@ -48,7 +49,7 @@ export default function PrivacyPage() {
           <p>We collect only the essential information needed to fulfill your couture dress orders:</p>
           <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm">
             <li><strong>Account & Contact Info:</strong> Full name, verified email address, and 10-digit mobile number for order confirmations and carrier tracking.</li>
-            <li><strong>Delivery Addresses:</strong> Street address, apartment/house number, city, state, and postal code for Blue Dart / courier delivery.</li>
+            <li><strong>Delivery Addresses:</strong> Street address, apartment/house number, city, state, and postal code for secure courier dispatch ({POLICY_CONFIG.COURIER_PARTNERS}).</li>
             <li><strong>Apparel Sizing Preferences:</strong> Sizing selections across Women (XS–XXL), Teens (13–18Y), and Girls (2–12Y) saved in your bag or order history. We never collect or store birth dates or personal child identifiers.</li>
           </ul>
         </section>

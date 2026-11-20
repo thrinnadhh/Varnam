@@ -20,7 +20,7 @@ export const KIDS_AGE_SIZES = [
   "6-7Y",
   "8-9Y",
   "10-11Y",
-  "11-12Y",
+  "12Y",
 ] as const;
 
 // Teens: 13–18Y & Youth Alphas

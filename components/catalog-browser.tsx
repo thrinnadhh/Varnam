@@ -3,17 +3,45 @@
 import { useState, useMemo } from "react";
 import { ProductCard } from "@/components/product-card";
 import {
-  SEGMENTS,
   KIDS_AGE_SIZES,
   TEEN_SIZES,
   WOMEN_SIZES,
-  type Segment,
 } from "@/lib/schemas";
 import { Filter, ArrowUpDown, Sparkles, X } from "lucide-react";
 
+interface CatalogVariant {
+  id: string;
+  size_name?: string;
+  size_age?: string | null;
+  price: number;
+  mrp: number;
+  stock: number;
+  color_name: string;
+  color_hex?: string;
+}
+
+interface CatalogCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface CatalogProduct {
+  id: string;
+  name: string;
+  slug: string;
+  segment?: string;
+  fabric: string;
+  lining: string;
+  created_at: string;
+  categories?: { name: string; slug: string } | null;
+  product_variants: CatalogVariant[];
+  product_images?: { image_url: string; is_primary?: boolean }[];
+}
+
 interface CatalogBrowserProps {
-  initialProducts: any[];
-  categories: any[];
+  initialProducts: CatalogProduct[];
+  categories: CatalogCategory[];
   currentCategorySlug?: string;
   initialSegment?: string;
   initialSize?: string;
@@ -72,7 +100,7 @@ export function CatalogBrowser({
     if (selectedSize !== "all") {
       list = list.filter((p) =>
         p.product_variants?.some(
-          (v: any) =>
+          (v) =>
             v.size_name === selectedSize || v.size_age === selectedSize
         )
       );
@@ -81,14 +109,14 @@ export function CatalogBrowser({
     // 4. Sort
     if (sortBy === "price_asc") {
       list.sort((a, b) => {
-        const minA = Math.min(...(a.product_variants || []).map((v: any) => v.price));
-        const minB = Math.min(...(b.product_variants || []).map((v: any) => v.price));
+        const minA = Math.min(...(a.product_variants || []).map((v) => v.price));
+        const minB = Math.min(...(b.product_variants || []).map((v) => v.price));
         return minA - minB;
       });
     } else if (sortBy === "price_desc") {
       list.sort((a, b) => {
-        const minA = Math.min(...(a.product_variants || []).map((v: any) => v.price));
-        const minB = Math.min(...(b.product_variants || []).map((v: any) => v.price));
+        const minA = Math.min(...(a.product_variants || []).map((v) => v.price));
+        const minB = Math.min(...(b.product_variants || []).map((v) => v.price));
         return minB - minA;
       });
     } else if (sortBy === "newest") {

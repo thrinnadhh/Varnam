@@ -3,25 +3,48 @@
 import { useState, useEffect, useTransition } from "react";
 import { getAdminOrders, updateAdminOrderStatus } from "@/app/admin/actions";
 import { formatPrice, formatDate } from "@/lib/utils";
-import {
-  Package,
-  Search,
-  Filter,
-  Truck,
-  CheckCircle,
-  AlertCircle,
-  Clock,
-  ExternalLink,
-} from "lucide-react";
+
+interface ShippingAddressJson {
+  name?: string;
+  phone?: string;
+  address_line1?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+}
+
+interface OrderItemSummary {
+  id: string;
+  product_name: string;
+  size_age: string;
+  quantity: number;
+}
+
+interface AdminOrder {
+  id: string;
+  order_number: string;
+  status: "pending" | "confirmed" | "packed" | "shipped" | "delivered" | "cancelled";
+  payment_method: string;
+  payment_status: string;
+  total_amount: number;
+  created_at: string;
+  carrier?: string | null;
+  tracking_number?: string | null;
+  tracking_url?: string | null;
+  notes?: string | null;
+  shipping_address?: ShippingAddressJson | null;
+  profiles?: { full_name?: string; phone?: string } | null;
+  order_items?: OrderItemSummary[];
+}
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // Status update form states
-  const [updateStatus, setUpdateStatus] = useState("");
+  const [updateStatus, setUpdateStatus] = useState<AdminOrder["status"]>("pending");
   const [carrier, setCarrier] = useState("");
   const [trackingNumber, setTrackingNumber] = useState("");
   const [trackingUrl, setTrackingUrl] = useState("");
@@ -31,20 +54,31 @@ export default function AdminOrdersPage() {
   const loadOrders = async (filter: string) => {
     try {
       const data = await getAdminOrders(filter);
-      setOrders(data);
+      setOrders(data as unknown as AdminOrder[]);
     } catch (e) {
       console.error(e);
     }
   };
 
   useEffect(() => {
-    loadOrders(statusFilter);
+    let isCancelled = false;
+    getAdminOrders(statusFilter)
+      .then((data) => {
+        if (!isCancelled) {
+          setOrders(data as unknown as AdminOrder[]);
+        }
+      })
+      .catch(console.error);
+
+    return () => {
+      isCancelled = true;
+    };
   }, [statusFilter]);
 
-  const handleOpenUpdate = (ord: any) => {
+  const handleOpenUpdate = (ord: AdminOrder) => {
     setSelectedOrder(ord);
     setUpdateStatus(ord.status);
-    setCarrier(ord.carrier || "Blue Dart");
+    setCarrier(ord.carrier || "");
     setTrackingNumber(ord.tracking_number || "");
     setTrackingUrl(ord.tracking_url || "");
     setNotes(ord.notes || "");
@@ -59,7 +93,7 @@ export default function AdminOrdersPage() {
       // STRICT COLUMN BOUNDARY: Mutates ONLY status, carrier, tracking_number, tracking_url, notes
       const res = await updateAdminOrderStatus({
         order_id: selectedOrder.id,
-        status: updateStatus as any,
+        status: updateStatus,
         carrier: carrier || undefined,
         tracking_number: trackingNumber || undefined,
         tracking_url: trackingUrl || undefined,
@@ -137,14 +171,14 @@ export default function AdminOrdersPage() {
                   </td>
                   <td className="py-3.5 px-3">
                     <p className="font-semibold text-stone-900">
-                      {(ord.shipping_address as any)?.name || ord.profiles?.full_name || "Customer"}
+                      {ord.shipping_address?.name || ord.profiles?.full_name || "Customer"}
                     </p>
                     <p className="text-[11px] text-stone-500 font-mono">
-                      {(ord.shipping_address as any)?.phone || ord.profiles?.phone || ""}
+                      {ord.shipping_address?.phone || ord.profiles?.phone || ""}
                     </p>
                   </td>
                   <td className="py-3.5 px-3">
-                    {ord.order_items?.map((it: any) => (
+                    {ord.order_items?.map((it) => (
                       <p key={it.id} className="text-[11px] text-stone-600">
                         {it.quantity}x {it.product_name} ({it.size_age})
                       </p>
@@ -226,7 +260,7 @@ export default function AdminOrdersPage() {
                 </label>
                 <select
                   value={updateStatus}
-                  onChange={(e) => setUpdateStatus(e.target.value)}
+                  onChange={(e) => setUpdateStatus(e.target.value as AdminOrder["status"])}
                   className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-stone-50"
                 >
                   <option value="pending">Pending</option>
@@ -247,7 +281,7 @@ export default function AdminOrdersPage() {
                     type="text"
                     value={carrier}
                     onChange={(e) => setCarrier(e.target.value)}
-                    placeholder="e.g. Blue Dart"
+                    placeholder="e.g. Express Air Courier"
                     className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-stone-50"
                   />
                 </div>

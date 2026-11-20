@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
   });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
@@ -65,14 +65,42 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  const isProd = process.env.NODE_ENV === "production";
+  const imageSources = [
+    "'self'",
+    "blob:",
+    "data:",
+    "https://*.supabase.co",
+    "https://*.cashfree.com",
+    !isProd ? "https://images.unsplash.com" : "",
+    !isProd ? "http://127.0.0.1:54321" : "",
+    !isProd ? "http://localhost:3000" : "",
+    !isProd ? "http://localhost:3040" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const connectSources = [
+    "'self'",
+    "https://api.cashfree.com",
+    "https://sandbox.cashfree.com",
+    "https://*.cashfree.com",
+    "https://*.supabase.co",
+    !isProd
+      ? "http://127.0.0.1:54321 ws://127.0.0.1:54321 http://localhost:3000 http://localhost:3040"
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   // Content Security Policy
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline' https://sdk.cashfree.com https://*.cashfree.com;
     style-src 'self' 'unsafe-inline';
-    img-src 'self' blob: data: https://images.unsplash.com https://*.supabase.co https://*.cashfree.com http://127.0.0.1:54321 http://localhost:3000 http://localhost:3040;
+    img-src ${imageSources};
     font-src 'self' data: https://fonts.gstatic.com;
-    connect-src 'self' https://api.cashfree.com https://sandbox.cashfree.com https://*.cashfree.com https://*.supabase.co http://127.0.0.1:54321 ws://127.0.0.1:54321 http://localhost:3000 http://localhost:3040;
+    connect-src ${connectSources};
     frame-src 'self' https://sdk.cashfree.com https://*.cashfree.com;
     object-src 'none';
     base-uri 'self';

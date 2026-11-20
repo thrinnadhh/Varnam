@@ -6,7 +6,6 @@ import {
   Package,
   ShoppingBag,
   Store,
-  ShieldAlert,
 } from "lucide-react";
 
 export const metadata = {

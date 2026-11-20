@@ -1,6 +1,6 @@
 "use server";
 
-import { createServerSupabaseClient, createAdminSupabaseClient } from "./supabase";
+import { createServerSupabaseClient } from "./supabase";
 import { checkoutSchema, addressSchema, type CheckoutInput, type AddressInput } from "@/lib/schemas";
 import { revalidatePath } from "next/cache";
 
@@ -643,7 +643,7 @@ export async function createCashfreeSessionAction(orderId: string) {
       : "https://sandbox.cashfree.com/pg";
 
   const orderAmountRupees = (order.total_amount / 100).toFixed(2);
-  const shipping = order.shipping_address as any;
+  const shipping = order.shipping_address as { name?: string; phone?: string; email?: string } | null;
 
   try {
     const response = await fetch(`${baseUrl}/orders`, {
@@ -682,8 +682,9 @@ export async function createCashfreeSessionAction(orderId: string) {
       payment_session_id: data.payment_session_id,
       order_number: order.order_number,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Cashfree fetch error:", err);
-    return { success: false, error: err.message || "Network error connecting to payment gateway." };
+    const errorMsg = err instanceof Error ? err.message : "Network error connecting to payment gateway.";
+    return { success: false, error: errorMsg };
   }
 }

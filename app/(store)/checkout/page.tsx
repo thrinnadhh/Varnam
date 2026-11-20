@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import type { User } from "@supabase/supabase-js";
 import { formatPrice } from "@/lib/utils";
 import {
   getAddresses,
@@ -12,23 +13,43 @@ import {
   createCashfreeSessionAction,
 } from "@/lib/db/actions";
 import { createBrowserSupabaseClient } from "@/lib/db/client";
+import { POLICY_CONFIG } from "@/lib/constants";
 import {
   ShieldCheck,
   Truck,
-  CreditCard,
-  Banknote,
   CheckCircle2,
   Lock,
-  ArrowRight,
   AlertCircle,
-  MapPin,
-  Sparkles,
 } from "lucide-react";
+
+interface SavedAddress {
+  id: string;
+  name: string;
+  phone: string;
+  address_line1: string;
+  address_line2?: string | null;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+  is_default?: boolean;
+}
+
+interface CheckoutCartItem {
+  variant_id: string;
+  product_name: string;
+  product_slug: string;
+  size_age: string;
+  color_name: string;
+  price: number;
+  quantity: number;
+  image_url?: string;
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
   const [supabase] = useState(() => createBrowserSupabaseClient());
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   // Auth Form State (for guests who need to sign in / create account)
@@ -40,8 +61,8 @@ export default function CheckoutPage() {
   const [isAuthPending, setIsAuthPending] = useState(false);
 
   // Cart & Order State
-  const [cartItems, setCartItems] = useState<any[]>([]);
-  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [cartItems, setCartItems] = useState<CheckoutCartItem[]>([]);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("new");
 
   // Address Form State
@@ -70,7 +91,7 @@ export default function CheckoutPage() {
         setUser(user);
         if (user) {
           const addrs = await getAddresses();
-          setSavedAddresses(addrs);
+          setSavedAddresses(addrs as SavedAddress[]);
           if (addrs.length > 0) {
             setSelectedAddressId(addrs[0].id);
           }
@@ -84,7 +105,7 @@ export default function CheckoutPage() {
       try {
         const storedCart = JSON.parse(localStorage.getItem("varnam_guest_cart") || "[]");
         setCartItems(storedCart);
-      } catch (e) {
+      } catch {
         setCartItems([]);
       }
     }
@@ -124,8 +145,8 @@ export default function CheckoutPage() {
       if (addrs.length > 0) {
         setSelectedAddressId(addrs[0].id);
       }
-    } catch (err: any) {
-      setAuthError(err.message || "Authentication failed. Please try again.");
+    } catch (err: unknown) {
+      setAuthError(err instanceof Error ? err.message : "Authentication failed. Please try again.");
     } finally {
       setIsAuthPending(false);
     }
@@ -136,8 +157,8 @@ export default function CheckoutPage() {
     (acc, item) => acc + item.price * item.quantity,
     0
   );
-  const isFreeShipping = subtotalPaise >= 99900;
-  const shippingPaise = cartItems.length === 0 ? 0 : isFreeShipping ? 0 : 9900;
+  const isFreeShipping = subtotalPaise >= POLICY_CONFIG.FREE_SHIPPING_THRESHOLD_PAISE;
+  const shippingPaise = cartItems.length === 0 ? 0 : isFreeShipping ? 0 : POLICY_CONFIG.STANDARD_SHIPPING_FEE_PAISE;
   const totalPaise = subtotalPaise + shippingPaise;
 
   const handlePlaceOrder = async () => {
@@ -149,9 +170,9 @@ export default function CheckoutPage() {
     }
 
     // Determine shipping address
-    let finalAddress: any = null;
+    let finalAddress: SavedAddress | typeof addressForm | null = null;
     if (selectedAddressId !== "new") {
-      finalAddress = savedAddresses.find((a) => a.id === selectedAddressId);
+      finalAddress = savedAddresses.find((a) => a.id === selectedAddressId) || null;
     } else {
       // Validate address form
       if (
@@ -168,12 +189,17 @@ export default function CheckoutPage() {
       finalAddress = addressForm;
     }
 
+    if (!finalAddress) {
+      setOrderError("Please select or provide a valid shipping address.");
+      return;
+    }
+
     setIsPlacingOrder(true);
 
     try {
       // Save address if new
       if (selectedAddressId === "new") {
-        await saveAddress(finalAddress);
+        await saveAddress(finalAddress as Parameters<typeof saveAddress>[0]);
       }
 
       const checkoutPayload = {
@@ -181,7 +207,11 @@ export default function CheckoutPage() {
           variant_id: item.variant_id,
           quantity: item.quantity,
         })),
-        shipping_address: finalAddress,
+        shipping_address: {
+          ...finalAddress,
+          country: finalAddress.country || "India",
+          is_default: finalAddress.is_default ?? false,
+        },
         payment_method: paymentMethod,
       };
 
@@ -215,8 +245,8 @@ export default function CheckoutPage() {
         setOrderError(sessionResult.error || "Payment gateway connection error.");
         setIsPlacingOrder(false);
       }
-    } catch (err: any) {
-      setOrderError(err.message || "An unexpected error occurred.");
+    } catch (err: unknown) {
+      setOrderError(err instanceof Error ? err.message : "An unexpected error occurred.");
       setIsPlacingOrder(false);
     }
   };
@@ -293,7 +323,7 @@ export default function CheckoutPage() {
             ) : (
               <div className="space-y-4 pt-2">
                 <p className="text-xs text-text-muted">
-                  Log in or create a quick account so you can track your daughter's order in real-time.
+                  Log in or create a quick account so you can track your daughter&apos;s order in real-time.
                 </p>
 
                 {authError && (
@@ -647,7 +677,7 @@ export default function CheckoutPage() {
               <div key={item.variant_id} className="py-3 flex gap-3 text-xs">
                 <div className="relative w-14 h-18 rounded-lg overflow-hidden border border-border bg-canvas shrink-0">
                   <Image
-                    src={item.image_url}
+                    src={item.image_url || "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=600&q=80"}
                     alt={item.product_name}
                     fill
                     sizes="56px"
@@ -717,11 +747,11 @@ export default function CheckoutPage() {
           <div className="space-y-2 pt-2 text-xs text-text-muted">
             <div className="flex items-center gap-1.5 font-medium text-emerald-800">
               <ShieldCheck className="w-4 h-4 text-emerald-700" />
-              <span>7-Day Return / Size Exchange Guarantee</span>
+              <span>{POLICY_CONFIG.EXCHANGE_RETURN_WINDOW}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Truck className="w-4 h-4 text-brand-secondary" />
-              <span>Dispatches within 24 business hours</span>
+              <span>Dispatches within {POLICY_CONFIG.DISPATCH_TIMELINE}</span>
             </div>
           </div>
         </div>

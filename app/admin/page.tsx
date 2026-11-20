@@ -5,12 +5,23 @@ import {
   DollarSign,
   Package,
   AlertTriangle,
-  ShoppingBag,
-  ArrowRight,
   TrendingUp,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+interface RecentOrderSummary {
+  id: string;
+  order_number: string;
+  total_amount: number;
+  payment_method: string;
+  payment_status: string;
+  status: string;
+  created_at: string;
+  profiles?: { full_name?: string } | null;
+  shipping_address?: { name?: string } | null;
+  order_items?: { id: string }[];
+}
 
 export default async function AdminDashboardPage() {
   let metrics = {
@@ -20,7 +31,7 @@ export default async function AdminDashboardPage() {
     lowStockVariants: 0,
     totalProducts: 0,
   };
-  let recentOrders: any[] = [];
+  let recentOrders: RecentOrderSummary[] = [];
   let errorMsg = null;
 
   try {
@@ -29,9 +40,9 @@ export default async function AdminDashboardPage() {
       getAdminOrders(),
     ]);
     metrics = m;
-    recentOrders = o.slice(0, 5);
-  } catch (err: any) {
-    errorMsg = err.message;
+    recentOrders = o.slice(0, 5) as unknown as RecentOrderSummary[];
+  } catch (err: unknown) {
+    errorMsg = err instanceof Error ? err.message : "Failed to load dashboard metrics";
   }
 
   return (
@@ -65,7 +76,7 @@ export default async function AdminDashboardPage() {
 
       {errorMsg && (
         <div className="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs sm:text-sm">
-          <strong>Notice:</strong> {errorMsg} (Ensure your admin user has `profiles.role = 'admin'`).
+          <strong>Notice:</strong> {errorMsg} (Ensure your admin user has profiles.role = &apos;admin&apos;).
         </div>
       )}
 
@@ -172,7 +183,7 @@ export default async function AdminDashboardPage() {
                       {ord.order_number}
                     </td>
                     <td className="py-3 px-3">
-                      {ord.profiles?.full_name || ord.profiles?.email || "Guest"}
+                      {ord.profiles?.full_name || ord.shipping_address?.name || "Customer"}
                     </td>
                     <td className="py-3 px-3 text-stone-500">
                       {formatDate(ord.created_at)}

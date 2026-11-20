@@ -1,6 +1,6 @@
 "use server";
 
-import { createServerSupabaseClient, createAdminSupabaseClient } from "@/lib/db/supabase";
+import { createServerSupabaseClient } from "@/lib/db/supabase";
 import type { Database } from "@/types/db";
 import {
   adminOrderUpdateSchema,

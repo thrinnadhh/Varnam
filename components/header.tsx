@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { ShoppingBag, Heart, User, Menu, X, Search, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { POLICY_CONFIG } from "@/lib/constants";
 
 export function AnnouncementBar() {
   return (
     <div className="bg-brand-primary text-white text-xs font-medium py-2 px-4 text-center tracking-wide overflow-hidden">
       <div className="flex items-center justify-center gap-2">
         <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-        <span>Festive Couture Live • Women, Teens & Girls • Free Express Delivery Above ₹999 • 100% Cotton Linings</span>
+        <span>Festive Couture Live • Women, Teens &amp; Girls • Free Express Delivery Above {POLICY_CONFIG.FREE_SHIPPING_THRESHOLD_LABEL} • 100% Cotton Linings</span>
       </div>
     </div>
   );
@@ -22,24 +23,31 @@ export function Header() {
 
   // Sync cart count from local storage or server
   useEffect(() => {
-    try {
-      const guestCart = JSON.parse(localStorage.getItem("varnam_guest_cart") || "[]");
-      setCartCount(guestCart.reduce((acc: number, item: any) => acc + (item.quantity || 1), 0));
-    } catch {
-      setCartCount(0);
-    }
+    let isMounted = true;
+    queueMicrotask(() => {
+      if (!isMounted) return;
+      try {
+        const guestCart = JSON.parse(localStorage.getItem("varnam_guest_cart") || "[]");
+        setCartCount(guestCart.reduce((acc: number, item: { quantity?: number }) => acc + (item.quantity || 1), 0));
+      } catch {
+        setCartCount(0);
+      }
+    });
 
     const handleCartUpdate = () => {
       try {
         const guestCart = JSON.parse(localStorage.getItem("varnam_guest_cart") || "[]");
-        setCartCount(guestCart.reduce((acc: number, item: any) => acc + (item.quantity || 1), 0));
+        setCartCount(guestCart.reduce((acc: number, item: { quantity?: number }) => acc + (item.quantity || 1), 0));
       } catch {
         setCartCount(0);
       }
     };
 
     window.addEventListener("varnam_cart_updated", handleCartUpdate);
-    return () => window.removeEventListener("varnam_cart_updated", handleCartUpdate);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("varnam_cart_updated", handleCartUpdate);
+    };
   }, []);
 
   return (

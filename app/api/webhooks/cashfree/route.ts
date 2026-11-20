@@ -62,6 +62,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true, ignored: "Incomplete event payload" });
     }
 
+    console.log(`Processing Cashfree webhook event: ${eventType} for order: ${orderNumber}`);
+
     const gatewayPaymentId = String(paymentData.cf_payment_id);
     const paymentStatus = paymentData.payment_status; // "SUCCESS", "FAILED"
 
@@ -147,7 +149,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Cashfree webhook processing failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
