@@ -55,15 +55,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Server-side Route Guard for /checkout
-  if (pathname.startsWith("/checkout")) {
-    if (!user) {
-      const redirectUrl = new URL("/login", request.url);
-      redirectUrl.searchParams.set("redirectTo", "/checkout");
-      return NextResponse.redirect(redirectUrl);
-    }
-  }
-
   // Server-side Route Guard for /account
   if (pathname.startsWith("/account")) {
     if (!user) {

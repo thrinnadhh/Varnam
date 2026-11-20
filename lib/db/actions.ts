@@ -1,6 +1,6 @@
 "use server";
 
-import { createServerSupabaseClient } from "./supabase";
+import { createServerSupabaseClient, isSupabaseConfigured } from "./supabase";
 import {
   checkoutSchema,
   addressSchema,
@@ -29,6 +29,9 @@ import {
 // ==========================================
 
 export async function getStoreSettings() {
+  if (!isSupabaseConfigured()) {
+    return FALLBACK_STORE_SETTINGS;
+  }
   try {
     const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
@@ -104,6 +107,9 @@ export async function updateStoreSettings(input: Partial<StoreSettingsInput>) {
 }
 
 export async function getHeroBanners(includeInactive = false): Promise<FallbackBanner[]> {
+  if (!isSupabaseConfigured()) {
+    return FALLBACK_HERO_BANNERS;
+  }
   try {
     const supabase = await createServerSupabaseClient();
     let query = supabase.from("hero_banners").select("*");
@@ -678,6 +684,9 @@ function buildFallbackNavigationTree(): NavigationNode[] {
 }
 
 export async function getNavigationTree(): Promise<NavigationNode[]> {
+  if (!isSupabaseConfigured()) {
+    return buildFallbackNavigationTree();
+  }
   try {
     const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
@@ -731,6 +740,9 @@ export async function getNavigationTree(): Promise<NavigationNode[]> {
 }
 
 export async function getCategoryTreeAdmin(): Promise<NavigationNode[]> {
+  if (!isSupabaseConfigured()) {
+    return buildFallbackNavigationTree();
+  }
   try {
     const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
@@ -886,6 +898,9 @@ export async function reorderCategoryNodes(ordered: string[] | { id: string; sor
 // ==========================================
 
 export async function getCategories() {
+  if (!isSupabaseConfigured()) {
+    return FALLBACK_CATEGORIES;
+  }
   try {
     const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
@@ -905,6 +920,9 @@ export async function getCategories() {
 }
 
 export async function getBanners() {
+  if (!isSupabaseConfigured()) {
+    return FALLBACK_BANNERS;
+  }
   try {
     const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
@@ -937,7 +955,51 @@ export interface GetProductsParams {
   limit?: number;
 }
 
+function filterFallbackProductsList(params: GetProductsParams = {}): ProductListItem[] {
+  let filtered = [...FALLBACK_PRODUCTS];
+  if (params.categorySlug) {
+    filtered = filtered.filter((p) => p.categories.slug === params.categorySlug);
+  }
+  if (params.segment) {
+    filtered = filtered.filter((p) => p.segment === params.segment);
+  }
+  if (params.sizeGroup) {
+    filtered = filtered.filter((p) =>
+      p.product_variants.some((v) => v.size_group === params.sizeGroup)
+    );
+  }
+  const targetSize = params.sizeName || params.ageSize;
+  if (targetSize) {
+    filtered = filtered.filter((p) =>
+      p.product_variants.some((v) => v.size_name === targetSize)
+    );
+  }
+  if (params.isFeatured) {
+    filtered = filtered.filter((p) => p.is_featured);
+  }
+  if (params.sort === "price_asc") {
+    filtered.sort((a, b) => {
+      const minA = Math.min(...a.product_variants.map((v) => v.price));
+      const minB = Math.min(...b.product_variants.map((v) => v.price));
+      return minA - minB;
+    });
+  } else if (params.sort === "price_desc") {
+    filtered.sort((a, b) => {
+      const minA = Math.min(...a.product_variants.map((v) => v.price));
+      const minB = Math.min(...b.product_variants.map((v) => v.price));
+      return minB - minA;
+    });
+  }
+  if (params.limit) {
+    filtered = filtered.slice(0, params.limit);
+  }
+  return (filtered as unknown) as ProductListItem[];
+}
+
 export async function getProducts(params: GetProductsParams = {}): Promise<ProductListItem[]> {
+  if (!isSupabaseConfigured()) {
+    return filterFallbackProductsList(params);
+  }
   try {
     const supabase = await createServerSupabaseClient();
 
@@ -1056,48 +1118,14 @@ export async function getProducts(params: GetProductsParams = {}): Promise<Produ
     console.warn("Error fetching products from DB, using fallback:", err);
   }
 
-  // Filter fallback catalog
-  let filtered = [...FALLBACK_PRODUCTS];
-  if (params.categorySlug) {
-    filtered = filtered.filter((p) => p.categories.slug === params.categorySlug);
-  }
-  if (params.segment) {
-    filtered = filtered.filter((p) => p.segment === params.segment);
-  }
-  if (params.sizeGroup) {
-    filtered = filtered.filter((p) =>
-      p.product_variants.some((v) => v.size_group === params.sizeGroup)
-    );
-  }
-  const targetSize = params.sizeName || params.ageSize;
-  if (targetSize) {
-    filtered = filtered.filter((p) =>
-      p.product_variants.some((v) => v.size_name === targetSize)
-    );
-  }
-  if (params.isFeatured) {
-    filtered = filtered.filter((p) => p.is_featured);
-  }
-  if (params.sort === "price_asc") {
-    filtered.sort((a, b) => {
-      const minA = Math.min(...a.product_variants.map((v) => v.price));
-      const minB = Math.min(...b.product_variants.map((v) => v.price));
-      return minA - minB;
-    });
-  } else if (params.sort === "price_desc") {
-    filtered.sort((a, b) => {
-      const minA = Math.min(...a.product_variants.map((v) => v.price));
-      const minB = Math.min(...b.product_variants.map((v) => v.price));
-      return minB - minA;
-    });
-  }
-  if (params.limit) {
-    filtered = filtered.slice(0, params.limit);
-  }
-  return (filtered as unknown) as ProductListItem[];
+  return filterFallbackProductsList(params);
 }
 
 export async function getProductBySlug(slug: string): Promise<ProductWithDetails | null> {
+  if (!isSupabaseConfigured()) {
+    const found = FALLBACK_PRODUCTS.find((p) => p.slug === slug);
+    return (found as unknown as ProductWithDetails) || null;
+  }
   try {
     const supabase = await createServerSupabaseClient();
 
@@ -1173,6 +1201,7 @@ export async function getProductBySlug(slug: string): Promise<ProductWithDetails
 // ==========================================
 
 export async function getCart() {
+  if (!isSupabaseConfigured()) return [];
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -1314,6 +1343,7 @@ export async function mergeGuestCartAction(guestItems: Array<{ variant_id: strin
 // ==========================================
 
 export async function getWishlist() {
+  if (!isSupabaseConfigured()) return [];
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -1375,6 +1405,7 @@ export async function toggleWishlist(productId: string) {
 // ==========================================
 
 export async function getAddresses() {
+  if (!isSupabaseConfigured()) return [];
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -1500,6 +1531,7 @@ export async function createOrderAction(input: CheckoutInput) {
 }
 
 export async function getUserOrders() {
+  if (!isSupabaseConfigured()) return [];
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
