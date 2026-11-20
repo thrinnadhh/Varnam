@@ -265,30 +265,60 @@ export function QuickViewModal({
               </div>
 
               {/* Quantity Stepper */}
-              <div className="mt-4 flex items-center gap-3">
+              <div className="mt-4 flex flex-wrap items-center gap-3">
                 <span className="text-xs font-bold text-[#261C17] uppercase tracking-wider">
                   Quantity:
                 </span>
-                <div className="inline-flex items-center border border-[#D8C7AE] rounded-lg bg-[#FAF5EB]">
+                <div className="inline-flex items-center border border-[#D8C7AE] rounded-lg bg-[#FAF5EB] shadow-xs">
                   <button
                     type="button"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-1.5 text-[#3B281E] hover:bg-[#EFE6D5] rounded-l-lg"
+                    disabled={quantity <= 1}
+                    className="p-1.5 text-[#3B281E] hover:bg-[#EFE6D5] disabled:opacity-30 rounded-l-lg transition-colors"
                     aria-label="Decrease quantity"
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </button>
-                  <span className="w-8 text-center text-xs font-bold text-[#261C17]">
-                    {quantity}
-                  </span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={activeVariant?.stock || 50}
+                    value={quantity}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      if (!isNaN(val)) {
+                        setQuantity(Math.max(1, Math.min(activeVariant?.stock || 50, val)));
+                      }
+                    }}
+                    className="w-8 text-center text-xs font-bold font-mono bg-transparent text-[#261C17] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    aria-label="Quantity"
+                  />
                   <button
                     type="button"
-                    onClick={() => setQuantity(Math.min(10, quantity + 1))}
-                    className="p-1.5 text-[#3B281E] hover:bg-[#EFE6D5] rounded-r-lg"
+                    onClick={() => setQuantity(Math.min(activeVariant?.stock || 50, quantity + 1))}
+                    disabled={quantity >= (activeVariant?.stock || 50)}
+                    className="p-1.5 text-[#3B281E] hover:bg-[#EFE6D5] disabled:opacity-30 rounded-r-lg transition-colors"
                     aria-label="Increase quantity"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 5].map((num) => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => setQuantity(Math.min(activeVariant?.stock || 50, num))}
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold font-mono transition-all ${
+                        quantity === num
+                          ? "bg-[#8B1E3F] text-[#FAF5EB]"
+                          : "bg-[#EFE6D5] text-[#3B281E] hover:bg-[#FAF5EB] border border-[#D8C7AE]/60"
+                      }`}
+                    >
+                      {num}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>

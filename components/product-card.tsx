@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useTransition } from "react";
-import { Heart, ShoppingBag, Check, Eye } from "lucide-react";
+import { Heart, ShoppingBag, Check, Eye, Minus, Plus } from "lucide-react";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { toggleWishlist, addToCart } from "@/lib/db/actions";
 import { QuickViewModal } from "@/components/quick-view-modal";
@@ -43,6 +43,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const [isFavorited, setIsFavorited] = useState(false);
   const [addedFeedback, setAddedFeedback] = useState(false);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+  const [cardQuantity, setCardQuantity] = useState(1);
 
   const primaryImage =
     product.product_images?.find((img) => img.is_primary)?.image_url ||
@@ -86,7 +87,7 @@ export function ProductCard({ product }: ProductCardProps) {
         const guestCart = JSON.parse(localStorage.getItem("varnam_guest_cart") || "[]");
         const existingIdx = guestCart.findIndex((i: { variant_id?: string }) => i.variant_id === firstAvailable.id);
         if (existingIdx >= 0) {
-          guestCart[existingIdx].quantity += 1;
+          guestCart[existingIdx].quantity += cardQuantity;
         } else {
           guestCart.push({
             variant_id: firstAvailable.id,
@@ -99,7 +100,7 @@ export function ProductCard({ product }: ProductCardProps) {
             price: firstAvailable.price,
             mrp: firstAvailable.mrp,
             image_url: primaryImage,
-            quantity: 1,
+            quantity: cardQuantity,
           });
         }
         localStorage.setItem("varnam_guest_cart", JSON.stringify(guestCart));
@@ -108,7 +109,7 @@ export function ProductCard({ product }: ProductCardProps) {
         console.warn("Local cart save error:", err);
       }
 
-      await addToCart(firstAvailable.id, 1);
+      await addToCart(firstAvailable.id, cardQuantity);
       setAddedFeedback(true);
       setTimeout(() => setAddedFeedback(false), 2000);
     });
@@ -227,30 +228,73 @@ export function ProductCard({ product }: ProductCardProps) {
               </div>
             </div>
 
-            {/* Quick Add CTA */}
-            <button
-              type="button"
-              onClick={handleQuickAdd}
-              disabled={isPending}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
-                addedFeedback
-                  ? "bg-[#145349] text-white"
-                  : "bg-[#8B1E3F] text-[#FAF5EB] hover:bg-[#721531] active:scale-95"
-              }`}
-              aria-label={`Quick add ${product.name} to bag`}
-            >
-              {addedFeedback ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Added</span>
-                </>
-              ) : (
-                <>
-                  <ShoppingBag className="w-3.5 h-3.5" />
-                  <span>Quick Add</span>
-                </>
-              )}
-            </button>
+            {/* Quantity Stepper & Quick Add CTA */}
+            <div className="flex items-center gap-1.5">
+              <div
+                className="flex items-center border border-[#D8C7AE] rounded-lg bg-[#EFE6D5] overflow-hidden shadow-xs"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setCardQuantity((q) => Math.max(1, q - 1))}
+                  disabled={cardQuantity <= 1 || isPending}
+                  className="px-1.5 py-1 text-[#3B281E] hover:bg-[#FAF5EB] disabled:opacity-30 transition-colors"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus className="w-3 h-3" />
+                </button>
+                <input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={cardQuantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val)) {
+                      setCardQuantity(Math.max(1, Math.min(50, val)));
+                    }
+                  }}
+                  className="w-6 text-center text-xs font-bold font-mono bg-transparent text-[#261C17] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  aria-label="Item quantity"
+                />
+                <button
+                  type="button"
+                  onClick={() => setCardQuantity((q) => Math.min(50, q + 1))}
+                  disabled={cardQuantity >= 50 || isPending}
+                  className="px-1.5 py-1 text-[#3B281E] hover:bg-[#FAF5EB] disabled:opacity-30 transition-colors"
+                  aria-label="Increase quantity"
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleQuickAdd}
+                disabled={isPending}
+                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                  addedFeedback
+                    ? "bg-[#145349] text-white"
+                    : "bg-[#8B1E3F] text-[#FAF5EB] hover:bg-[#721531] active:scale-95"
+                }`}
+                aria-label={`Quick add ${cardQuantity} of ${product.name} to bag`}
+              >
+                {addedFeedback ? (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>{cardQuantity > 1 ? `Added (${cardQuantity})` : "Added"}</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                    <span>{cardQuantity > 1 ? `Add (${cardQuantity})` : "Quick Add"}</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

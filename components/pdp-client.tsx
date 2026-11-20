@@ -386,7 +386,7 @@ export function PDPClient({ product }: PDPClientProps) {
               </span>
             )}
           </div>
-          <div className="flex items-center border border-[#D8C7AE] rounded-xl bg-[#EFE6D5] overflow-hidden">
+          <div className="flex items-center border border-[#D8C7AE] rounded-xl bg-[#EFE6D5] overflow-hidden w-fit shadow-xs">
             <button
               type="button"
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -396,18 +396,49 @@ export function PDPClient({ product }: PDPClientProps) {
             >
               <Minus className="w-3.5 h-3.5" />
             </button>
-            <span className="px-4 py-1 text-sm font-bold font-mono text-[#261C17] min-w-[36px] text-center">
-              {quantity}
-            </span>
+            <input
+              type="number"
+              min={1}
+              max={selectedVariant?.stock || 50}
+              value={quantity}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                if (!isNaN(val)) {
+                  setQuantity(Math.max(1, Math.min(selectedVariant?.stock || 50, val)));
+                }
+              }}
+              className="w-12 text-center text-sm font-bold font-mono bg-transparent text-[#261C17] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              aria-label="Item quantity"
+            />
             <button
               type="button"
-              onClick={() => setQuantity((q) => Math.min(selectedVariant?.stock || 10, q + 1))}
-              disabled={quantity >= (selectedVariant?.stock || 10)}
+              onClick={() => setQuantity((q) => Math.min(selectedVariant?.stock || 50, q + 1))}
+              disabled={quantity >= (selectedVariant?.stock || 50)}
               className="px-3.5 py-2 text-[#3B281E] hover:bg-[#FAF5EB] disabled:opacity-30 transition-colors"
               aria-label="Increase quantity"
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
+          </div>
+
+          {/* Quick Quantity Shortcut Chips */}
+          <div className="flex items-center gap-1.5 pt-1">
+            <span className="text-[10px] text-[#6B574B] font-medium mr-1">Quick Select:</span>
+            {[1, 2, 3, 5, 10].map((num) => (
+              <button
+                key={num}
+                type="button"
+                onClick={() => setQuantity(Math.min(selectedVariant?.stock || 50, num))}
+                className={`px-2 py-0.5 rounded text-[11px] font-bold font-mono transition-all ${
+                  quantity === num
+                    ? "bg-[#8B1E3F] text-[#FAF5EB] shadow-xs"
+                    : "bg-[#EFE6D5] text-[#3B281E] hover:bg-[#FAF5EB] border border-[#D8C7AE]/60"
+                }`}
+                aria-label={`Select quantity ${num}`}
+              >
+                {num}
+              </button>
+            ))}
           </div>
         </div>
 

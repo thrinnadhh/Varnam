@@ -95,7 +95,7 @@ export const cartItemSchema = z.object({
     .number()
     .int()
     .min(1, "Quantity must be at least 1")
-    .max(10, "Maximum 10 items allowed per SKU"),
+    .max(50, "Maximum 50 items allowed per SKU"),
 });
 
 export const guestCartItemSchema = z.object({
@@ -109,7 +109,7 @@ export const guestCartItemSchema = z.object({
   price: z.number().int().min(0),
   mrp: z.number().int().min(0),
   image_url: z.string().url(),
-  quantity: z.number().int().min(1).max(10),
+  quantity: z.number().int().min(1).max(50),
 });
 
 export type CartItemInput = z.infer<typeof cartItemSchema>;

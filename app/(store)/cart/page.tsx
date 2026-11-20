@@ -230,22 +230,36 @@ export default function CartPage() {
                     </div>
 
                     <div className="flex items-center justify-between pt-2 border-t border-[#D8C7AE]/50">
-                      <div className="flex items-center border border-[#D8C7AE] rounded-lg bg-[#EFE6D5]">
+                      <div className="flex items-center border border-[#D8C7AE] rounded-lg bg-[#EFE6D5] shadow-xs">
                         <button
                           type="button"
                           onClick={() => handleUpdateQuantity(item.variant_id, -1)}
-                          className="p-1.5 text-[#3B281E] hover:bg-[#FAF5EB] rounded-l-lg"
+                          disabled={item.quantity <= 1}
+                          className="p-1.5 text-[#3B281E] hover:bg-[#FAF5EB] disabled:opacity-30 rounded-l-lg transition-colors"
                           aria-label="Decrease quantity"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
-                        <span className="w-8 text-center text-xs font-bold text-[#261C17] price-tabular">
-                          {item.quantity}
-                        </span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={50}
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val > 0) {
+                              const diff = Math.min(50, val) - item.quantity;
+                              if (diff !== 0) handleUpdateQuantity(item.variant_id, diff);
+                            }
+                          }}
+                          className="w-9 text-center text-xs font-bold font-mono bg-transparent text-[#261C17] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          aria-label="Item quantity in bag"
+                        />
                         <button
                           type="button"
                           onClick={() => handleUpdateQuantity(item.variant_id, 1)}
-                          className="p-1.5 text-[#3B281E] hover:bg-[#FAF5EB] rounded-r-lg"
+                          disabled={item.quantity >= 50}
+                          className="p-1.5 text-[#3B281E] hover:bg-[#FAF5EB] disabled:opacity-30 rounded-r-lg transition-colors"
                           aria-label="Increase quantity"
                         >
                           <Plus className="w-3.5 h-3.5" />
