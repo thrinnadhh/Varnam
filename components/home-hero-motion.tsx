@@ -50,8 +50,8 @@ export function HomeHeroMotion() {
       {/* Main Hero Card - Note: LCP Image has priority={true} and is never animated or hidden */}
       <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden border-2 border-border/80 shadow-warm-lg bg-surface">
         <Image
-          src="https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=1000&q=80"
-          alt="Little girl wearing Blush Peony Tiered Tulle Party Gown"
+          src="https://images.unsplash.com/photo-1616788494707-ec28f08d05a1?auto=format&fit=crop&w=1000&q=80"
+          alt="Little girl wearing Indian Embroidered Zari Festive Gown"
           fill
           priority
           sizes="(max-width: 640px) 90vw, 450px"

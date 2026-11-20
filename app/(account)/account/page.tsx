@@ -238,7 +238,7 @@ function AccountContent() {
           mrp: variant.mrp || variant.price,
           image_url:
             item.products.product_images?.[0]?.image_url ||
-            "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80",
           quantity: 1,
         });
         localStorage.setItem("varnam_guest_cart", JSON.stringify(local));
@@ -727,7 +727,7 @@ function AccountContent() {
                     const prod = item.products;
                     const primaryImg =
                       prod.product_images?.[0]?.image_url ||
-                      "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=600&q=80";
+                      "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80";
                     const minPrice = prod.product_variants?.[0]?.price || 0;
 
                     return (

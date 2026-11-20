@@ -4,18 +4,22 @@ import { getCategories, getProducts, getHeroBanners, getStoreSettings } from "@/
 import { ProductCard } from "@/components/product-card";
 import { Sparkles, ArrowRight, ShieldCheck, Ruler, Scissors } from "lucide-react";
 import { BannerCarousel } from "@/components/banner-carousel";
+import { SliderRow } from "@/components/slider-row";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [categories, featuredProducts, heroBanners, storeSettings] = await Promise.all([
     getCategories(),
-    getProducts({ isFeatured: true, limit: 8 }),
+    getProducts({ isFeatured: true, limit: 12 }),
     getHeroBanners(),
     getStoreSettings(),
   ]);
 
-  // Curated collections requested: Xmas Collection, Daily Wear, Cottonwears, Tops, Trending Collections, New Arrivals.
+  // 12 Curated Occasion Collections:
+  // 1. Xmas Collection, 2. Daily Wear, 3. Cottonwears, 4. Tops,
+  // 5. Trending Collections, 6. New Arrivals, 7. Pattu & Lehengas, 8. Anarkali & Shararas,
+  // 9. Festive & Wedding, 10. Haldi & Mehendi, 11. Party & Evening Gowns, 12. Temple & Pooja Wear.
   // Dynamically populated from getCategories() so any Admin edits/renames appear immediately!
   const targetCuratedSlugs = [
     "xmas-collection",
@@ -24,6 +28,12 @@ export default async function HomePage() {
     "tops",
     "trending-collections",
     "new-arrivals",
+    "pattu-lehengas",
+    "anarkali-shararas",
+    "festive-wedding",
+    "haldi-mehendi",
+    "party-gowns",
+    "temple-pooja-wear",
   ];
 
   interface CategoryItem {
@@ -46,13 +56,11 @@ export default async function HomePage() {
     .filter((c): c is CategoryItem => !!c);
 
   const otherParents = activeParents.filter(
-    (c) =>
-      !targetCuratedSlugs.includes(c.slug) &&
-      !["festive-wedding", "party-gowns", "cotton-dresses", "casuals-coords", "pattu-lehengas", "anarkali-shararas", "mulmul-festive-frocks"].includes(c.slug)
+    (c) => !targetCuratedSlugs.includes(c.slug)
   );
 
   const curatedCollections = [...matchedCurated, ...otherParents];
-  const displayCollections = curatedCollections.length > 0 ? curatedCollections : activeParents.slice(0, 6);
+  const displayCollections = curatedCollections.length > 0 ? curatedCollections : activeParents;
 
   return (
     <div className="flex flex-col gap-10 sm:gap-14 pb-16">
@@ -66,37 +74,42 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* 2. Dynamic Curated Collections Row (Admin-configurable: Xmas Collection, Daily Wear, Cottonwears, Tops, Trending Collections, New Arrivals) */}
+      {/* 2. Dynamic Curated Collections Row (12 Curated Occasion Collections with Slide Arrows) */}
       {displayCollections.length > 0 && (
         <section className="w-full space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-[#D8C7AE] pb-3">
             <div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EFE6D5] border border-[#C69214] text-[#8B1E3F] text-[10px] font-bold tracking-wider uppercase mb-1">
                 <Sparkles className="w-3 h-3 text-[#C69214]" />
-                <span>Featured Festive Collections</span>
+                <span>Featured Festive Collections • 12 Curations</span>
               </div>
               <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#261C17]">
                 Curated Occasions &amp; Celebrations
               </h2>
               <p className="text-xs text-[#6B574B] mt-0.5">
-                Explore handloom festive edits, pure cotton twirls, and holiday season styles
+                Explore handloom festive edits, pure cotton twirls, wedding silks, and holiday celebrations
               </p>
             </div>
-            <Link
-              href="/collections"
-              className="text-xs font-bold text-[#8B1E3F] hover:text-[#721531] flex items-center gap-1 self-start sm:self-auto"
-            >
-              <span>View All Collections</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            <div className="flex items-center gap-3">
+              <span className="hidden sm:inline-block text-[11px] text-[#6B574B] font-medium">
+                Slide to explore 12 collections &rarr;
+              </span>
+              <Link
+                href="/collections"
+                className="text-xs font-bold text-[#8B1E3F] hover:text-[#721531] flex items-center gap-1"
+              >
+                <span>View All Collections</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          <SliderRow contentClassName="pb-3 pt-1">
             {displayCollections.map((category) => (
               <Link
                 key={category.id}
                 href={`/collections/${category.slug}`}
-                className="group flex flex-col rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] p-2.5 hover:border-[#8B1E3F] hover:shadow-[0_8px_24px_-6px_rgba(59,40,30,0.18)] transition-all overflow-hidden"
+                className="group flex flex-col min-w-[170px] sm:min-w-[210px] md:min-w-[230px] max-w-[240px] flex-shrink-0 snap-start rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] p-3 hover:border-[#8B1E3F] hover:shadow-[0_8px_24px_-6px_rgba(59,40,30,0.18)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
               >
                 <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-[#EFE6D5] mb-2.5">
                   <Image
@@ -104,11 +117,11 @@ export default async function HomePage() {
                     alt={category.name}
                     fill
                     className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                    sizes="(max-width: 640px) 180px, 240px"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#2A1C15]/70 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
                   <span className="absolute bottom-1.5 left-2 right-2 text-[10px] text-amber-200 font-medium truncate">
-                    Explore Edit
+                    Explore Edit &rarr;
                   </span>
                 </div>
                 <div className="px-1 pb-1">
@@ -116,14 +129,14 @@ export default async function HomePage() {
                     {category.name}
                   </h3>
                   {category.description && (
-                    <p className="text-[10px] text-[#6B574B] line-clamp-1 mt-0.5">
+                    <p className="text-[10px] text-[#6B574B] line-clamp-2 mt-0.5 leading-tight">
                       {category.description}
                     </p>
                   )}
                 </div>
               </Link>
             ))}
-          </div>
+          </SliderRow>
         </section>
       )}
 
@@ -185,7 +198,7 @@ export default async function HomePage() {
 
           <div className="lg:col-span-4 relative aspect-[3/4] rounded-2xl overflow-hidden border border-[#D8C7AE] shadow-md bg-[#EFE6D5]">
             <Image
-              src="https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80"
+              src="https://images.unsplash.com/photo-1616788494707-ec28f08d05a1?auto=format&fit=crop&w=800&q=80"
               alt="Varnam Celebratory Indian Couture"
               fill
               className="object-cover object-center"
@@ -200,7 +213,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 4. Shared Occasion Collections (Strictly tested in storefront.spec.ts) */}
+      {/* 4. Shared Occasion Collections (With Sliding Arrows on the Ends — Tested in storefront.spec.ts) */}
       <section className="space-y-6">
         <div className="flex items-end justify-between border-b border-[#D8C7AE] pb-3">
           <div>
@@ -211,20 +224,25 @@ export default async function HomePage() {
               Shared Occasion Collections
             </h2>
           </div>
-          <Link
-            href="/collections"
-            className="text-xs font-bold text-[#8B1E3F] hover:text-[#721531] flex items-center gap-1"
-          >
-            <span>View All Curations</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:inline-block text-[11px] text-[#6B574B] font-medium">
+              Slide to browse occasions &rarr;
+            </span>
+            <Link
+              href="/collections"
+              className="text-xs font-bold text-[#8B1E3F] hover:text-[#721531] flex items-center gap-1"
+            >
+              <span>View All Curations</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <SliderRow contentClassName="pb-3 pt-1">
           {/* Card 1: Festive & Wedding */}
           <Link
             href="/collections/festive-wedding"
-            className="group relative h-72 rounded-2xl overflow-hidden border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)] hover:shadow-xl transition-all"
+            className="group relative h-80 min-w-[280px] sm:min-w-[340px] lg:min-w-[380px] flex-shrink-0 snap-start rounded-2xl overflow-hidden border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)] hover:shadow-xl transition-all"
           >
             <Image
               src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80"
@@ -232,12 +250,12 @@ export default async function HomePage() {
               fill
               className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#2A1C15]/90 via-[#2A1C15]/40 to-transparent flex flex-col justify-end p-6 text-[#FAF5EB]">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#2A1C15]/95 via-[#2A1C15]/40 to-transparent flex flex-col justify-end p-6 text-[#FAF5EB]">
               <span className="text-[10px] uppercase font-bold tracking-widest text-[#C69214]">
                 Temple Weaves &amp; Zari
               </span>
-              <h3 className="font-serif text-xl font-bold mt-1">Festive &amp; Wedding</h3>
-              <p className="text-xs text-[#FAF5EB]/80 line-clamp-2 mt-1">
+              <h3 className="font-serif text-xl sm:text-2xl font-bold mt-1">Festive &amp; Wedding</h3>
+              <p className="text-xs text-[#FAF5EB]/85 line-clamp-2 mt-1">
                 Royal tissue lehengas, pure silk pavadais, and embellished anarkali suits for milestone poojas and weddings.
               </p>
             </div>
@@ -246,7 +264,7 @@ export default async function HomePage() {
           {/* Card 2: Party & Evening Gowns */}
           <Link
             href="/collections/party-gowns"
-            className="group relative h-72 rounded-2xl overflow-hidden border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)] hover:shadow-xl transition-all"
+            className="group relative h-80 min-w-[280px] sm:min-w-[340px] lg:min-w-[380px] flex-shrink-0 snap-start rounded-2xl overflow-hidden border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)] hover:shadow-xl transition-all"
           >
             <Image
               src="https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=800&q=80"
@@ -254,12 +272,12 @@ export default async function HomePage() {
               fill
               className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#2A1C15]/90 via-[#2A1C15]/40 to-transparent flex flex-col justify-end p-6 text-[#FAF5EB]">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#2A1C15]/95 via-[#2A1C15]/40 to-transparent flex flex-col justify-end p-6 text-[#FAF5EB]">
               <span className="text-[10px] uppercase font-bold tracking-widest text-[#C69214]">
                 Tulle &amp; Organza
               </span>
-              <h3 className="font-serif text-xl font-bold mt-1">Party &amp; Evening Gowns</h3>
-              <p className="text-xs text-[#FAF5EB]/80 line-clamp-2 mt-1">
+              <h3 className="font-serif text-xl sm:text-2xl font-bold mt-1">Party &amp; Evening Gowns</h3>
+              <p className="text-xs text-[#FAF5EB]/85 line-clamp-2 mt-1">
                 Twirl-worthy tiered ruffles and fairy-tale flared silhouettes with soft satin and cotton underskirts.
               </p>
             </div>
@@ -268,7 +286,7 @@ export default async function HomePage() {
           {/* Card 3: Mulmul & Festive Frocks */}
           <Link
             href="/collections/mulmul-festive-frocks"
-            className="group relative h-72 rounded-2xl overflow-hidden border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)] hover:shadow-xl transition-all sm:col-span-2 lg:col-span-1"
+            className="group relative h-80 min-w-[280px] sm:min-w-[340px] lg:min-w-[380px] flex-shrink-0 snap-start rounded-2xl overflow-hidden border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)] hover:shadow-xl transition-all"
           >
             <Image
               src="https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&w=800&q=80"
@@ -276,20 +294,64 @@ export default async function HomePage() {
               fill
               className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#2A1C15]/90 via-[#2A1C15]/40 to-transparent flex flex-col justify-end p-6 text-[#FAF5EB]">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#2A1C15]/95 via-[#2A1C15]/40 to-transparent flex flex-col justify-end p-6 text-[#FAF5EB]">
               <span className="text-[10px] uppercase font-bold tracking-widest text-[#C69214]">
                 Pure Cotton Twirls
               </span>
-              <h3 className="font-serif text-xl font-bold mt-1">Mulmul &amp; Festive Frocks</h3>
-              <p className="text-xs text-[#FAF5EB]/80 line-clamp-2 mt-1">
+              <h3 className="font-serif text-xl sm:text-2xl font-bold mt-1">Mulmul &amp; Festive Frocks</h3>
+              <p className="text-xs text-[#FAF5EB]/85 line-clamp-2 mt-1">
                 Breathable, skin-soft handblock printed cotton dresses with zero synthetic contact and generous ease.
               </p>
             </div>
           </Link>
-        </div>
+
+          {/* Card 4: Haldi & Mehendi Celebration */}
+          <Link
+            href="/collections/haldi-mehendi"
+            className="group relative h-80 min-w-[280px] sm:min-w-[340px] lg:min-w-[380px] flex-shrink-0 snap-start rounded-2xl overflow-hidden border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)] hover:shadow-xl transition-all"
+          >
+            <Image
+              src="https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?auto=format&fit=crop&w=800&q=80"
+              alt="Haldi & Mehendi Celebration"
+              fill
+              className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#2A1C15]/95 via-[#2A1C15]/40 to-transparent flex flex-col justify-end p-6 text-[#FAF5EB]">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#C69214]">
+                Turmeric &amp; Marigold
+              </span>
+              <h3 className="font-serif text-xl sm:text-2xl font-bold mt-1">Haldi &amp; Mehendi</h3>
+              <p className="text-xs text-[#FAF5EB]/85 line-clamp-2 mt-1">
+                Vibrant sunshine yellow lehengas, flared festive twirls, and comfortable sangeet ceremony wear.
+              </p>
+            </div>
+          </Link>
+
+          {/* Card 5: Temple & Pooja Wear */}
+          <Link
+            href="/collections/temple-pooja-wear"
+            className="group relative h-80 min-w-[280px] sm:min-w-[340px] lg:min-w-[380px] flex-shrink-0 snap-start rounded-2xl overflow-hidden border border-[#D8C7AE] shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)] hover:shadow-xl transition-all"
+          >
+            <Image
+              src="https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=800&q=80"
+              alt="Temple & Pooja Wear"
+              fill
+              className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#2A1C15]/95 via-[#2A1C15]/40 to-transparent flex flex-col justify-end p-6 text-[#FAF5EB]">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#C69214]">
+                Auspicious Kasavu &amp; Gold
+              </span>
+              <h3 className="font-serif text-xl sm:text-2xl font-bold mt-1">Temple &amp; Pooja Silks</h3>
+              <p className="text-xs text-[#FAF5EB]/85 line-clamp-2 mt-1">
+                Sacred golden border traditional drapes and pure cotton outfits crafted for temple visits and rituals.
+              </p>
+            </div>
+          </Link>
+        </SliderRow>
       </section>
 
-      {/* 5. Featured Boutique Hang-Tag Dresses */}
+      {/* 5. Featured Boutique Hang-Tag Dresses (With Slide Arrows) */}
       <section className="space-y-6">
         <div className="flex items-end justify-between border-b border-[#D8C7AE] pb-3">
           <div>
@@ -300,20 +362,30 @@ export default async function HomePage() {
               Artisanal Celebration Twirls
             </h2>
           </div>
-          <Link
-            href="/collections"
-            className="text-xs font-bold text-[#8B1E3F] hover:text-[#721531] flex items-center gap-1"
-          >
-            <span>View All ({featuredProducts.length})</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:inline-block text-[11px] text-[#6B574B] font-medium">
+              Slide to view designs &rarr;
+            </span>
+            <Link
+              href="/collections"
+              className="text-xs font-bold text-[#8B1E3F] hover:text-[#721531] flex items-center gap-1"
+            >
+              <span>View All ({featuredProducts.length})</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        <SliderRow contentClassName="pb-4 pt-1">
           {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <div
+              key={product.id}
+              className="min-w-[240px] sm:min-w-[270px] lg:min-w-[290px] max-w-[300px] flex-shrink-0 snap-start"
+            >
+              <ProductCard product={product} />
+            </div>
           ))}
-        </div>
+        </SliderRow>
       </section>
     </div>
   );

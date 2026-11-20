@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 3040;
-const BASE_URL = `http://localhost:${PORT}`;
+const PORT = process.env.PORT || 3001;
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -26,9 +26,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `pnpm dev -p ${PORT}`,
+    command: `npm run dev -- -p ${PORT}`,
     url: BASE_URL,
-    reuseExistingServer: false,
+    reuseExistingServer: true,
     timeout: 120000,
   },
 });

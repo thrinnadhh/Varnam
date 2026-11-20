@@ -46,7 +46,7 @@ const PRESET_BANNER_IMAGES = [
   },
   {
     name: "Xmas & Winter Festive Red",
-    url: "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1600&q=85",
+    url: "https://images.unsplash.com/photo-1616788494707-ec28f08d05a1?auto=format&fit=crop&w=1600&q=85",
   },
   {
     name: "Royal Kumkum Velvet Anarkali",
@@ -54,7 +54,7 @@ const PRESET_BANNER_IMAGES = [
   },
   {
     name: "Pure Cottonwears Twirl",
-    url: "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=1600&q=85",
+    url: "https://images.unsplash.com/photo-1604014237800-1c9102c219da?auto=format&fit=crop&w=1600&q=85",
   },
   {
     name: "Daily Wear Casuals & Co-ords",
@@ -62,15 +62,23 @@ const PRESET_BANNER_IMAGES = [
   },
   {
     name: "Festive Peplum Kurtis & Tops",
-    url: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1600&q=85",
+    url: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1600&q=85",
   },
   {
     name: "Trending Celebratory Collections",
-    url: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1600&q=85",
+    url: "https://images.unsplash.com/photo-1614786269829-d24616faf56d?auto=format&fit=crop&w=1600&q=85",
   },
   {
     name: "Fresh New Arrivals Atelier",
     url: "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&w=1600&q=85",
+  },
+  {
+    name: "Temple & Pooja Kasavu Silks",
+    url: "https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?auto=format&fit=crop&w=1600&q=85",
+  },
+  {
+    name: "Haldi & Sangeet Yellow Twirls",
+    url: "https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?auto=format&fit=crop&w=1600&q=85",
   },
 ];
 
