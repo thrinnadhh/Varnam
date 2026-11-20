@@ -99,6 +99,7 @@ async function runTests() {
       slug: `active-cat-${Date.now()}`,
       segment: "all",
       is_active: true,
+      show_in_nav: false,
     })
     .select()
     .single();
@@ -110,6 +111,7 @@ async function runTests() {
       slug: `inactive-cat-${Date.now()}`,
       segment: "all",
       is_active: false,
+      show_in_nav: false,
     })
     .select()
     .single();

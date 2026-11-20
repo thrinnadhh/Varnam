@@ -8,23 +8,51 @@ import { BannerCarousel } from "@/components/banner-carousel";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [, featuredProducts, heroBanners, storeSettings] = await Promise.all([
+  const [categories, featuredProducts, heroBanners, storeSettings] = await Promise.all([
     getCategories(),
     getProducts({ isFeatured: true, limit: 8 }),
     getHeroBanners(),
     getStoreSettings(),
   ]);
 
-  const ageMilestones = [
-    { label: "1-2 Yrs", ageSize: "2-3Y" },
-    { label: "3-4 Yrs", ageSize: "4-5Y" },
-    { label: "5-6 Yrs", ageSize: "6-7Y" },
-    { label: "7-8 Yrs", ageSize: "8-9Y" },
-    { label: "9-10 Yrs", ageSize: "10-11Y" },
-    { label: "11-12 Yrs", ageSize: "12Y" },
-    { label: "13-14 Yrs", ageSize: "13-14Y" },
-    { label: "15-16 Yrs", ageSize: "15-16Y" },
+  // Curated collections requested: Xmas Collection, Daily Wear, Cottonwears, Tops, Trending Collections, New Arrivals.
+  // Dynamically populated from getCategories() so any Admin edits/renames appear immediately!
+  const targetCuratedSlugs = [
+    "xmas-collection",
+    "daily-wear",
+    "cottonwears",
+    "tops",
+    "trending-collections",
+    "new-arrivals",
   ];
+
+  interface CategoryItem {
+    id: string;
+    parent_id?: string | null;
+    name: string;
+    slug: string;
+    description?: string | null;
+    image_url?: string | null;
+    is_active?: boolean;
+    sort_order?: number;
+  }
+
+  const allCategories = (categories as unknown as CategoryItem[]) || [];
+  const activeParents = allCategories.filter((c) => !c.parent_id && c.is_active !== false);
+
+  // Match target slugs in requested order, or fallback to active parents
+  const matchedCurated = targetCuratedSlugs
+    .map((slug) => activeParents.find((c) => c.slug === slug))
+    .filter((c): c is CategoryItem => !!c);
+
+  const otherParents = activeParents.filter(
+    (c) =>
+      !targetCuratedSlugs.includes(c.slug) &&
+      !["festive-wedding", "party-gowns", "cotton-dresses", "casuals-coords", "pattu-lehengas", "anarkali-shararas", "mulmul-festive-frocks"].includes(c.slug)
+  );
+
+  const curatedCollections = [...matchedCurated, ...otherParents];
+  const displayCollections = curatedCollections.length > 0 ? curatedCollections : activeParents.slice(0, 6);
 
   return (
     <div className="flex flex-col gap-10 sm:gap-14 pb-16">
@@ -38,48 +66,66 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* 2. Shop by Daughter's Age Quick-Filter Bar */}
-      <section className="w-full rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] p-5 shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-[#8B1E3F] text-[#FAF5EB]">
-              <Sparkles className="w-4 h-4 text-[#C69214]" />
-            </span>
+      {/* 2. Dynamic Curated Collections Row (Admin-configurable: Xmas Collection, Daily Wear, Cottonwears, Tops, Trending Collections, New Arrivals) */}
+      {displayCollections.length > 0 && (
+        <section className="w-full space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-[#D8C7AE] pb-3">
             <div>
-              <h2 className="font-serif text-base sm:text-lg font-bold text-[#261C17]">
-                Shop by Daughter&apos;s Age
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#EFE6D5] border border-[#C69214] text-[#8B1E3F] text-[10px] font-bold tracking-wider uppercase mb-1">
+                <Sparkles className="w-3 h-3 text-[#C69214]" />
+                <span>Featured Festive Collections</span>
+              </div>
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#261C17]">
+                Curated Occasions &amp; Celebrations
               </h2>
-              <p className="text-[11px] text-[#6B574B]">
-                True-to-age milestone fits tailored with +1 inch inner growth seam allowance
+              <p className="text-xs text-[#6B574B] mt-0.5">
+                Explore handloom festive edits, pure cotton twirls, and holiday season styles
               </p>
             </div>
-          </div>
-          <Link
-            href="/collections"
-            className="text-xs font-bold text-[#8B1E3F] hover:text-[#721531] flex items-center gap-1 self-start md:self-auto"
-          >
-            <span>Explore All Sizing Guides</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-          {ageMilestones.map((milestone) => (
             <Link
-              key={milestone.label}
-              href={`/collections?ageSize=${milestone.ageSize}&segment=girls`}
-              className="group flex flex-col items-center justify-center p-3 rounded-xl bg-[#EFE6D5] border border-[#D8C7AE] hover:bg-[#8B1E3F] hover:border-[#8B1E3F] transition-all text-center"
+              href="/collections"
+              className="text-xs font-bold text-[#8B1E3F] hover:text-[#721531] flex items-center gap-1 self-start sm:self-auto"
             >
-              <span className="text-xs font-bold text-[#261C17] group-hover:text-[#FAF5EB] transition-colors">
-                {milestone.label}
-              </span>
-              <span className="text-[9px] text-[#6B574B] group-hover:text-amber-200 transition-colors mt-0.5">
-                Fit {milestone.ageSize}
-              </span>
+              <span>View All Collections</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
-          ))}
-        </div>
-      </section>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            {displayCollections.map((category) => (
+              <Link
+                key={category.id}
+                href={`/collections/${category.slug}`}
+                className="group flex flex-col rounded-2xl bg-[#FAF5EB] border border-[#D8C7AE] p-2.5 hover:border-[#8B1E3F] hover:shadow-[0_8px_24px_-6px_rgba(59,40,30,0.18)] transition-all overflow-hidden"
+              >
+                <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-[#EFE6D5] mb-2.5">
+                  <Image
+                    src={category.image_url || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80"}
+                    alt={category.name}
+                    fill
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#2A1C15]/70 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                  <span className="absolute bottom-1.5 left-2 right-2 text-[10px] text-amber-200 font-medium truncate">
+                    Explore Edit
+                  </span>
+                </div>
+                <div className="px-1 pb-1">
+                  <h3 className="font-serif text-sm font-bold text-[#261C17] group-hover:text-[#8B1E3F] transition-colors line-clamp-1">
+                    {category.name}
+                  </h3>
+                  {category.description && (
+                    <p className="text-[10px] text-[#6B574B] line-clamp-1 mt-0.5">
+                      {category.description}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 3. Hero Storytelling & Generation CTAs (Tested in storefront.spec.ts) */}
       <section className="relative overflow-hidden rounded-3xl bg-[#FAF5EB] border-2 border-[#D8C7AE] p-6 sm:p-10 lg:p-12 shadow-[0_8px_24px_-6px_rgba(59,40,30,0.12)]">

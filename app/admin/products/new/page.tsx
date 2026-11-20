@@ -46,7 +46,7 @@ export default function NewProductPage() {
   const [slug, setSlug] = useState("");
   const [segment, setSegment] = useState<Segment>("girls");
   const [categoryId, setCategoryId] = useState("11111111-1111-1111-1111-111111111111"); // Festive & Wedding default
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([
+  const [categories, setCategories] = useState<{ id: string; name: string; parent_id?: string | null }[]>([
     { id: "11111111-1111-1111-1111-111111111111", name: "Festive & Wedding" },
     { id: "22222222-2222-2222-2222-222222222222", name: "Party & Evening Gowns" },
     { id: "33333333-3333-3333-3333-333333333333", name: "Cotton Twirl Frocks & Day Dresses" },
@@ -425,11 +425,15 @@ export default function NewProductPage() {
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full px-3.5 py-2.5 text-sm rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-rose-800 bg-white"
               >
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+                {categories.map((c) => {
+                  const parent = c.parent_id ? categories.find((p) => p.id === c.parent_id) : null;
+                  const label = parent ? `${parent.name} → ${c.name}` : c.name;
+                  return (
+                    <option key={c.id} value={c.id}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 

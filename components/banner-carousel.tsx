@@ -103,9 +103,9 @@ export function BannerCarousel({
           </div>
 
           {/* Main Title - Editorial Serif (NO cursive/script) */}
-          <h1 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#FAF5EB] leading-[1.15]">
+          <h2 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#FAF5EB] leading-[1.15]">
             {current.title}
-          </h1>
+          </h2>
 
           {/* Subtitle */}
           {current.subtitle && (

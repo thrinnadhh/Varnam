@@ -45,12 +45,32 @@ const PRESET_BANNER_IMAGES = [
     url: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1600&q=85",
   },
   {
+    name: "Xmas & Winter Festive Red",
+    url: "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1600&q=85",
+  },
+  {
     name: "Royal Kumkum Velvet Anarkali",
     url: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1600&q=85",
   },
   {
-    name: "Handloom Soft Cotton Frocks",
+    name: "Pure Cottonwears Twirl",
     url: "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=1600&q=85",
+  },
+  {
+    name: "Daily Wear Casuals & Co-ords",
+    url: "https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?auto=format&fit=crop&w=1600&q=85",
+  },
+  {
+    name: "Festive Peplum Kurtis & Tops",
+    url: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1600&q=85",
+  },
+  {
+    name: "Trending Celebratory Collections",
+    url: "https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1600&q=85",
+  },
+  {
+    name: "Fresh New Arrivals Atelier",
+    url: "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&w=1600&q=85",
   },
 ];
 
@@ -223,13 +243,13 @@ export default function AdminBannersPage() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-900/10 text-rose-900 text-xs font-bold mb-2">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Storefront Merchandising</span>
+            <span>Storefront Merchandising • Unlimited Banners Supported</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-stone-900 font-serif">
             Hero Banners &amp; Rotation Duration Manager
           </h1>
           <p className="text-xs sm:text-sm text-stone-600 mt-1">
-            Configure full-width rotating hero showcases, CTA links, and the auto-advance rotation timer.
+            Configure full-width rotating hero showcases, CTA links, and the auto-advance rotation timer. Upload and activate as many banners as desired ({banners.filter(b => b.is_active).length} of {banners.length} banners active).
           </p>
         </div>
 

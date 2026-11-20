@@ -77,7 +77,7 @@ test.describe("Varnam Multi-Segment Apparel Storefront E2E", () => {
     await expect(cmToggle).toHaveClass(/bg-brand-primary/);
 
     // Close modal
-    const closeBtn = modal.getByRole("button", { name: /Close|✕/i });
+    const closeBtn = modal.getByRole("button", { name: /Close|✕/i }).first();
     if (await closeBtn.isVisible()) {
       await closeBtn.click();
     } else {

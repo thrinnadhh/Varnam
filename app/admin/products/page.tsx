@@ -16,6 +16,7 @@ interface CategoryOption {
   id: string;
   name: string;
   slug: string;
+  parent_id?: string | null;
 }
 
 interface AdminProductVariant {
@@ -359,11 +360,15 @@ export default function AdminProductsPage() {
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white"
               >
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+                {categories.map((c) => {
+                  const parent = c.parent_id ? categories.find((p) => p.id === c.parent_id) : null;
+                  const label = parent ? `${parent.name} → ${c.name}` : c.name;
+                  return (
+                    <option key={c.id} value={c.id}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
