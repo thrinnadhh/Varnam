@@ -9,10 +9,10 @@ export default async function CategoryPage({
   searchParams,
 }: {
   params: Promise<{ category: string }>;
-  searchParams: Promise<{ age?: string }>;
+  searchParams: Promise<{ segment?: "girls" | "teens" | "women"; age?: string; size?: string }>;
 }) {
   const { category: categorySlug } = await params;
-  const { age } = await searchParams;
+  const { segment, age, size } = await searchParams;
 
   const [categories, products] = await Promise.all([
     getCategories(),
@@ -28,7 +28,9 @@ export default async function CategoryPage({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       <div className="mb-6">
         <span className="text-[11px] font-bold uppercase tracking-wider text-brand-secondary">
-          Girls Collection (2–14Y)
+          {currentCategory.segment === "all"
+            ? "Women • Teens • Girls Collection"
+            : `${currentCategory.segment} Collection`}
         </span>
         <h1 className="font-serif text-3xl sm:text-4xl font-bold text-text-heading mt-0.5">
           {currentCategory.name}
@@ -42,6 +44,8 @@ export default async function CategoryPage({
         initialProducts={products}
         categories={categories}
         currentCategorySlug={categorySlug}
+        initialSegment={segment}
+        initialSize={size}
         initialAge={age}
       />
     </div>

@@ -1,9 +1,15 @@
 import { z } from "zod";
 
 // ==========================================
-// Age & Sizing Constants
+// Segment & Sizing Constants
 // ==========================================
-export const AGE_SIZES = [
+export const SEGMENTS = ["girls", "teens", "women"] as const;
+export type Segment = (typeof SEGMENTS)[number];
+
+export const SIZE_GROUPS = ["kids", "teen", "women"] as const;
+export type SizeGroup = (typeof SIZE_GROUPS)[number];
+
+export const KIDS_AGE_SIZES = [
   "2-3Y",
   "4-5Y",
   "6-7Y",
@@ -12,7 +18,44 @@ export const AGE_SIZES = [
   "12-14Y",
 ] as const;
 
-export type AgeSize = (typeof AGE_SIZES)[number];
+export const TEEN_SIZES = [
+  "11-12Y",
+  "13-14Y",
+  "15-16Y",
+  "XS",
+  "S",
+  "M",
+] as const;
+
+export const WOMEN_SIZES = [
+  "XS",
+  "S",
+  "M",
+  "L",
+  "XL",
+  "XXL",
+  "Free Size",
+] as const;
+
+export const NUMERIC_SIZES = [
+  "28",
+  "30",
+  "32",
+  "34",
+  "36",
+  "38",
+] as const;
+
+export const ALL_SIZES = [
+  ...KIDS_AGE_SIZES,
+  ...TEEN_SIZES,
+  ...WOMEN_SIZES,
+  ...NUMERIC_SIZES,
+] as const;
+
+// Backward compatible export
+export const AGE_SIZES = KIDS_AGE_SIZES;
+export type AgeSize = (typeof KIDS_AGE_SIZES)[number];
 
 // ==========================================
 // Customer Address Schema
@@ -41,7 +84,11 @@ export type AddressInput = z.infer<typeof addressSchema>;
 // ==========================================
 export const cartItemSchema = z.object({
   variant_id: z.string().uuid("Invalid variant ID"),
-  quantity: z.number().int().min(1, "Quantity must be at least 1").max(10, "Maximum 10 items allowed per SKU"),
+  quantity: z
+    .number()
+    .int()
+    .min(1, "Quantity must be at least 1")
+    .max(10, "Maximum 10 items allowed per SKU"),
 });
 
 export const guestCartItemSchema = z.object({
@@ -49,10 +96,12 @@ export const guestCartItemSchema = z.object({
   product_id: z.string().uuid(),
   product_name: z.string(),
   product_slug: z.string(),
-  size_age: z.string(),
+  size_name: z.string(),
+  size_age: z.string().optional(),
+  size_group: z.enum(SIZE_GROUPS).optional(),
   color_name: z.string(),
   price: z.number().int(), // in paise
-  mrp: z.number().int(),   // in paise
+  mrp: z.number().int(), // in paise
   image_url: z.string(),
   quantity: z.number().int().min(1).max(10),
 });
@@ -74,7 +123,6 @@ export type CheckoutInput = z.infer<typeof checkoutSchema>;
 // ==========================================
 // Admin Order Update Schema (Strict Field Boundary)
 // ==========================================
-// ONLY permits status and tracking mutations. Modifying price/totals/user is strictly disallowed!
 export const adminOrderUpdateSchema = z.object({
   order_id: z.string().uuid("Invalid order ID"),
   status: z
@@ -83,7 +131,11 @@ export const adminOrderUpdateSchema = z.object({
   carrier: z.string().max(100).optional().nullable(),
   tracking_number: z.string().max(100).optional().nullable(),
   tracking_url: z.string().url("Must be a valid URL").optional().nullable(),
-  estimated_delivery_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format: YYYY-MM-DD").optional().nullable(),
+  estimated_delivery_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Format: YYYY-MM-DD")
+    .optional()
+    .nullable(),
   notes: z.string().max(1000).optional().nullable(),
 });
 
@@ -93,17 +145,39 @@ export type AdminOrderUpdateInput = z.infer<typeof adminOrderUpdateSchema>;
 // Admin Product & Variant Schemas
 // ==========================================
 export const sizeChartRowSchema = z.object({
-  age: z.string(),
-  chest: z.string(),
-  length: z.string(),
-  waist: z.string(),
+  size: z.string(),
+  age: z.string().optional(),
+  bust_in: z.number().optional(),
+  bust_cm: z.number().optional(),
+  waist_in: z.number().optional(),
+  waist_cm: z.number().optional(),
+  hip_in: z.number().optional(),
+  hip_cm: z.number().optional(),
+  length_in: z.number().optional(),
+  length_cm: z.number().optional(),
+  // For backwards compatibility with string rows
+  chest: z.string().optional(),
+  waist: z.string().optional(),
+  length: z.string().optional(),
 });
 
 export const productVariantInputSchema = z.object({
   id: z.string().uuid().optional(),
-  size_age: z.enum(AGE_SIZES),
+  size_group: z.enum(SIZE_GROUPS),
+  size_name: z.string().min(1, "Size name required"),
+  size_age: z.string().optional(),
+  bust_inches: z.number().optional().nullable(),
+  bust_cm: z.number().optional().nullable(),
+  waist_inches: z.number().optional().nullable(),
+  waist_cm: z.number().optional().nullable(),
+  hip_inches: z.number().optional().nullable(),
+  hip_cm: z.number().optional().nullable(),
+  length_inches: z.number().optional().nullable(),
+  length_cm: z.number().optional().nullable(),
   color_name: z.string().min(1, "Color name required"),
-  color_hex: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be valid 6-character hex (e.g. #881337)"),
+  color_hex: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Must be valid 6-character hex (e.g. #881337)"),
   sku: z.string().min(3, "SKU must be at least 3 characters").max(50),
   price: z.number().int().min(0, "Price in paise must be non-negative"),
   mrp: z.number().int().min(0, "MRP in paise must be non-negative"),
@@ -114,12 +188,15 @@ export const productVariantInputSchema = z.object({
 export const productInputSchema = z.object({
   id: z.string().uuid().optional(),
   category_id: z.string().uuid("Category required"),
+  segment: z.enum(SEGMENTS),
   name: z.string().min(3, "Product name must be at least 3 characters").max(200),
   slug: z.string().min(3).max(200),
   description: z.string().min(10, "Description must be at least 10 characters"),
   fabric: z.string().min(2, "Fabric details required"),
   lining: z.string().min(2, "Inner lining details required (e.g. 100% Breathable Cotton)"), // Mandatory
   care_instructions: z.string().min(2, "Care instructions required"),
+  model_height: z.string().optional().nullable(),
+  model_size_worn: z.string().optional().nullable(),
   size_chart: z.array(sizeChartRowSchema).optional().nullable(),
   is_active: z.boolean().default(true),
   is_featured: z.boolean().default(false),

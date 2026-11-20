@@ -12,12 +12,15 @@ interface ProductCardProps {
     id: string;
     name: string;
     slug: string;
+    segment?: "girls" | "teens" | "women" | string;
     fabric: string;
     lining: string;
     categories?: { name: string; slug: string };
     product_variants: Array<{
       id: string;
-      size_age: string;
+      size_group?: string;
+      size_name?: string;
+      size_age?: string | null;
       color_name: string;
       price: number;
       mrp: number;
@@ -48,8 +51,19 @@ export function ProductCard({ product }: ProductCardProps) {
   const maxMrp = Math.max(...(mrps.length ? mrps : [0]));
   const discountPercent = calculateDiscount(minPrice, maxMrp);
 
-  // Available age tags
-  const ageTags = Array.from(new Set(product.product_variants.map((v) => v.size_age)));
+  // Available size tags
+  const sizeTags = Array.from(
+    new Set(product.product_variants.map((v) => v.size_name || v.size_age || ""))
+  ).filter(Boolean);
+
+  const segmentLabel =
+    product.segment === "women"
+      ? "Women"
+      : product.segment === "teens"
+      ? "Teens (12–18Y)"
+      : product.segment === "girls"
+      ? "Girls (2–14Y)"
+      : null;
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -81,7 +95,8 @@ export function ProductCard({ product }: ProductCardProps) {
             product_id: product.id,
             product_name: product.name,
             product_slug: product.slug,
-            size_age: firstAvailableVariant.size_age,
+            size_name: firstAvailableVariant.size_name || firstAvailableVariant.size_age || "Standard",
+            size_age: firstAvailableVariant.size_age || firstAvailableVariant.size_name,
             color_name: firstAvailableVariant.color_name,
             price: firstAvailableVariant.price,
             mrp: firstAvailableVariant.mrp,
@@ -103,7 +118,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div className="group relative bg-surface rounded-2xl border border-border hover:border-brand-primary/30 overflow-hidden shadow-warm-sm hover:shadow-warm-md transition-all duration-300 flex flex-col">
-      {/* Image Container with high-contrast age pill */}
+      {/* Image Container with high-contrast segment and size pills */}
       <Link href={`/products/${product.slug}`} className="relative aspect-[3/4] w-full overflow-hidden bg-canvas">
         <Image
           src={primaryImage}
@@ -113,12 +128,20 @@ export function ProductCard({ product }: ProductCardProps) {
           className="object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
         />
 
-        {/* High-contrast age badges on top-left */}
+        {/* High-contrast badges on top-left */}
         <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 z-10">
-          <span className="bg-stone-900/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm shadow-sm">
-            Ages {ageTags[0]}
-            {ageTags.length > 1 ? `–${ageTags[ageTags.length - 1]}` : ""}
-          </span>
+          {segmentLabel && (
+            <span className="bg-stone-900/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm shadow-sm">
+              {segmentLabel}
+            </span>
+          )}
+          {sizeTags.length > 0 && (
+            <span className="bg-surface/90 text-text-heading text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm shadow-sm border border-border/80">
+              {product.segment === "girls" ? "Ages " : "Sizes "}
+              {sizeTags[0]}
+              {sizeTags.length > 1 ? `–${sizeTags[sizeTags.length - 1]}` : ""}
+            </span>
+          )}
           {discountPercent > 0 && (
             <span className="bg-brand-secondary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
               {discountPercent}% OFF
@@ -175,7 +198,7 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* Quick Add Button */}
         <div className="mt-3 pt-3 border-t border-border-subtle flex items-center justify-between">
           <span className="text-[11px] text-text-muted">
-            {ageTags.length} sizes available
+            {sizeTags.length} sizes available
           </span>
 
           <button

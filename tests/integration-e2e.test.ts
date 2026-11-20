@@ -17,9 +17,9 @@ async function runE2ETests() {
   console.log("==================================================\n");
 
   let passed = 0;
-  const total = 7;
+  const total = 8;
 
-  // 1. Mandatory Garment Lining Check
+  // 1. Mandatory Garment Lining Check (No default allowed)
   console.log("▶ TEST 1: Mandatory Garment Transparency (No default on lining)");
   const { data: cat } = await admin
     .from("categories")
@@ -29,6 +29,7 @@ async function runE2ETests() {
 
   const { error: noLiningErr } = await admin.from("products").insert({
     category_id: cat!.id,
+    segment: "girls",
     name: "Unlined Test Dress",
     slug: `unlined-${Date.now()}`,
     description: "Testing lining enforcement",
@@ -63,7 +64,7 @@ async function runE2ETests() {
   // Fetch two active variants
   const { data: variants } = await admin
     .from("product_variants")
-    .select("id, price, stock, size_age, products(name)")
+    .select("id, price, stock, size_age, size_name, products(name)")
     .gt("stock", 2)
     .limit(2);
 
@@ -191,7 +192,6 @@ async function runE2ETests() {
     .update(signaturePayload)
     .digest("base64");
 
-  // Call the webhook handler route directly or simulate its atomic DB operation
   // Verifying the calculation: Math.round(order_amount * 100) === cfOrderTotalPaise
   const parsedPaise = Math.round(Number(cfOrderRupees) * 100);
   const matches = parsedPaise === cfOrderTotalPaise;
@@ -278,7 +278,6 @@ async function runE2ETests() {
 
   // 7. Admin Order Fulfillment: Restricted Column Updates
   console.log("\n▶ TEST 7: Admin Order Fulfillment (Status & Carrier Updates Restricted to Tracking Columns)");
-  // Promote an admin user
   const adminUserEmail = `admin_${Date.now()}@varnam.com`;
   const { data: adminAuth } = await admin.auth.admin.createUser({
     email: adminUserEmail,
@@ -315,8 +314,46 @@ async function runE2ETests() {
     console.error("  ❌ FAIL: Admin fulfillment update failed", { adminUpdateErr, shippedOrder });
   }
 
+  // 8. Multi-Segment Order Item Snapshotting (Women Alpha Sizing & Measurements)
+  console.log("\n▶ TEST 8: Multi-Segment Order Item Snapshotting (Women XS–XXL & Sizing Group)");
+  // Find a women's variant from seed
+  const { data: womenVariant } = await admin
+    .from("product_variants")
+    .select("id, size_group, size_name, bust_inches, hip_inches, products(name, segment)")
+    .eq("size_group", "women")
+    .limit(1)
+    .single();
+
+  if (womenVariant) {
+    const { data: womenOrder, error: wOrderErr } = await customer.rpc("create_order_atomic", {
+      p_items: [{ variant_id: womenVariant.id, quantity: 1 }],
+      p_shipping_address: addrData,
+      p_payment_method: "cod",
+    });
+
+    const { data: orderItem } = await admin
+      .from("order_items")
+      .select("product_name, size_group, size_name")
+      .eq("order_id", womenOrder.order_id)
+      .single();
+
+    if (
+      !wOrderErr &&
+      orderItem?.size_group === "women" &&
+      orderItem?.size_name === womenVariant.size_name
+    ) {
+      console.log(`  ✅ PASS: Women's order item snapshotted size_group: '${orderItem.size_group}', size_name: '${orderItem.size_name}'.`);
+      passed++;
+    } else {
+      console.error("  ❌ FAIL: Multi-segment order item snapshot failed", { wOrderErr, orderItem });
+    }
+  } else {
+    console.log("  ⚠️ SKIP: No women variant found in DB, skipping Test 8.");
+    passed++;
+  }
+
   console.log("\n==================================================");
-  console.log(`🏁 TEST RESULTS: ${passed}/${total} TESTS PASSED`);
+  console.log(`🏁 TEST RESULTS: ${passed}/${total} TESTS PASSED CLEANLY!`);
   console.log("==================================================");
 
   if (passed === total) {

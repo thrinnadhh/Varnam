@@ -27,6 +27,7 @@ create table public.categories (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   slug text not null unique,
+  segment text check (segment in ('girls', 'teens', 'women', 'all')) default 'all',
   description text,
   image_url text,
   display_order int not null default 0,
@@ -43,13 +44,16 @@ comment on table public.categories is 'Catalog categories (e.g. Frocks, Ethnic &
 create table public.products (
   id uuid primary key default gen_random_uuid(),
   category_id uuid not null references public.categories(id) on delete restrict,
+  segment text not null check (segment in ('girls', 'teens', 'women')),
   name text not null,
   slug text not null unique,
   description text not null,
   fabric text not null,
-  lining text not null, -- No default: explicit declaration mandatory for child comfort transparency
+  lining text not null, -- No default: explicit declaration mandatory for comfort transparency
   care_instructions text not null,
-  size_chart jsonb, -- e.g. [{"age": "2-3Y", "chest": "21 in", "length": "20 in", "waist": "20 in"}]
+  model_height text, -- e.g. "5'8\" (173 cm)" or "4'2\" (127 cm)"
+  model_size_worn text, -- e.g. "Size S" or "Ages 6-7Y"
+  size_chart jsonb, -- e.g. [{"size": "S", "bust_in": 34, "bust_cm": 86.4, "waist_in": 28, "waist_cm": 71.1, "hip_in": 38, "hip_cm": 96.5, "length_in": 52, "length_cm": 132}]
   is_active boolean not null default true,
   is_featured boolean not null default false,
   created_at timestamptz not null default now(),
@@ -64,7 +68,17 @@ comment on table public.products is 'Base dress products with rich fabric, expli
 create table public.product_variants (
   id uuid primary key default gen_random_uuid(),
   product_id uuid not null references public.products(id) on delete cascade,
-  size_age text not null, -- e.g. '2-3Y', '4-5Y', '6-7Y', '8-9Y', '10-11Y', '12-14Y'
+  size_group text not null check (size_group in ('kids', 'teen', 'women')),
+  size_name text not null, -- e.g. '2-3Y', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '28', 'Free Size'
+  size_age text, -- Alias/backwards compatible column
+  bust_inches numeric(4,1),
+  bust_cm numeric(5,1),
+  waist_inches numeric(4,1),
+  waist_cm numeric(5,1),
+  hip_inches numeric(4,1),
+  hip_cm numeric(5,1),
+  length_inches numeric(4,1),
+  length_cm numeric(5,1),
   color_name text not null,
   color_hex text not null,
   sku text not null unique,
@@ -74,7 +88,7 @@ create table public.product_variants (
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint uq_product_size_color unique (product_id, size_age, color_name)
+  constraint uq_product_size_color unique (product_id, size_name, color_name)
 );
 
 comment on table public.product_variants is 'SKU variants partitioned by age/size and color with prices stored in paise.';
@@ -208,6 +222,8 @@ create table public.order_items (
   product_id uuid not null references public.products(id) on delete restrict,
   product_name text not null,
   size_age text not null,
+  size_group text,
+  size_name text,
   color_name text not null,
   price bigint not null check (price >= 0), -- Unit price in paise snapshot
   quantity int not null check (quantity > 0),
@@ -732,6 +748,8 @@ begin
       product_id,
       product_name,
       size_age,
+      size_group,
+      size_name,
       color_name,
       price,
       quantity
@@ -740,7 +758,9 @@ begin
       v_variant.id,
       v_variant.prod_id,
       v_variant.product_name,
-      v_variant.size_age,
+      coalesce(v_variant.size_age, v_variant.size_name),
+      v_variant.size_group,
+      v_variant.size_name,
       v_variant.color_name,
       v_variant.price,
       v_item.quantity

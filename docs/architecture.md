@@ -1,19 +1,22 @@
 # Varnam Architecture & Technical Specification
 
-> **Girls' Dress & Apparel Mobile-First Storefront**
-> Built for Parents Buying for Girls Aged 2–14.
-> Target: High Trust, Joyful Celebration, Crystal-Clear Sizing, Impeccable Performance & Ironclad Security.
-> Post-EGM Hardened & Preconditions Verified Edition.
+> **Celebratory Indian Couture & Apparel Mobile-First Storefront**
+> Built for Women, Teens (12–18Y), and Girls (2–14Y).
+> Target: High Trust, Multi-Generational Celebration, Crystal-Clear Sizing (In/Cm), Impeccable Performance & Ironclad Security.
+> Post-EGM Hardened, Multi-Segment Verified Edition.
 
 ---
 
 ## 1. Executive Summary & Core Mission
 
-**Varnam** is an artisanal and modern e-commerce storefront crafted for parents purchasing premium dresses, festive lehengas, gowns, frocks, and casual apparel for girls aged 2 to 14. 
+**Varnam** is an artisanal and modern mobile-first e-commerce storefront crafted for celebratory apparel across three generational demographics:
+1. **Women's Couture (Sizes XS–XXL, Numeric 28–38, Free Size):** Royal Raw Silk Anarkalis, Hand-Painted Organza Gowns, and Zari Ensembles with complete bust (32–42"), waist, and hip (36–46") measurements.
+2. **Teens Couture (Ages 12–18Y / Youth Sizes 11-12Y to M):** Contemporary festive co-ord sets, tiered party gowns, and fusion styles specifically proportioned for adolescent silhouettes.
+3. **Girls' Apparel & Dresses (Ages 2–14Y):** Handcrafted zari lehengas, whimsical tiered party gowns, and pure cotton twirl frocks with true-to-age sizing and +2 inch growth margins.
 
 Key product tenets:
-- **Parent-Centric Trust & Transparency:** High contrast typography (strict WCAG AA compliance with enhanced marigold and muted tones), clear age-based sizing (2–3Y, 4–5Y, 6–7Y, 8–9Y, 10–11Y, 12–14Y), explicit garment measurements (chest, waist, length in inches/cm), and detailed fabric, explicit inner lining (no arbitrary defaults), and care disclosures.
-- **Mobile-First Luxury:** Tactile, joyful, responsive interactions designed for one-handed smartphone purchasing.
+- **Trust & Garment Transparency:** High-contrast typography (strict WCAG AA compliance), multi-segment sizing charts with an interactive **Inches (in) / Centimeters (cm)** toggle, explicit garment measurements (bust, chest, waist, hip, length), segment-specific model fit disclosures (`model_height` and `model_size_worn`), and mandatory explicit inner lining declaration on every dress (no defaults allowed).
+- **Mobile-First Luxury:** Tactile, joyful, responsive interactions designed for one-handed smartphone purchasing with instant segment switching.
 - **Fail-Safe Commerce:** Zero overselling guaranteed by atomic Postgres row-locking transactions with deterministic sort order (deadlock-free); stock reservation timeouts (15 minutes for online orders; COD strictly excluded); automated idempotent restocking on cancellation; strict blocks preventing cancellation of shipped/delivered orders; payment reconciliation verified server-side via HMAC-SHA256 signatures with millisecond timestamp drift bounds.
 - **Restrained Motion:** High perceived performance with strict bundle size budgets (≤ 60 KB gzip animation budget on non-home customer routes; zero animation libraries in admin).
 
@@ -47,10 +50,10 @@ Key product tenets:
 ```
 
 ### Request Flow & Core Lifecycles
-1. **Public Browsing:** Next.js Server Components query Supabase Postgres directly using `@supabase/ssr` with anonymous role. Row-Level Security (RLS) ensures only active products/variants belonging to active categories are returned.
-2. **Cart Management:** Guest cart persisted in `localStorage` client-side. When the user authenticates, the guest cart is merged into `cart_items` in Supabase via the `merge_guest_cart` RPC, capping quantities at current available stock.
+1. **Public Browsing:** Next.js Server Components query Supabase Postgres directly using `@supabase/ssr` with anonymous role. Row-Level Security (RLS) ensures only active products/variants belonging to active categories are returned. Public queries support filtering by `segment` (`women`, `teens`, `girls`), occasion category slug, and size.
+2. **Cart Management:** Guest cart persisted in `localStorage` client-side with full segment, variant, and size metadata. When the user authenticates, the guest cart is merged into `cart_items` in Supabase via the `merge_guest_cart` RPC, capping quantities at current available stock.
 3. **Checkout Initiation:** Requires authentication. Customer selects/enters delivery address and chooses **Cashfree** (UPI, Google Pay, PhonePe, Cards, NetBanking) or **Cash on Delivery (COD)**.
-4. **Order Execution:** A single database transaction (`create_order_atomic` RPC) validates inputs, locks variant rows in sorted order (`ORDER BY variant_id ASC` to eliminate deadlocks), verifies stock and active status across categories/products, re-prices all items from database authority, decrements stock, records immutable order snapshots, and clears purchased cart items:
+4. **Order Execution:** A single database transaction (`create_order_atomic` RPC) validates inputs, locks variant rows in sorted order (`ORDER BY variant_id ASC` to eliminate deadlocks), verifies stock and active status across categories/products, re-prices all items from database authority, decrements stock, records immutable order snapshots (including `size_group`, `size_name`, and `size_age`), and clears purchased cart items:
    - For **Cashfree payments**: Status is set to `'pending'`, `payment_status = 'pending'`, and `expires_at = now() + interval '15 minutes'` (15-minute stock reservation TTL).
    - For **Cash on Delivery (COD)**: Status is set directly to `'confirmed'`, `payment_status = 'pending'`, and `expires_at = null` (**COD is strictly excluded from reservation TTL and never expires**).
 5. **Payment Webhook Processing:** Cashfree posts order events to `/api/webhooks/cashfree`. The handler:
@@ -109,6 +112,7 @@ erDiagram
         uuid id PK
         string name
         string slug UK
+        string segment "girls | teens | women | all"
         string description
         string image_url
         int display_order
@@ -120,13 +124,16 @@ erDiagram
     PRODUCTS {
         uuid id PK
         uuid category_id FK
+        string segment "girls | teens | women"
         string name
         string slug UK
         text description
         string fabric
         string lining "Mandatory explicit declaration"
         string care_instructions
-        jsonb size_chart "age dimensions"
+        string model_height "e.g. 5'8 (173 cm) or 4'2 (127 cm)"
+        string model_size_worn "e.g. Size S or Age 6-7Y"
+        jsonb size_chart "multi-segment dimensional chart"
         boolean is_active
         boolean is_featured
         timestamptz created_at
@@ -136,7 +143,17 @@ erDiagram
     PRODUCT_VARIANTS {
         uuid id PK
         uuid product_id FK
-        string size_age "2-3Y | 4-5Y | etc."
+        string size_group "kids | teen | women"
+        string size_name "XS | S | M | L | XL | XXL | 2-3Y | 11-12Y | 32"
+        string size_age "backward compatible age label"
+        numeric bust_inches
+        numeric bust_cm
+        numeric waist_inches
+        numeric waist_cm
+        numeric hip_inches
+        numeric hip_cm
+        numeric length_inches
+        numeric length_cm
         string color_name
         string color_hex
         string sku UK
@@ -204,6 +221,8 @@ erDiagram
         uuid variant_id FK
         uuid product_id FK
         string product_name
+        string size_group "kids | teen | women"
+        string size_name "XS | S | 2-3Y etc."
         string size_age
         string color_name
         bigint price "Paise snapshot"
@@ -229,7 +248,16 @@ erDiagram
 
 ---
 
-## 4. Database & RLS Architecture
+## 4. Multi-Segment Sizing & Database Architecture
+
+### Multi-Segment Sizing System
+To accommodate Women, Teens, and Girls without shoehorning different sizing conventions into a single format, Varnam partitions sizing into dedicated tiers:
+
+| Demographic Segment | `size_group` | Size Values Supported | Key Measurement Columns | Fit Disclosures |
+|---|---|---|---|---|
+| **Women** | `women` | Alpha (`XS` to `XXL`), Numeric (`28`–`38`), Free Size (`Free Size` / `FS`) | Bust, Waist, Hip, Length (Inches & CM) | `model_height` (e.g. 5'8" / 173 cm), `model_size_worn` (e.g. Size S) |
+| **Teens** | `teen` | Age/Alpha (`11-12Y`, `13-14Y`, `15-16Y`, `XS`, `S`, `M`) | Bust, Waist, Hip, Length (Inches & CM) | Youth silhouette fit callout |
+| **Girls** | `kids` | Milestones (`2-3Y`, `4-5Y`, `6-7Y`, `8-9Y`, `10-11Y`, `12-14Y`) | Chest, Waist, Length (Inches & CM) | +2" growth margins, `model_height` (e.g. 4'2" / 127 cm), `model_size_worn` (Age 6-7Y) |
 
 ### Best Practices Applied (Supabase Postgres Guidelines & EGM Hardening)
 - **All monetary values in integer paise (`bigint`):** Prevents floating-point rounding errors on financial transactions.
@@ -286,7 +314,7 @@ create or replace function public.create_order_atomic(
 6. **Stock Verification:** If `variant.stock < item.quantity`, throws exception and aborts.
 7. **Authoritative Re-pricing:** Re-computes item price exclusively from `product_variants.price`.
 8. **Inventory Decrement:** Decrements stock atomically: `stock = stock - quantity`.
-9. **Snapshot Persistence:** Writes immutable snapshot to `order_items`.
+9. **Snapshot Persistence:** Writes immutable snapshot to `order_items` including `size_group`, `size_name`, and `size_age`.
 10. **Cart Cleanup:** Removes ordered items from customer's `cart_items`.
 11. **Idempotent Restock Trigger:**
     If order is later marked `cancelled`, trigger `tr_restore_stock_on_cancel` restores variant inventory only if not already cancelled (`old.cancelled_at is null`), and explicitly blocks cancelling shipped/delivered orders.
@@ -322,7 +350,7 @@ create or replace function public.create_order_atomic(
 
 ## 7. Motion & Animation Tiered System
 
-Animation elevates brand perception for parents shopping for celebratory wear, but must never degrade load times or battery life.
+Animation elevates brand perception for shoppers across all generational edits, but must never degrade load times or battery life.
 
 | Tier | Technology | Purpose | Constraints |
 |---|---|---|---|
@@ -380,11 +408,12 @@ Animation elevates brand perception for parents shopping for celebratory wear, b
 
 ## 10. Preconditions Verification Summary (Passed Gates)
 
+- [x] **Multi-Segment Architecture Confirmed**: Women (XS–XXL), Teens (12–18Y), and Girls (2–14Y) supported across categories, products, variants, and storefront navigation.
 - [x] **Cashfree Provider Confirmed**: Fully documented across architecture, RPCs, and webhooks.
 - [x] **Late Payment & Scheduler Implemented**: `refund_status` on payments; late payment trigger; `cancel_expired_orders()` scheduler (COD excluded).
 - [x] **Idempotent Restock & Shipped Block**: Trigger restocks only once per order, blocks cancelling shipped/delivered orders.
 - [x] **No Default on `products.lining`**: Removed default; explicit declaration enforced.
-- [x] **Clean `supabase db reset` & Test Suite**: 5/5 tests passed cleanly (Role escalation guard, Anon catalog RLS, Concurrent last-unit lock, Idempotent cancellation restock, Shipped cancellation block).
-- [x] **Stitch Screens Generated**: Home, Listing, PDP, Cart/Checkout, and Account screens produced under project `3954058033568371635`.
+- [x] **Clean `supabase db reset` & Test Suite**: Precondition and E2E verification suites updated and passing cleanly.
+- [x] **Stitch Screens Reworked**: Multi-segment storefront home (`5a0a8f69eedc4bee93b19b3998aa4fa8`) and Women/Teens Anarkali PDP (`540c80ec8a184a40b77f726d82995c7f`) generated under project `3954058033568371635`.
 - [x] **Section 2 Confirmed Complete**: Comprehensive lifecycle specification verified.
 - [x] **Contrast Fixes Applied**: WCAG AA compliant muted (`#57534e`) and marigold (`#b45309`, `#92400e`) tokens established.

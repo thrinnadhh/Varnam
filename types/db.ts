@@ -126,6 +126,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean
           name: string
+          segment: string | null
           slug: string
           updated_at: string
         }
@@ -137,6 +138,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           name: string
+          segment?: string | null
           slug: string
           updated_at?: string
         }
@@ -148,6 +150,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean
           name?: string
+          segment?: string | null
           slug?: string
           updated_at?: string
         }
@@ -164,6 +167,8 @@ export type Database = {
           product_name: string
           quantity: number
           size_age: string
+          size_group: string | null
+          size_name: string | null
           variant_id: string
         }
         Insert: {
@@ -176,6 +181,8 @@ export type Database = {
           product_name: string
           quantity: number
           size_age: string
+          size_group?: string | null
+          size_name?: string | null
           variant_id: string
         }
         Update: {
@@ -188,6 +195,8 @@ export type Database = {
           product_name?: string
           quantity?: number
           size_age?: string
+          size_group?: string | null
+          size_name?: string | null
           variant_id?: string
         }
         Relationships: [
@@ -379,46 +388,76 @@ export type Database = {
       }
       product_variants: {
         Row: {
+          bust_cm: number | null
+          bust_inches: number | null
           color_hex: string
           color_name: string
           created_at: string
+          hip_cm: number | null
+          hip_inches: number | null
           id: string
           is_active: boolean
+          length_cm: number | null
+          length_inches: number | null
           mrp: number
           price: number
           product_id: string
-          size_age: string
+          size_age: string | null
+          size_group: string
+          size_name: string
           sku: string
           stock: number
           updated_at: string
+          waist_cm: number | null
+          waist_inches: number | null
         }
         Insert: {
+          bust_cm?: number | null
+          bust_inches?: number | null
           color_hex: string
           color_name: string
           created_at?: string
+          hip_cm?: number | null
+          hip_inches?: number | null
           id?: string
           is_active?: boolean
+          length_cm?: number | null
+          length_inches?: number | null
           mrp: number
           price: number
           product_id: string
-          size_age: string
+          size_age?: string | null
+          size_group: string
+          size_name: string
           sku: string
           stock?: number
           updated_at?: string
+          waist_cm?: number | null
+          waist_inches?: number | null
         }
         Update: {
+          bust_cm?: number | null
+          bust_inches?: number | null
           color_hex?: string
           color_name?: string
           created_at?: string
+          hip_cm?: number | null
+          hip_inches?: number | null
           id?: string
           is_active?: boolean
+          length_cm?: number | null
+          length_inches?: number | null
           mrp?: number
           price?: number
           product_id?: string
-          size_age?: string
+          size_age?: string | null
+          size_group?: string
+          size_name?: string
           sku?: string
           stock?: number
           updated_at?: string
+          waist_cm?: number | null
+          waist_inches?: number | null
         }
         Relationships: [
           {
@@ -441,7 +480,10 @@ export type Database = {
           is_active: boolean
           is_featured: boolean
           lining: string
+          model_height: string | null
+          model_size_worn: string | null
           name: string
+          segment: string
           size_chart: Json | null
           slug: string
           updated_at: string
@@ -456,7 +498,10 @@ export type Database = {
           is_active?: boolean
           is_featured?: boolean
           lining: string
+          model_height?: string | null
+          model_size_worn?: string | null
           name: string
+          segment: string
           size_chart?: Json | null
           slug: string
           updated_at?: string
@@ -471,7 +516,10 @@ export type Database = {
           is_active?: boolean
           is_featured?: boolean
           lining?: string
+          model_height?: string | null
+          model_size_worn?: string | null
           name?: string
+          segment?: string
           size_chart?: Json | null
           slug?: string
           updated_at?: string

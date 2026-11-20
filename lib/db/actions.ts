@@ -25,6 +25,9 @@ export async function getCategories() {
 
 export interface GetProductsParams {
   categorySlug?: string;
+  segment?: "girls" | "teens" | "women";
+  sizeGroup?: "kids" | "teen" | "women";
+  sizeName?: string;
   ageSize?: string;
   sort?: "featured" | "price_asc" | "price_desc" | "newest";
   isFeatured?: boolean;
@@ -38,17 +41,41 @@ export async function getProducts(params: GetProductsParams = {}) {
     .from("products")
     .select(`
       id,
+      category_id,
+      segment,
       name,
       slug,
       description,
       fabric,
       lining,
       care_instructions,
+      model_height,
+      model_size_worn,
       size_chart,
       is_featured,
       created_at,
-      categories!inner(id, name, slug, is_active),
-      product_variants!inner(id, size_age, color_name, color_hex, sku, price, mrp, stock, is_active),
+      categories!inner(id, name, slug, segment, is_active),
+      product_variants!inner(
+        id,
+        size_group,
+        size_name,
+        size_age,
+        bust_inches,
+        bust_cm,
+        waist_inches,
+        waist_cm,
+        hip_inches,
+        hip_cm,
+        length_inches,
+        length_cm,
+        color_name,
+        color_hex,
+        sku,
+        price,
+        mrp,
+        stock,
+        is_active
+      ),
       product_images(id, image_url, alt_text, display_order, is_primary)
     `)
     .eq("is_active", true)
@@ -59,8 +86,17 @@ export async function getProducts(params: GetProductsParams = {}) {
     query = query.eq("categories.slug", params.categorySlug);
   }
 
-  if (params.ageSize) {
-    query = query.eq("product_variants.size_age", params.ageSize);
+  if (params.segment) {
+    query = query.eq("segment", params.segment);
+  }
+
+  if (params.sizeGroup) {
+    query = query.eq("product_variants.size_group", params.sizeGroup);
+  }
+
+  const targetSize = params.sizeName || params.ageSize;
+  if (targetSize) {
+    query = query.eq("product_variants.size_name", targetSize);
   }
 
   if (params.isFeatured) {
@@ -108,17 +144,41 @@ export async function getProductBySlug(slug: string) {
     .from("products")
     .select(`
       id,
+      category_id,
+      segment,
       name,
       slug,
       description,
       fabric,
       lining,
       care_instructions,
+      model_height,
+      model_size_worn,
       size_chart,
       is_featured,
       created_at,
-      categories!inner(id, name, slug),
-      product_variants(id, size_age, color_name, color_hex, sku, price, mrp, stock, is_active),
+      categories!inner(id, name, slug, segment),
+      product_variants(
+        id,
+        size_group,
+        size_name,
+        size_age,
+        bust_inches,
+        bust_cm,
+        waist_inches,
+        waist_cm,
+        hip_inches,
+        hip_cm,
+        length_inches,
+        length_cm,
+        color_name,
+        color_hex,
+        sku,
+        price,
+        mrp,
+        stock,
+        is_active
+      ),
       product_images(id, image_url, alt_text, display_order, is_primary)
     `)
     .eq("slug", slug)

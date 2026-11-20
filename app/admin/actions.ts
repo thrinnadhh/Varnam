@@ -59,29 +59,32 @@ export async function getAdminMetrics() {
     .select("*", { count: "exact", head: true })
     .in("status", ["pending", "confirmed", "packed"]);
 
-  // 3. Low stock count (stock <= 5)
-  const { count: lowStockVariants } = await supabase
-    .from("product_variants")
-    .select("*", { count: "exact", head: true })
-    .eq("is_active", true)
-    .lte("stock", 5);
-
-  // 4. Products count
+  // 3. Products count
   const { count: totalProducts } = await supabase
     .from("products")
-    .select("*", { count: "exact", head: true });
+    .select("*", { count: "exact", head: true })
+    .eq("is_active", true);
+
+  // 4. Low stock variants (< 5 units)
+  const { data: lowStockVariants } = await supabase
+    .from("product_variants")
+    .select("id, sku, stock, size_age, size_name, products(name)")
+    .lt("stock", 5)
+    .eq("is_active", true)
+    .limit(10);
 
   return {
     totalRevenuePaise,
     totalOrders: totalOrders || 0,
     pendingOrders: pendingOrders || 0,
-    lowStockVariants: lowStockVariants || 0,
     totalProducts: totalProducts || 0,
+    lowStockVariants: (lowStockVariants || []).length,
+    lowStockList: lowStockVariants || [],
   };
 }
 
 // ==========================================
-// Admin Orders Management (Strict Column Boundary)
+// Admin Orders Management
 // ==========================================
 
 export async function getAdminOrders(statusFilter?: string) {
@@ -92,21 +95,28 @@ export async function getAdminOrders(statusFilter?: string) {
     .select(`
       id,
       order_number,
+      user_id,
       status,
-      total_amount,
-      subtotal_amount,
-      shipping_amount,
       payment_method,
       payment_status,
+      total_amount,
       carrier,
       tracking_number,
       tracking_url,
-      estimated_delivery_date,
       shipping_address,
       notes,
       created_at,
-      profiles(email, full_name, phone),
-      order_items(id, product_name, size_age, color_name, price, quantity)
+      profiles(email),
+      order_items(
+        id,
+        product_name,
+        size_name,
+        size_age,
+        color_name,
+        quantity,
+        unit_price,
+        total_price
+      )
     `)
     .order("created_at", { ascending: false });
 
@@ -174,15 +184,18 @@ export async function getAdminProducts() {
     .from("products")
     .select(`
       id,
+      segment,
       name,
       slug,
       fabric,
       lining,
+      model_height,
+      model_size_worn,
       is_active,
       is_featured,
       created_at,
       categories(name),
-      product_variants(id, size_age, color_name, sku, price, mrp, stock, is_active),
+      product_variants(id, size_group, size_name, size_age, color_name, sku, price, mrp, stock, is_active),
       product_images(image_url, is_primary)
     `)
     .order("created_at", { ascending: false });
@@ -210,12 +223,15 @@ export async function createAdminProduct(input: ProductInput) {
     .from("products")
     .insert({
       category_id: p.category_id,
+      segment: p.segment,
       name: p.name,
       slug: p.slug,
       description: p.description,
       fabric: p.fabric,
       lining: p.lining, // Mandatory explicit declaration!
       care_instructions: p.care_instructions,
+      model_height: p.model_height,
+      model_size_worn: p.model_size_worn,
       size_chart: p.size_chart,
       is_active: p.is_active,
       is_featured: p.is_featured,
@@ -230,7 +246,17 @@ export async function createAdminProduct(input: ProductInput) {
   // 2. Insert variants
   const variantsToInsert = p.variants.map((v) => ({
     product_id: product.id,
-    size_age: v.size_age,
+    size_group: v.size_group,
+    size_name: v.size_name,
+    size_age: v.size_age || v.size_name,
+    bust_inches: v.bust_inches,
+    bust_cm: v.bust_cm,
+    waist_inches: v.waist_inches,
+    waist_cm: v.waist_cm,
+    hip_inches: v.hip_inches,
+    hip_cm: v.hip_cm,
+    length_inches: v.length_inches,
+    length_cm: v.length_cm,
     color_name: v.color_name,
     color_hex: v.color_hex,
     sku: v.sku,

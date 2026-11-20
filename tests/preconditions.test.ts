@@ -20,7 +20,7 @@ async function runTests() {
   console.log("==================================================\n");
 
   let passedCount = 0;
-  let totalTests = 5;
+  const totalTests = 6;
 
   // -----------------------------------------------------------------
   // 1. Role Self-Escalation Guard Test
@@ -73,6 +73,7 @@ async function runTests() {
     .insert({
       name: "Active Festive Category",
       slug: `active-cat-${Date.now()}`,
+      segment: "all",
       is_active: true,
     })
     .select()
@@ -83,6 +84,7 @@ async function runTests() {
     .insert({
       name: "Inactive Archival Category",
       slug: `inactive-cat-${Date.now()}`,
+      segment: "all",
       is_active: false,
     })
     .select()
@@ -92,7 +94,8 @@ async function runTests() {
   const { data: activeProd } = await adminClient
     .from("products")
     .insert({
-      category_id: activeCat.id,
+      category_id: activeCat!.id,
+      segment: "girls",
       name: "Public Festive Dress",
       slug: `public-dress-${Date.now()}`,
       description: "Beautiful festive dress",
@@ -107,7 +110,8 @@ async function runTests() {
   const { data: inactiveProd } = await adminClient
     .from("products")
     .insert({
-      category_id: activeCat.id,
+      category_id: activeCat!.id,
+      segment: "girls",
       name: "Draft Unreleased Dress",
       slug: `draft-dress-${Date.now()}`,
       description: "Not ready for public",
@@ -122,7 +126,8 @@ async function runTests() {
   const { data: prodInInactiveCat } = await adminClient
     .from("products")
     .insert({
-      category_id: inactiveCat.id,
+      category_id: inactiveCat!.id,
+      segment: "girls",
       name: "Dress in Inactive Category",
       slug: `inactive-cat-dress-${Date.now()}`,
       description: "Category is inactive",
@@ -139,9 +144,9 @@ async function runTests() {
   const anonProductIds = (anonProducts || []).map((p) => p.id);
 
   const seesActiveOnly =
-    anonProductIds.includes(activeProd.id) &&
-    !anonProductIds.includes(inactiveProd.id) &&
-    !anonProductIds.includes(prodInInactiveCat.id);
+    anonProductIds.includes(activeProd!.id) &&
+    !anonProductIds.includes(inactiveProd!.id) &&
+    !anonProductIds.includes(prodInInactiveCat!.id);
 
   // Check that anon CANNOT read customer profiles or orders
   const { data: anonOrders, error: anonOrdersErr } = await anonClient.from("orders").select("id");
@@ -157,8 +162,8 @@ async function runTests() {
   } else {
     console.error("  ❌ FAIL: Anon visibility leak!", {
       anonProductIds,
-      activeProdId: activeProd.id,
-      inactiveProdId: inactiveProd.id,
+      activeProdId: activeProd?.id,
+      inactiveProdId: inactiveProd?.id,
       anonOrders,
       anonProfiles,
     });
@@ -172,7 +177,9 @@ async function runTests() {
   const { data: limitedVariant } = await adminClient
     .from("product_variants")
     .insert({
-      product_id: activeProd.id,
+      product_id: activeProd!.id,
+      size_group: "kids",
+      size_name: "4-5Y",
       size_age: "4-5Y",
       color_name: "Ruby Rose",
       color_hex: "#881337",
@@ -210,7 +217,7 @@ async function runTests() {
 
   const orderPayload = [
     {
-      variant_id: limitedVariant.id,
+      variant_id: limitedVariant!.id,
       quantity: 1,
     },
   ];
@@ -253,7 +260,7 @@ async function runTests() {
   const { data: updatedVariant } = await adminClient
     .from("product_variants")
     .select("stock")
-    .eq("id", limitedVariant.id)
+    .eq("id", limitedVariant!.id)
     .single();
 
   if (
@@ -290,7 +297,7 @@ async function runTests() {
   const { data: restockedVariant1 } = await adminClient
     .from("product_variants")
     .select("stock")
-    .eq("id", limitedVariant.id)
+    .eq("id", limitedVariant!.id)
     .single();
 
   // Cancel again to test idempotency (should NOT restock twice)
@@ -302,7 +309,7 @@ async function runTests() {
   const { data: restockedVariant2 } = await adminClient
     .from("product_variants")
     .select("stock")
-    .eq("id", limitedVariant.id)
+    .eq("id", limitedVariant!.id)
     .single();
 
   if (restockedVariant1?.stock === 1 && restockedVariant2?.stock === 1) {
@@ -346,6 +353,71 @@ async function runTests() {
     passedCount++;
   } else {
     console.error("  ❌ FAIL: Cancelling shipped order was not blocked!", cancelShippedErr);
+  }
+
+  // -----------------------------------------------------------------
+  // 6. Multi-Segment Catalog, Sizing & Model Fit Disclosures
+  // -----------------------------------------------------------------
+  console.log("\n▶ TEST 6: Multi-Segment Sizing (Women, Teens, Girls) & Fit Disclosures");
+  const { data: womenProd } = await adminClient
+    .from("products")
+    .insert({
+      category_id: activeCat!.id,
+      segment: "women",
+      name: "Test Royal Crimson Silk Anarkali",
+      slug: `test-anarkali-${Date.now()}`,
+      description: "Handcrafted pure silk anarkali",
+      fabric: "Pure Raw Silk",
+      lining: "100% Breathable Malmal Cotton",
+      care_instructions: "Dry clean only",
+      model_height: "5'8\" (173 cm)",
+      model_size_worn: "Size S",
+      is_active: true,
+    })
+    .select()
+    .single();
+
+  const { data: womenVariant, error: wVarErr } = await adminClient
+    .from("product_variants")
+    .insert({
+      product_id: womenProd!.id,
+      size_group: "women",
+      size_name: "S",
+      size_age: "S",
+      bust_inches: 34,
+      bust_cm: 86,
+      waist_inches: 28,
+      waist_cm: 71,
+      hip_inches: 38,
+      hip_cm: 97,
+      length_inches: 54,
+      length_cm: 137,
+      color_name: "Royal Crimson",
+      color_hex: "#881337",
+      sku: `SKU-WOMEN-S-${Date.now()}`,
+      price: 349900,
+      mrp: 499900,
+      stock: 10,
+      is_active: true,
+    })
+    .select()
+    .single();
+
+  if (
+    womenProd?.segment === "women" &&
+    womenProd?.model_height === "5'8\" (173 cm)" &&
+    womenVariant?.size_group === "women" &&
+    womenVariant?.bust_inches === 34 &&
+    womenVariant?.hip_inches === 38
+  ) {
+    console.log("  ✅ PASS: Multi-segment Women's product verified with bust/hip measurements & model fit.");
+    passedCount++;
+  } else {
+    console.error("  ❌ FAIL: Women's multi-segment product failed validation:", {
+      womenProd,
+      womenVariant,
+      wVarErr,
+    });
   }
 
   console.log("\n==================================================");
