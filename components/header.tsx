@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { ShoppingBag, Heart, User, Menu, X, Search, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
 export function AnnouncementBar() {
   return (
@@ -85,13 +86,13 @@ export function Header() {
                 href="/collections?segment=teens"
                 className="px-3 py-1.5 rounded-lg text-xs font-bold text-text-heading hover:bg-surface hover:text-brand-primary transition-colors"
               >
-                Teens (12–18Y)
+                Teens (13–18Y)
               </Link>
               <Link
                 href="/collections?segment=girls"
                 className="px-3 py-1.5 rounded-lg text-xs font-bold text-text-heading hover:bg-surface hover:text-brand-primary transition-colors"
               >
-                Girls (2–14Y)
+                Girls (2–12Y)
               </Link>
             </div>
 
@@ -158,9 +159,16 @@ export function Header() {
       </div>
 
       {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden bg-surface border-b border-border px-4 pt-2 pb-6 space-y-4 animate-in slide-in-from-top-2 duration-200">
-          {/* Segment Selector in Mobile */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="lg:hidden bg-surface border-b border-border px-4 pt-2 pb-6 space-y-4 overflow-hidden"
+          >
+            {/* Segment Selector in Mobile */}
           <div>
             <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted px-2 pb-2">
               Shop by Audience
@@ -178,14 +186,14 @@ export function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-2 text-center rounded-lg bg-surface-raised border border-border text-xs font-bold text-text-heading hover:bg-brand-primary hover:text-white transition-colors"
               >
-                Teens (12–18Y)
+                Teens (13–18Y)
               </Link>
               <Link
                 href="/collections?segment=girls"
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-2 text-center rounded-lg bg-surface-raised border border-border text-xs font-bold text-text-heading hover:bg-brand-primary hover:text-white transition-colors"
               >
-                Girls (2–14Y)
+                Girls (2–12Y)
               </Link>
             </div>
           </div>
@@ -247,8 +255,9 @@ export function Header() {
               Admin Portal
             </Link>
           </div>
-        </div>
+        </motion.div>
       )}
-    </header>
+    </AnimatePresence>
+  </header>
   );
 }

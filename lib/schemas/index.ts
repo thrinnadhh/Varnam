@@ -9,24 +9,31 @@ export type Segment = (typeof SEGMENTS)[number];
 export const SIZE_GROUPS = ["kids", "teen", "women"] as const;
 export type SizeGroup = (typeof SIZE_GROUPS)[number];
 
+export const MEASUREMENT_TYPES = ["garment", "body"] as const;
+export type MeasurementType = (typeof MEASUREMENT_TYPES)[number];
+
+// Non-overlapping distinct demographic size milestones
+// Girls: 2–12Y
 export const KIDS_AGE_SIZES = [
   "2-3Y",
   "4-5Y",
   "6-7Y",
   "8-9Y",
   "10-11Y",
-  "12-14Y",
+  "11-12Y",
 ] as const;
 
+// Teens: 13–18Y & Youth Alphas
 export const TEEN_SIZES = [
-  "11-12Y",
   "13-14Y",
   "15-16Y",
+  "17-18Y",
   "XS",
   "S",
   "M",
 ] as const;
 
+// Women: Adult Alphas & Free Size
 export const WOMEN_SIZES = [
   "XS",
   "S",
@@ -98,11 +105,10 @@ export const guestCartItemSchema = z.object({
   product_slug: z.string(),
   size_name: z.string(),
   size_age: z.string().optional(),
-  size_group: z.enum(SIZE_GROUPS).optional(),
   color_name: z.string(),
-  price: z.number().int(), // in paise
-  mrp: z.number().int(), // in paise
-  image_url: z.string(),
+  price: z.number().int().min(0),
+  mrp: z.number().int().min(0),
+  image_url: z.string().url(),
   quantity: z.number().int().min(1).max(10),
 });
 
@@ -110,10 +116,10 @@ export type CartItemInput = z.infer<typeof cartItemSchema>;
 export type GuestCartItem = z.infer<typeof guestCartItemSchema>;
 
 // ==========================================
-// Checkout & Order Creation Schemas
+// Checkout Schemas
 // ==========================================
 export const checkoutSchema = z.object({
-  items: z.array(cartItemSchema).min(1, "Cart cannot be empty"),
+  items: z.array(cartItemSchema).min(1, "Your cart is empty"),
   shipping_address: addressSchema,
   payment_method: z.enum(["cashfree", "cod"]),
 });
@@ -121,32 +127,27 @@ export const checkoutSchema = z.object({
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
 
 // ==========================================
-// Admin Order Update Schema (Strict Field Boundary)
+// Admin Order Status Update Schema
 // ==========================================
 export const adminOrderUpdateSchema = z.object({
-  order_id: z.string().uuid("Invalid order ID"),
+  order_id: z.string().uuid("Valid order ID required"),
   status: z
     .enum(["pending", "confirmed", "packed", "shipped", "delivered", "cancelled"])
     .optional(),
-  carrier: z.string().max(100).optional().nullable(),
-  tracking_number: z.string().max(100).optional().nullable(),
-  tracking_url: z.string().url("Must be a valid URL").optional().nullable(),
-  estimated_delivery_date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Format: YYYY-MM-DD")
-    .optional()
-    .nullable(),
-  notes: z.string().max(1000).optional().nullable(),
+  carrier: z.string().max(100).optional(),
+  tracking_number: z.string().max(100).optional(),
+  tracking_url: z.string().url("Valid tracking URL required").optional().or(z.literal("")),
+  estimated_delivery_date: z.string().optional(),
+  notes: z.string().max(500).optional(),
 });
 
 export type AdminOrderUpdateInput = z.infer<typeof adminOrderUpdateSchema>;
 
 // ==========================================
-// Admin Product & Variant Schemas
+// Catalog Product & Variant Schemas (Multi-Segment)
 // ==========================================
 export const sizeChartRowSchema = z.object({
   size: z.string(),
-  age: z.string().optional(),
   bust_in: z.number().optional(),
   bust_cm: z.number().optional(),
   waist_in: z.number().optional(),
@@ -155,7 +156,8 @@ export const sizeChartRowSchema = z.object({
   hip_cm: z.number().optional(),
   length_in: z.number().optional(),
   length_cm: z.number().optional(),
-  // For backwards compatibility with string rows
+  measurement_type: z.enum(MEASUREMENT_TYPES).optional(),
+  // For backwards compatibility with legacy strings
   chest: z.string().optional(),
   waist: z.string().optional(),
   length: z.string().optional(),
@@ -195,6 +197,7 @@ export const productInputSchema = z.object({
   fabric: z.string().min(2, "Fabric details required"),
   lining: z.string().min(2, "Inner lining details required (e.g. 100% Breathable Cotton)"), // Mandatory
   care_instructions: z.string().min(2, "Care instructions required"),
+  measurement_type: z.enum(MEASUREMENT_TYPES).default("garment"),
   model_height: z.string().optional().nullable(),
   model_size_worn: z.string().optional().nullable(),
   size_chart: z.array(sizeChartRowSchema).optional().nullable(),

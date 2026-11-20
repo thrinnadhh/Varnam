@@ -161,7 +161,7 @@ export function CatalogBrowser({
                 : "bg-canvas text-text-body hover:bg-border"
             }`}
           >
-            Teens (12–18Y)
+            Teens (13–18Y)
           </button>
           <button
             type="button"
@@ -175,7 +175,7 @@ export function CatalogBrowser({
                 : "bg-canvas text-text-body hover:bg-border"
             }`}
           >
-            Girls (2–14Y)
+            Girls (2–12Y)
           </button>
         </div>
 

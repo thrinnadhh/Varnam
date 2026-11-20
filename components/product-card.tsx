@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { Heart, ShoppingBag, Check } from "lucide-react";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { toggleWishlist, addToCart } from "@/lib/db/actions";
+import { motion } from "motion/react";
 
 interface ProductCardProps {
   product: {
@@ -150,8 +151,10 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Wishlist Heart on top-right */}
-        <button
+        <motion.button
           type="button"
+          whileTap={{ scale: 0.85 }}
+          whileHover={{ scale: 1.1 }}
           onClick={handleWishlistClick}
           className={`absolute top-2.5 right-2.5 p-2 rounded-full backdrop-blur-md transition-all z-10 ${
             isFavorited
@@ -161,7 +164,7 @@ export function ProductCard({ product }: ProductCardProps) {
           aria-label="Add to favorites"
         >
           <Heart className={`w-4 h-4 ${isFavorited ? "fill-current" : ""}`} />
-        </button>
+        </motion.button>
 
         {/* Cotton Lining Indicator Tag */}
         <div className="absolute bottom-2 left-2 right-2">
@@ -201,8 +204,9 @@ export function ProductCard({ product }: ProductCardProps) {
             {sizeTags.length} sizes available
           </span>
 
-          <button
+          <motion.button
             type="button"
+            whileTap={{ scale: 0.95 }}
             disabled={isPending}
             onClick={handleQuickAdd}
             className={`text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
@@ -220,7 +224,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 <ShoppingBag className="w-3.5 h-3.5" /> Quick Add
               </>
             )}
-          </button>
+          </motion.button>
         </div>
       </div>
     </div>

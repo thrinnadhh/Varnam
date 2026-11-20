@@ -1,5 +1,6 @@
 import { getCategories, getProducts } from "@/lib/db/actions";
 import { CatalogBrowser } from "@/components/catalog-browser";
+import { SmoothScroll } from "@/components/smooth-scroll";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +19,9 @@ export default async function CollectionsPage({
     segment === "women"
       ? "Women's Couture & Celebratory Dresses"
       : segment === "teens"
-      ? "Teens Couture & Partywear (12–18Y)"
+      ? "Teens Couture & Partywear (13–18Y)"
       : segment === "girls"
-      ? "Girls' Apparel & Dresses (2–14Y)"
+      ? "Girls' Apparel & Dresses (2–12Y)"
       : "All Couture & Dresses — Women, Teens & Girls";
 
   const segmentSubtitle =
@@ -33,7 +34,8 @@ export default async function CollectionsPage({
       : "Explore handcrafted lehengas, royal anarkalis, tiered party frocks, and breathable cotton dresses.";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <SmoothScroll>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       <div className="mb-6">
         <h1 className="font-serif text-3xl sm:text-4xl font-bold text-text-heading">
           {segmentTitle}
@@ -51,5 +53,6 @@ export default async function CollectionsPage({
         initialAge={age}
       />
     </div>
+    </SmoothScroll>
   );
 }

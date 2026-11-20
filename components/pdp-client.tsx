@@ -5,6 +5,7 @@ import Image from "next/image";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { addToCart, toggleWishlist } from "@/lib/db/actions";
 import { SizeGuideModal } from "@/components/size-guide-modal";
+import { motion } from "motion/react";
 import {
   Heart,
   ShoppingBag,
@@ -292,9 +293,10 @@ export function PDPClient({ product }: PDPClientProps) {
               const isOutOfStock = v.stock <= 0;
 
               return (
-                <button
+                <motion.button
                   key={v.id}
                   type="button"
+                  whileTap={!isOutOfStock ? { scale: 0.95 } : undefined}
                   disabled={isOutOfStock}
                   onClick={() => setSelectedVariantId(v.id)}
                   className={`py-2.5 px-2 rounded-xl text-xs font-bold border transition-all text-center flex flex-col items-center justify-center ${
@@ -311,7 +313,7 @@ export function PDPClient({ product }: PDPClientProps) {
                       {v.stock} left
                     </span>
                   )}
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -358,8 +360,9 @@ export function PDPClient({ product }: PDPClientProps) {
 
         {/* Add to Bag CTA */}
         <div className="space-y-3 pt-2">
-          <button
+          <motion.button
             type="button"
+            whileTap={!(isPending || selectedVariant?.stock <= 0) ? { scale: 0.98 } : undefined}
             disabled={isPending || selectedVariant?.stock <= 0}
             onClick={handleAddToCart}
             className={`w-full py-4 rounded-xl font-bold text-sm sm:text-base flex items-center justify-center gap-2 shadow-warm-md hover:shadow-warm-lg transition-all ${
@@ -381,7 +384,7 @@ export function PDPClient({ product }: PDPClientProps) {
                 <ShoppingBag className="w-5 h-5" /> Add to Bag • {formatPrice(selectedVariant?.price || 0)}
               </>
             )}
-          </button>
+          </motion.button>
         </div>
 
         {/* Pincode Delivery Estimator */}

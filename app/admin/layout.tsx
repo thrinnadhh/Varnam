@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createServerSupabaseClient } from "@/lib/db/supabase";
 import {
   LayoutDashboard,
   Package,
@@ -15,11 +17,31 @@ export const metadata = {
   },
 };
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Server-side Admin Guard
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login?redirectTo=/admin");
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || profile.role !== "admin") {
+    redirect("/?error=unauthorized");
+  }
+
   return (
     <div className="min-h-screen bg-stone-100 flex flex-col md:flex-row font-sans">
       {/* Admin Sidebar Navigation */}
@@ -54,34 +76,38 @@ export default function AdminLayout({
               href="/admin/orders"
               className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-stone-300 hover:text-white hover:bg-stone-800 transition-colors"
             >
-              <Package className="w-4 h-4 text-stone-400" />
-              <span>Order Fulfillment</span>
+              <ShoppingBag className="w-4 h-4 text-stone-400" />
+              <span>Orders & Fulfillment</span>
             </Link>
 
             <Link
               href="/admin/products"
               className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-stone-300 hover:text-white hover:bg-stone-800 transition-colors"
             >
-              <ShoppingBag className="w-4 h-4 text-stone-400" />
-              <span>Catalog & Inventory</span>
+              <Package className="w-4 h-4 text-stone-400" />
+              <span>Catalog & Sizing</span>
             </Link>
           </nav>
         </div>
 
-        {/* Footer / Storefront Return */}
-        <div className="p-4 border-t border-stone-800 text-xs">
+        {/* Footer info & Link back to store */}
+        <div className="p-4 border-t border-stone-800 space-y-2 text-xs">
           <Link
             href="/"
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
           >
             <Store className="w-4 h-4" />
-            <span>&larr; Return to Storefront</span>
+            <span>Storefront View</span>
           </Link>
+          <div className="px-3 py-2 bg-stone-950/50 rounded-lg text-[11px] text-stone-400 space-y-0.5 border border-stone-800">
+            <p className="font-semibold text-stone-300">Admin Mode Active</p>
+            <p className="text-[10px] text-stone-500 font-mono truncate">{user.email}</p>
+          </div>
         </div>
       </aside>
 
-      {/* Main Viewport */}
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto max-w-7xl">
+      {/* Main Content Area */}
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
         {children}
       </main>
     </div>

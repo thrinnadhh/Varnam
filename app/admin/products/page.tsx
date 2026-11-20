@@ -10,8 +10,21 @@ import {
   KIDS_AGE_SIZES,
   type Segment,
   type SizeGroup,
+  type MeasurementType,
 } from "@/lib/schemas";
-import { Plus, ShoppingBag, ShieldCheck, Check, AlertCircle, Sparkles } from "lucide-react";
+import { Plus, ShoppingBag, ShieldCheck, Check, AlertCircle, Sparkles, Ruler } from "lucide-react";
+
+interface DraftVariant {
+  size_name: string;
+  size_group: SizeGroup;
+  bust_inches: number;
+  waist_inches: number;
+  hip_inches: number;
+  length_inches: number;
+  stock: number;
+  price_rupees: string;
+  mrp_rupees: string;
+}
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -23,6 +36,7 @@ export default function AdminProductsPage() {
   // New Product Form State
   const [segment, setSegment] = useState<Segment>("women");
   const [sizeGroup, setSizeGroup] = useState<SizeGroup>("women");
+  const [measurementType, setMeasurementType] = useState<MeasurementType>("garment");
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -30,14 +44,15 @@ export default function AdminProductsPage() {
   const [fabric, setFabric] = useState("Pure Chanderi Silk");
   const [lining, setLining] = useState("100% Breathable Malmal Cotton"); // Mandatory explicit!
   const [careInstructions, setCareInstructions] = useState("Dry clean only recommended for festive zari border.");
-  const [modelHeight, setModelHeight] = useState("5'8\" (173 cm)");
-  const [modelSizeWorn, setModelSizeWorn] = useState("Size S");
+
+  // NO arbitrary defaults on model fit disclosures (Admin must explicitly provide or leave empty)
+  const [modelHeight, setModelHeight] = useState("");
+  const [modelSizeWorn, setModelSizeWorn] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
 
-  // Pricing & Stock Defaults
-  const [priceRupees, setPriceRupees] = useState("2499");
-  const [mrpRupees, setMrpRupees] = useState("3499");
-  const [defaultStock, setDefaultStock] = useState("12");
+  // Draft measurement table & Admin Confirmation
+  const [draftVariants, setDraftVariants] = useState<DraftVariant[]>([]);
+  const [isDraftConfirmed, setIsDraftConfirmed] = useState(false);
 
   // Image URL
   const [imageUrl, setImageUrl] = useState("https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=1000&q=80");
@@ -62,28 +77,89 @@ export default function AdminProductsPage() {
     loadData();
   }, []);
 
-  // When segment changes, adjust sizeGroup and model defaults
+  // Generate initial draft measurements based on segment
+  const generateDraftVariants = (targetSegment: Segment, targetSizeGroup: SizeGroup) => {
+    setIsDraftConfirmed(false);
+    if (targetSegment === "women") {
+      const womenDefaults: Record<string, { bust: number; waist: number; hip: number; length: number }> = {
+        XS: { bust: 32, waist: 26, hip: 36, length: 54 },
+        S: { bust: 34, waist: 28, hip: 38, length: 54 },
+        M: { bust: 36, waist: 30, hip: 40, length: 55 },
+        L: { bust: 38, waist: 32, hip: 42, length: 55 },
+        XL: { bust: 40, waist: 34, hip: 44, length: 56 },
+        XXL: { bust: 42, waist: 36, hip: 46, length: 56 },
+      };
+      const drafts: DraftVariant[] = ["XS", "S", "M", "L", "XL", "XXL"].map((sz) => ({
+        size_name: sz,
+        size_group: "women",
+        bust_inches: womenDefaults[sz].bust,
+        waist_inches: womenDefaults[sz].waist,
+        hip_inches: womenDefaults[sz].hip,
+        length_inches: womenDefaults[sz].length,
+        stock: 12,
+        price_rupees: "3499",
+        mrp_rupees: "4999",
+      }));
+      setDraftVariants(drafts);
+    } else if (targetSegment === "teens") {
+      // Non-overlapping Teens: 13-18Y + Alphas
+      const teenDefaults: Record<string, { bust: number; waist: number; hip: number; length: number }> = {
+        "13-14Y": { bust: 31, waist: 26, hip: 34, length: 46 },
+        "15-16Y": { bust: 33, waist: 27, hip: 36, length: 48 },
+        "17-18Y": { bust: 35, waist: 28, hip: 38, length: 50 },
+        XS: { bust: 31, waist: 26, hip: 34, length: 47 },
+        S: { bust: 33, waist: 27, hip: 36, length: 48 },
+        M: { bust: 35, waist: 29, hip: 38, length: 49 },
+      };
+      const drafts: DraftVariant[] = ["13-14Y", "15-16Y", "17-18Y", "XS", "S", "M"].map((sz) => ({
+        size_name: sz,
+        size_group: "teen",
+        bust_inches: teenDefaults[sz].bust,
+        waist_inches: teenDefaults[sz].waist,
+        hip_inches: teenDefaults[sz].hip,
+        length_inches: teenDefaults[sz].length,
+        stock: 10,
+        price_rupees: "2499",
+        mrp_rupees: "3499",
+      }));
+      setDraftVariants(drafts);
+    } else {
+      // Non-overlapping Girls: 2-12Y
+      const kidsDefaults: Record<string, { bust: number; waist: number; hip: number; length: number }> = {
+        "2-3Y": { bust: 21, waist: 20, hip: 22, length: 22 },
+        "4-5Y": { bust: 23, waist: 22, hip: 24, length: 26 },
+        "6-7Y": { bust: 25, waist: 24, hip: 26, length: 30 },
+        "8-9Y": { bust: 27, waist: 26, hip: 28, length: 34 },
+        "10-11Y": { bust: 29, waist: 28, hip: 30, length: 38 },
+        "11-12Y": { bust: 31, waist: 29, hip: 32, length: 41 },
+      };
+      const drafts: DraftVariant[] = KIDS_AGE_SIZES.map((sz) => ({
+        size_name: sz,
+        size_group: "kids",
+        bust_inches: kidsDefaults[sz].bust,
+        waist_inches: kidsDefaults[sz].waist,
+        hip_inches: kidsDefaults[sz].hip,
+        length_inches: kidsDefaults[sz].length,
+        stock: 15,
+        price_rupees: "1899",
+        mrp_rupees: "2499",
+      }));
+      setDraftVariants(drafts);
+    }
+  };
+
+  // When segment changes, adjust sizeGroup and re-generate draft
   const handleSegmentChange = (newSegment: Segment) => {
     setSegment(newSegment);
-    if (newSegment === "women") {
-      setSizeGroup("women");
-      setModelHeight("5'8\" (173 cm)");
-      setModelSizeWorn("Size S");
-      setPriceRupees("3499");
-      setMrpRupees("4999");
-    } else if (newSegment === "teens") {
-      setSizeGroup("teen");
-      setModelHeight("5'2\" (157 cm)");
-      setModelSizeWorn("XS (13-14Y)");
-      setPriceRupees("2499");
-      setMrpRupees("3299");
-    } else {
-      setSizeGroup("kids");
-      setModelHeight("4'2\" (127 cm)");
-      setModelSizeWorn("Age 6-7Y");
-      setPriceRupees("1899");
-      setMrpRupees("2499");
-    }
+    const newGroup: SizeGroup =
+      newSegment === "women" ? "women" : newSegment === "teens" ? "teen" : "kids";
+    setSizeGroup(newGroup);
+    generateDraftVariants(newSegment, newGroup);
+  };
+
+  const handleOpenForm = () => {
+    setIsAddingProduct(true);
+    generateDraftVariants(segment, sizeGroup);
   };
 
   const handleNameChange = (val: string) => {
@@ -96,6 +172,13 @@ export default function AdminProductsPage() {
     );
   };
 
+  const handleUpdateDraft = (index: number, field: keyof DraftVariant, value: any) => {
+    const updated = [...draftVariants];
+    updated[index] = { ...updated[index], [field]: value };
+    setDraftVariants(updated);
+    setIsDraftConfirmed(false); // Reset confirmation if measurements are touched
+  };
+
   const handleCreateProduct = (e: React.FormEvent) => {
     e.preventDefault();
     setFeedback(null);
@@ -106,111 +189,45 @@ export default function AdminProductsPage() {
       return;
     }
 
+    if (!isDraftConfirmed) {
+      setFeedback("Error: Please review and confirm the draft sizing measurements below.");
+      return;
+    }
+
     startTransition(async () => {
-      const pricePaise = Math.round(Number(priceRupees) * 100);
-      const mrpPaise = Math.round(Number(mrpRupees) * 100);
-      const stock = Number(defaultStock);
+      const variants = draftVariants.map((v) => ({
+        size_group: v.size_group,
+        size_name: v.size_name,
+        size_age: v.size_name,
+        bust_inches: Number(v.bust_inches),
+        bust_cm: Math.round(Number(v.bust_inches) * 2.54),
+        waist_inches: Number(v.waist_inches),
+        waist_cm: Math.round(Number(v.waist_inches) * 2.54),
+        hip_inches: Number(v.hip_inches),
+        hip_cm: Math.round(Number(v.hip_inches) * 2.54),
+        length_inches: Number(v.length_inches),
+        length_cm: Math.round(Number(v.length_inches) * 2.54),
+        color_name: "Original",
+        color_hex: "#881337",
+        sku: `${slug.toUpperCase()}-${v.size_name}`,
+        price: Math.round(Number(v.price_rupees) * 100),
+        mrp: Math.round(Number(v.mrp_rupees) * 100),
+        stock: Number(v.stock),
+        is_active: true,
+      }));
 
-      let variants: any[] = [];
-
-      if (segment === "women") {
-        const womenMeasurements: Record<string, { bust: number; waist: number; hip: number; length: number }> = {
-          XS: { bust: 32, waist: 26, hip: 36, length: 54 },
-          S: { bust: 34, waist: 28, hip: 38, length: 54 },
-          M: { bust: 36, waist: 30, hip: 40, length: 55 },
-          L: { bust: 38, waist: 32, hip: 42, length: 55 },
-          XL: { bust: 40, waist: 34, hip: 44, length: 56 },
-          XXL: { bust: 42, waist: 36, hip: 46, length: 56 },
-        };
-
-        variants = ["XS", "S", "M", "L", "XL", "XXL"].map((size) => {
-          const m = womenMeasurements[size];
-          return {
-            size_group: "women" as const,
-            size_name: size,
-            size_age: size,
-            bust_inches: m.bust,
-            bust_cm: Math.round(m.bust * 2.54),
-            waist_inches: m.waist,
-            waist_cm: Math.round(m.waist * 2.54),
-            hip_inches: m.hip,
-            hip_cm: Math.round(m.hip * 2.54),
-            length_inches: m.length,
-            length_cm: Math.round(m.length * 2.54),
-            color_name: "Original",
-            color_hex: "#881337",
-            sku: `${slug.toUpperCase()}-${size}`,
-            price: pricePaise,
-            mrp: mrpPaise,
-            stock,
-            is_active: true,
-          };
-        });
-      } else if (segment === "teens") {
-        const teenMeasurements: Record<string, { bust: number; waist: number; hip: number; length: number }> = {
-          "11-12Y": { bust: 28, waist: 24, hip: 30, length: 44 },
-          "13-14Y": { bust: 30, waist: 25, hip: 32, length: 46 },
-          "15-16Y": { bust: 32, waist: 26, hip: 34, length: 48 },
-          XS: { bust: 31, waist: 25, hip: 33, length: 47 },
-          S: { bust: 33, waist: 27, hip: 35, length: 48 },
-          M: { bust: 35, waist: 29, hip: 37, length: 49 },
-        };
-
-        variants = ["11-12Y", "13-14Y", "15-16Y", "XS", "S", "M"].map((size) => {
-          const m = teenMeasurements[size];
-          return {
-            size_group: "teen" as const,
-            size_name: size,
-            size_age: size,
-            bust_inches: m.bust,
-            bust_cm: Math.round(m.bust * 2.54),
-            waist_inches: m.waist,
-            waist_cm: Math.round(m.waist * 2.54),
-            hip_inches: m.hip,
-            hip_cm: Math.round(m.hip * 2.54),
-            length_inches: m.length,
-            length_cm: Math.round(m.length * 2.54),
-            color_name: "Original",
-            color_hex: "#10b981",
-            sku: `${slug.toUpperCase()}-${size}`,
-            price: pricePaise,
-            mrp: mrpPaise,
-            stock,
-            is_active: true,
-          };
-        });
-      } else {
-        const kidsMeasurements: Record<string, { bust: number; waist: number; length: number }> = {
-          "2-3Y": { bust: 21, waist: 20, length: 22 },
-          "4-5Y": { bust: 23, waist: 22, length: 26 },
-          "6-7Y": { bust: 25, waist: 24, length: 30 },
-          "8-9Y": { bust: 27, waist: 25, length: 34 },
-          "10-11Y": { bust: 29, waist: 26, length: 38 },
-          "12-14Y": { bust: 31, waist: 28, length: 42 },
-        };
-
-        variants = KIDS_AGE_SIZES.map((size) => {
-          const m = kidsMeasurements[size];
-          return {
-            size_group: "kids" as const,
-            size_name: size,
-            size_age: size,
-            bust_inches: m.bust,
-            bust_cm: Math.round(m.bust * 2.54),
-            waist_inches: m.waist,
-            waist_cm: Math.round(m.waist * 2.54),
-            length_inches: m.length,
-            length_cm: Math.round(m.length * 2.54),
-            color_name: "Original",
-            color_hex: "#881337",
-            sku: `${slug.toUpperCase()}-${size}`,
-            price: pricePaise,
-            mrp: mrpPaise,
-            stock,
-            is_active: true,
-          };
-        });
-      }
+      const sizeChart = draftVariants.map((v) => ({
+        size: v.size_name,
+        bust_in: Number(v.bust_inches),
+        bust_cm: Math.round(Number(v.bust_inches) * 2.54),
+        waist_in: Number(v.waist_inches),
+        waist_cm: Math.round(Number(v.waist_inches) * 2.54),
+        hip_in: Number(v.hip_inches),
+        hip_cm: Math.round(Number(v.hip_inches) * 2.54),
+        length_in: Number(v.length_inches),
+        length_cm: Math.round(Number(v.length_inches) * 2.54),
+        measurement_type: measurementType,
+      }));
 
       const res = await createAdminProduct({
         category_id: categoryId,
@@ -221,8 +238,10 @@ export default function AdminProductsPage() {
         fabric,
         lining, // Mandatory explicit declaration!
         care_instructions: careInstructions,
-        model_height: modelHeight,
-        model_size_worn: modelSizeWorn,
+        measurement_type: measurementType,
+        model_height: modelHeight.trim() ? modelHeight.trim() : null,
+        model_size_worn: modelSizeWorn.trim() ? modelSizeWorn.trim() : null,
+        size_chart: sizeChart,
         is_active: true,
         is_featured: isFeatured,
         variants,
@@ -237,11 +256,14 @@ export default function AdminProductsPage() {
       });
 
       if (res.success) {
-        setFeedback("Couture dress and multi-segment variants created successfully!");
+        setFeedback("Couture dress and confirmed variant measurements created successfully!");
         setIsAddingProduct(false);
         loadData();
         setName("");
         setSlug("");
+        setModelHeight("");
+        setModelSizeWorn("");
+        setIsDraftConfirmed(false);
       } else {
         setFeedback(res.error || "Failed to create product.");
       }
@@ -256,13 +278,13 @@ export default function AdminProductsPage() {
             Catalog & Inventory Management
           </h1>
           <p className="text-xs sm:text-sm text-stone-600">
-            Multi-segment couture (Women, Teens, Girls), mandatory lining specs, and size group stocks.
+            Multi-segment couture (Women, Teens 13–18Y, Girls 2–12Y), mandatory lining specs, and verified sizing drafts.
           </p>
         </div>
 
         <button
           type="button"
-          onClick={() => setIsAddingProduct(!isAddingProduct)}
+          onClick={() => (isAddingProduct ? setIsAddingProduct(false) : handleOpenForm())}
           className="px-4 py-2 bg-rose-900 text-white rounded-lg text-xs font-semibold hover:bg-rose-800 transition-colors flex items-center gap-1.5"
         >
           <Plus className="w-4 h-4" />
@@ -298,8 +320,8 @@ export default function AdminProductsPage() {
                 className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white font-semibold"
               >
                 <option value="women">Women (Sizes XS–XXL / Numeric 28–38)</option>
-                <option value="teens">Teens (Ages 12–18Y / Youth Sizing)</option>
-                <option value="girls">Girls (Ages 2–14Y / Milestone Sizing)</option>
+                <option value="teens">Teens (Ages 13–18Y / Youth Sizing)</option>
+                <option value="girls">Girls (Ages 2–12Y / Milestone Sizing)</option>
               </select>
             </div>
 
@@ -322,16 +344,15 @@ export default function AdminProductsPage() {
 
             <div>
               <label className="block font-semibold text-stone-700 mb-1">
-                Size Group *
+                Chart Measurement Basis *
               </label>
               <select
-                value={sizeGroup}
-                onChange={(e) => setSizeGroup(e.target.value as SizeGroup)}
-                className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white"
+                value={measurementType}
+                onChange={(e) => setMeasurementType(e.target.value as MeasurementType)}
+                className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white font-semibold"
               >
-                <option value="women">Women Sizes (Bust, Waist, Hip, Length)</option>
-                <option value="teen">Teen Sizes (Youth Silhouette)</option>
-                <option value="kids">Kids Sizes (Chest, Waist, Length)</option>
+                <option value="garment">Garment Dimensions (Laid Flat with +2" Ease)</option>
+                <option value="body">Body Measurements (Natural Body Fit)</option>
               </select>
             </div>
           </div>
@@ -366,32 +387,42 @@ export default function AdminProductsPage() {
             </div>
           </div>
 
-          {/* Model Fit Disclosures */}
+          {/* Model Fit Disclosures (NO defaults - optional/explicit) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-purple-50/50 border border-purple-100">
             <div>
               <label className="block font-semibold text-purple-950 mb-1">
-                Model Height (Segment Specific) *
+                Model Height (Optional / Segment-Specific)
               </label>
               <input
                 type="text"
-                required
                 value={modelHeight}
                 onChange={(e) => setModelHeight(e.target.value)}
-                placeholder={'e.g. 5\'8" (173 cm) or 4\'2" (127 cm)'}
+                placeholder={
+                  segment === "women"
+                    ? "e.g. 5'8\" (173 cm)"
+                    : segment === "teens"
+                    ? "e.g. 5'3\" (160 cm)"
+                    : "e.g. 4'2\" (127 cm)"
+                }
                 className="w-full px-3 py-2 border border-purple-200 rounded-lg bg-white"
               />
             </div>
 
             <div>
               <label className="block font-semibold text-purple-950 mb-1">
-                Model Size Worn *
+                Model Size Worn (Optional)
               </label>
               <input
                 type="text"
-                required
                 value={modelSizeWorn}
                 onChange={(e) => setModelSizeWorn(e.target.value)}
-                placeholder="e.g. Size S or Age 6-7Y"
+                placeholder={
+                  segment === "women"
+                    ? "e.g. Size S"
+                    : segment === "teens"
+                    ? "e.g. Size XS (13-14Y)"
+                    : "e.g. Age 6-7Y"
+                }
                 className="w-full px-3 py-2 border border-purple-200 rounded-lg bg-white"
               />
             </div>
@@ -455,44 +486,126 @@ export default function AdminProductsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block font-semibold text-stone-700 mb-1">
-                Selling Price (₹) *
-              </label>
-              <input
-                type="number"
-                required
-                value={priceRupees}
-                onChange={(e) => setPriceRupees(e.target.value)}
-                className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-stone-50 font-mono"
-              />
+          {/* Admin Draft Measurements Review & Confirmation */}
+          <div className="space-y-3 p-4 rounded-xl border border-stone-300 bg-stone-50/60">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-200 pb-2">
+              <div>
+                <h3 className="font-bold text-stone-900 font-serif flex items-center gap-1.5 text-sm">
+                  <Ruler className="w-4 h-4 text-rose-900" />
+                  Auto-Generated Measurements Draft ({measurementType.toUpperCase()} Dimensions)
+                </h3>
+                <p className="text-[11px] text-stone-600">
+                  Review and customize measurements for each variant before confirming.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => generateDraftVariants(segment, sizeGroup)}
+                className="text-[11px] font-semibold text-rose-900 hover:underline self-start sm:self-auto"
+              >
+                Reset to Standard Archetype
+              </button>
             </div>
 
-            <div>
-              <label className="block font-semibold text-stone-700 mb-1">
-                MRP (₹) *
-              </label>
-              <input
-                type="number"
-                required
-                value={mrpRupees}
-                onChange={(e) => setMrpRupees(e.target.value)}
-                className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-stone-50 font-mono"
-              />
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs bg-white rounded-lg border border-stone-200 overflow-hidden">
+                <thead className="bg-stone-100 text-stone-700 font-semibold border-b border-stone-200 uppercase text-[10px]">
+                  <tr>
+                    <th className="py-2 px-2.5">Size</th>
+                    <th className="py-2 px-2.5">Bust/Chest (in)</th>
+                    <th className="py-2 px-2.5">Waist (in)</th>
+                    <th className="py-2 px-2.5">Hip (in)</th>
+                    <th className="py-2 px-2.5">Length (in)</th>
+                    <th className="py-2 px-2.5">Stock</th>
+                    <th className="py-2 px-2.5">Price (₹)</th>
+                    <th className="py-2 px-2.5">MRP (₹)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {draftVariants.map((v, idx) => (
+                    <tr key={v.size_name}>
+                      <td className="py-1.5 px-2.5 font-bold font-mono text-stone-900">
+                        {v.size_name}
+                      </td>
+                      <td className="py-1.5 px-2.5">
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={v.bust_inches}
+                          onChange={(e) => handleUpdateDraft(idx, "bust_inches", Number(e.target.value))}
+                          className="w-16 px-1.5 py-1 border border-stone-300 rounded font-mono text-xs"
+                        />
+                      </td>
+                      <td className="py-1.5 px-2.5">
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={v.waist_inches}
+                          onChange={(e) => handleUpdateDraft(idx, "waist_inches", Number(e.target.value))}
+                          className="w-16 px-1.5 py-1 border border-stone-300 rounded font-mono text-xs"
+                        />
+                      </td>
+                      <td className="py-1.5 px-2.5">
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={v.hip_inches}
+                          onChange={(e) => handleUpdateDraft(idx, "hip_inches", Number(e.target.value))}
+                          className="w-16 px-1.5 py-1 border border-stone-300 rounded font-mono text-xs"
+                        />
+                      </td>
+                      <td className="py-1.5 px-2.5">
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={v.length_inches}
+                          onChange={(e) => handleUpdateDraft(idx, "length_inches", Number(e.target.value))}
+                          className="w-16 px-1.5 py-1 border border-stone-300 rounded font-mono text-xs"
+                        />
+                      </td>
+                      <td className="py-1.5 px-2.5">
+                        <input
+                          type="number"
+                          value={v.stock}
+                          onChange={(e) => handleUpdateDraft(idx, "stock", Number(e.target.value))}
+                          className="w-16 px-1.5 py-1 border border-stone-300 rounded font-mono text-xs"
+                        />
+                      </td>
+                      <td className="py-1.5 px-2.5">
+                        <input
+                          type="number"
+                          value={v.price_rupees}
+                          onChange={(e) => handleUpdateDraft(idx, "price_rupees", e.target.value)}
+                          className="w-20 px-1.5 py-1 border border-stone-300 rounded font-mono text-xs"
+                        />
+                      </td>
+                      <td className="py-1.5 px-2.5">
+                        <input
+                          type="number"
+                          value={v.mrp_rupees}
+                          onChange={(e) => handleUpdateDraft(idx, "mrp_rupees", e.target.value)}
+                          className="w-20 px-1.5 py-1 border border-stone-300 rounded font-mono text-xs"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            <div>
-              <label className="block font-semibold text-stone-700 mb-1">
-                Stock Per Generated Variant *
-              </label>
+            {/* Confirmation Checkbox */}
+            <div className="pt-2 flex items-center gap-2">
               <input
-                type="number"
-                required
-                value={defaultStock}
-                onChange={(e) => setDefaultStock(e.target.value)}
-                className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-stone-50 font-mono"
+                type="checkbox"
+                id="confirmDraft"
+                checked={isDraftConfirmed}
+                onChange={(e) => setIsDraftConfirmed(e.target.checked)}
+                className="w-4 h-4 accent-rose-900 rounded"
               />
+              <label htmlFor="confirmDraft" className="font-semibold text-stone-800 text-xs">
+                I have reviewed and confirmed that these {draftVariants.length} variant measurements and stock levels are accurate.
+              </label>
             </div>
           </div>
 
@@ -519,8 +632,8 @@ export default function AdminProductsPage() {
             </button>
             <button
               type="submit"
-              disabled={isPending}
-              className="px-5 py-2 bg-rose-900 text-white rounded-lg hover:bg-rose-800 disabled:opacity-50"
+              disabled={isPending || !isDraftConfirmed}
+              className="px-5 py-2 bg-rose-900 text-white rounded-lg hover:bg-rose-800 disabled:opacity-50 font-semibold"
             >
               {isPending ? "Creating..." : "Save Product & Variants"}
             </button>

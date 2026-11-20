@@ -4,6 +4,7 @@ import { getCategories, getProducts } from "@/lib/db/actions";
 import { ProductCard } from "@/components/product-card";
 import { Sparkles, ArrowRight, ShieldCheck, HeartHandshake, Ruler, Users } from "lucide-react";
 import { HomeHeroMotion } from "@/components/home-hero-motion";
+import { SmoothScroll } from "@/components/smooth-scroll";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,8 @@ export default async function HomePage() {
   ]);
 
   return (
-    <div className="flex flex-col gap-12 sm:gap-16 pb-16">
+    <SmoothScroll>
+      <div className="flex flex-col gap-12 sm:gap-16 pb-16">
       {/* Hero Section with GSAP Storytelling Animation */}
       <section className="relative overflow-hidden bg-gradient-to-b from-brand-primary-subtle/70 via-canvas to-canvas pt-8 pb-12 sm:pt-12 sm:pb-20 border-b border-border-subtle">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -48,14 +50,14 @@ export default async function HomePage() {
                   href="/collections?segment=teens"
                   className="px-5 py-3 bg-brand-secondary text-white font-semibold rounded-xl hover:bg-brand-secondary-hover shadow-warm-sm transition-all text-xs sm:text-sm"
                 >
-                  Shop Teens (12–18Y)
+                  Shop Teens (13–18Y)
                 </Link>
 
                 <Link
                   href="/collections?segment=girls"
                   className="px-5 py-3 bg-surface text-text-heading border border-border font-semibold rounded-xl hover:bg-canvas shadow-warm-sm transition-all text-xs sm:text-sm"
                 >
-                  Shop Girls (2–14Y)
+                  Shop Girls (2–12Y)
                 </Link>
               </div>
 
@@ -125,7 +127,7 @@ export default async function HomePage() {
           >
             <div>
               <div className="inline-block px-3 py-1 rounded-full bg-amber-50 text-amber-900 text-[11px] font-bold mb-3 border border-amber-200">
-                Ages 12–18Y • Youth XS–M
+                Ages 13–18Y • Youth XS–M
               </div>
               <h3 className="font-serif text-xl font-bold text-text-heading group-hover:text-brand-primary transition-colors">
                 Teens Couture
@@ -147,7 +149,7 @@ export default async function HomePage() {
           >
             <div>
               <div className="inline-block px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold mb-3 border border-emerald-100">
-                Ages 2–14Y • True-to-Age Fit
+                Ages 2–12Y • True-to-Age Fit
               </div>
               <h3 className="font-serif text-xl font-bold text-text-heading group-hover:text-brand-primary transition-colors">
                 Girls' Apparel & Dresses
@@ -243,5 +245,6 @@ export default async function HomePage() {
         </div>
       </section>
     </div>
+    </SmoothScroll>
   );
 }

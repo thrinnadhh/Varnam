@@ -138,9 +138,9 @@ values
     '5''2" (157 cm)',
     'Size XS / 13-14Y',
     '[
-      {"size": "11-12Y", "bust_in": 29, "bust_cm": 73.7, "waist_in": 25, "waist_cm": 63.5, "hip_in": 32, "hip_cm": 81.3, "length_in": 38, "length_cm": 96.5},
       {"size": "13-14Y", "bust_in": 31, "bust_cm": 78.7, "waist_in": 26, "waist_cm": 66.0, "hip_in": 34, "hip_cm": 86.4, "length_in": 40, "length_cm": 101.6},
       {"size": "15-16Y", "bust_in": 33, "bust_cm": 83.8, "waist_in": 27, "waist_cm": 68.6, "hip_in": 36, "hip_cm": 91.4, "length_in": 42, "length_cm": 106.7},
+      {"size": "17-18Y", "bust_in": 35, "bust_cm": 88.9, "waist_in": 28, "waist_cm": 71.1, "hip_in": 38, "hip_cm": 96.5, "length_in": 44, "length_cm": 111.8},
       {"size": "XS", "bust_in": 31, "bust_cm": 78.7, "waist_in": 26, "waist_cm": 66.0, "hip_in": 34, "hip_cm": 86.4, "length_in": 40, "length_cm": 101.6},
       {"size": "S", "bust_in": 33, "bust_cm": 83.8, "waist_in": 27, "waist_cm": 68.6, "hip_in": 36, "hip_cm": 91.4, "length_in": 42, "length_cm": 106.7}
     ]'::jsonb,
@@ -162,9 +162,9 @@ values
     '5''3" (160 cm)',
     'Size 13-14Y',
     '[
-      {"size": "11-12Y", "bust_in": 29, "bust_cm": 73.7, "waist_in": 25, "waist_cm": 63.5, "hip_in": 32, "hip_cm": 81.3, "length_in": 46, "length_cm": 116.8},
       {"size": "13-14Y", "bust_in": 31, "bust_cm": 78.7, "waist_in": 26, "waist_cm": 66.0, "hip_in": 34, "hip_cm": 86.4, "length_in": 48, "length_cm": 121.9},
       {"size": "15-16Y", "bust_in": 33, "bust_cm": 83.8, "waist_in": 27, "waist_cm": 68.6, "hip_in": 36, "hip_cm": 91.4, "length_in": 50, "length_cm": 127.0},
+      {"size": "17-18Y", "bust_in": 35, "bust_cm": 88.9, "waist_in": 28, "waist_cm": 71.1, "hip_in": 38, "hip_cm": 96.5, "length_in": 52, "length_cm": 132.1},
       {"size": "XS", "bust_in": 31, "bust_cm": 78.7, "waist_in": 26, "waist_cm": 66.0, "hip_in": 34, "hip_cm": 86.4, "length_in": 48, "length_cm": 121.9}
     ]'::jsonb,
     true,
@@ -190,7 +190,7 @@ values
       {"size": "6-7Y", "bust_in": 25, "bust_cm": 63.5, "waist_in": 24, "waist_cm": 61.0, "hip_in": 26, "hip_cm": 66.0, "length_in": 30, "length_cm": 76.2},
       {"size": "8-9Y", "bust_in": 27, "bust_cm": 68.6, "waist_in": 26, "waist_cm": 66.0, "hip_in": 28, "hip_cm": 71.1, "length_in": 34, "length_cm": 86.4},
       {"size": "10-11Y", "bust_in": 29, "bust_cm": 73.7, "waist_in": 28, "waist_cm": 71.1, "hip_in": 30, "hip_cm": 76.2, "length_in": 38, "length_cm": 96.5},
-      {"size": "12-14Y", "bust_in": 31, "bust_cm": 78.7, "waist_in": 30, "waist_cm": 76.2, "hip_in": 32, "hip_cm": 81.3, "length_in": 42, "length_cm": 106.7}
+      {"size": "11-12Y", "bust_in": 31, "bust_cm": 78.7, "waist_in": 29, "waist_cm": 73.7, "hip_in": 32, "hip_cm": 81.3, "length_in": 41, "length_cm": 104.1}
     ]'::jsonb,
     true,
     true
@@ -271,25 +271,26 @@ values
   ('aaaaaaaa-2222-aaaa-aaaa-aaaaaaaaaaaa', 'women', 'M', 'M', 36.0, 91.4, 30.0, 76.2, 40.0, 101.6, 55.0, 139.7, 'Blush Peony', '#f43f5e', 'NOOR-WOMEN-M', 429900, 599900, 10, true),
   ('aaaaaaaa-2222-aaaa-aaaa-aaaaaaaaaaaa', 'women', 'L', 'L', 38.0, 96.5, 32.0, 81.3, 42.0, 106.7, 55.0, 139.7, 'Blush Peony', '#f43f5e', 'NOOR-WOMEN-L', 429900, 599900, 7, true),
 
-  -- Teens 1 (Meera): 11-12Y, 13-14Y, 15-16Y, XS, S
-  ('bbbbbbbb-1111-bbbb-bbbb-bbbbbbbbbbbb', 'teen', '11-12Y', '11-12Y', 29.0, 73.7, 25.0, 63.5, 32.0, 81.3, 38.0, 96.5, 'Mint Zari', '#059669', 'MEERA-TEEN-1112Y', 269900, 379900, 10, true),
+  -- Teens 1 (Meera): 13-14Y, 15-16Y, 17-18Y, XS, S
   ('bbbbbbbb-1111-bbbb-bbbb-bbbbbbbbbbbb', 'teen', '13-14Y', '13-14Y', 31.0, 78.7, 26.0, 66.0, 34.0, 86.4, 40.0, 101.6, 'Mint Zari', '#059669', 'MEERA-TEEN-1314Y', 269900, 379900, 14, true),
   ('bbbbbbbb-1111-bbbb-bbbb-bbbbbbbbbbbb', 'teen', '15-16Y', '15-16Y', 33.0, 83.8, 27.0, 68.6, 36.0, 91.4, 42.0, 106.7, 'Mint Zari', '#059669', 'MEERA-TEEN-1516Y', 269900, 379900, 12, true),
+  ('bbbbbbbb-1111-bbbb-bbbb-bbbbbbbbbbbb', 'teen', '17-18Y', '17-18Y', 35.0, 88.9, 28.0, 71.1, 38.0, 96.5, 44.0, 111.8, 'Mint Zari', '#059669', 'MEERA-TEEN-1718Y', 299900, 399900, 10, true),
   ('bbbbbbbb-1111-bbbb-bbbb-bbbbbbbbbbbb', 'teen', 'XS', 'XS', 31.0, 78.7, 26.0, 66.0, 34.0, 86.4, 40.0, 101.6, 'Mint Zari', '#059669', 'MEERA-TEEN-XS', 269900, 379900, 8, true),
   ('bbbbbbbb-1111-bbbb-bbbb-bbbbbbbbbbbb', 'teen', 'S', 'S', 33.0, 83.8, 27.0, 68.6, 36.0, 91.4, 42.0, 106.7, 'Mint Zari', '#059669', 'MEERA-TEEN-S', 269900, 379900, 8, true),
 
-  -- Teens 2 (Zoya): 11-12Y, 13-14Y, 15-16Y, XS
-  ('bbbbbbbb-2222-bbbb-bbbb-bbbbbbbbbbbb', 'teen', '11-12Y', '11-12Y', 29.0, 73.7, 25.0, 63.5, 32.0, 81.3, 46.0, 116.8, 'Twilight Lavender', '#7c3aed', 'ZOYA-TEEN-1112Y', 289900, 399900, 9, true),
+  -- Teens 2 (Zoya): 13-14Y, 15-16Y, 17-18Y, XS
   ('bbbbbbbb-2222-bbbb-bbbb-bbbbbbbbbbbb', 'teen', '13-14Y', '13-14Y', 31.0, 78.7, 26.0, 66.0, 34.0, 86.4, 48.0, 121.9, 'Twilight Lavender', '#7c3aed', 'ZOYA-TEEN-1314Y', 289900, 399900, 12, true),
   ('bbbbbbbb-2222-bbbb-bbbb-bbbbbbbbbbbb', 'teen', '15-16Y', '15-16Y', 33.0, 83.8, 27.0, 68.6, 36.0, 91.4, 50.0, 127.0, 'Twilight Lavender', '#7c3aed', 'ZOYA-TEEN-1516Y', 289900, 399900, 10, true),
+  ('bbbbbbbb-2222-bbbb-bbbb-bbbbbbbbbbbb', 'teen', '17-18Y', '17-18Y', 35.0, 88.9, 28.0, 71.1, 38.0, 96.5, 52.0, 132.1, 'Twilight Lavender', '#7c3aed', 'ZOYA-TEEN-1718Y', 319900, 429900, 9, true),
+  ('bbbbbbbb-2222-bbbb-bbbb-bbbbbbbbbbbb', 'teen', 'XS', 'XS', 31.0, 78.7, 26.0, 66.0, 34.0, 86.4, 48.0, 121.9, 'Twilight Lavender', '#7c3aed', 'ZOYA-TEEN-XS', 289900, 399900, 8, true),
 
-  -- Girls 1 (Aadhya): 2-3Y, 4-5Y, 6-7Y, 8-9Y, 10-11Y, 12-14Y
+  -- Girls 1 (Aadhya): 2-3Y, 4-5Y, 6-7Y, 8-9Y, 10-11Y, 11-12Y
   ('cccccccc-1111-cccc-cccc-cccccccccccc', 'kids', '2-3Y', '2-3Y', 21.0, 53.3, 20.0, 50.8, 22.0, 55.9, 22.0, 55.9, 'Rose Gold', '#e11d48', 'AADHYA-GIRLS-23Y', 249900, 349900, 15, true),
   ('cccccccc-1111-cccc-cccc-cccccccccccc', 'kids', '4-5Y', '4-5Y', 23.0, 58.4, 22.0, 55.9, 24.0, 61.0, 26.0, 66.0, 'Rose Gold', '#e11d48', 'AADHYA-GIRLS-45Y', 249900, 349900, 18, true),
   ('cccccccc-1111-cccc-cccc-cccccccccccc', 'kids', '6-7Y', '6-7Y', 25.0, 63.5, 24.0, 61.0, 26.0, 66.0, 30.0, 76.2, 'Rose Gold', '#e11d48', 'AADHYA-GIRLS-67Y', 249900, 349900, 20, true),
   ('cccccccc-1111-cccc-cccc-cccccccccccc', 'kids', '8-9Y', '8-9Y', 27.0, 68.6, 26.0, 66.0, 28.0, 71.1, 34.0, 86.4, 'Rose Gold', '#e11d48', 'AADHYA-GIRLS-89Y', 249900, 349900, 14, true),
   ('cccccccc-1111-cccc-cccc-cccccccccccc', 'kids', '10-11Y', '10-11Y', 29.0, 73.7, 28.0, 71.1, 30.0, 76.2, 38.0, 96.5, 'Rose Gold', '#e11d48', 'AADHYA-GIRLS-1011Y', 249900, 349900, 10, true),
-  ('cccccccc-1111-cccc-cccc-cccccccccccc', 'kids', '12-14Y', '12-14Y', 31.0, 78.7, 30.0, 76.2, 32.0, 81.3, 42.0, 106.7, 'Rose Gold', '#e11d48', 'AADHYA-GIRLS-1214Y', 249900, 349900, 8, true),
+  ('cccccccc-1111-cccc-cccc-cccccccccccc', 'kids', '11-12Y', '11-12Y', 31.0, 78.7, 29.0, 73.7, 32.0, 81.3, 41.0, 104.1, 'Rose Gold', '#e11d48', 'AADHYA-GIRLS-1112Y', 249900, 349900, 8, true),
 
   -- Girls 2 (Avani): 2-3Y, 4-5Y, 6-7Y, 8-9Y, 10-11Y
   ('cccccccc-2222-cccc-cccc-cccccccccccc', 'kids', '2-3Y', '2-3Y', 21.0, 53.3, 20.0, 50.8, 22.0, 55.9, 20.0, 50.8, 'Emerald Green', '#047857', 'AVANI-GIRLS-23Y', 179900, 239900, 16, true),
