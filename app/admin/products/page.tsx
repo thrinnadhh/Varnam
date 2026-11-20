@@ -160,6 +160,9 @@ export default function AdminProductsPage() {
   const handleOpenForm = () => {
     setIsAddingProduct(true);
     generateDraftVariants(segment, sizeGroup);
+    if (!categoryId && categories.length > 0) {
+      setCategoryId(categories[0].id);
+    }
   };
 
   const handleNameChange = (val: string) => {
@@ -229,8 +232,14 @@ export default function AdminProductsPage() {
         measurement_type: measurementType,
       }));
 
+      const targetCatId = categoryId || (categories.length > 0 ? categories[0].id : "");
+      if (!targetCatId) {
+        setFeedback("Error: Please select a category for this dress.");
+        return;
+      }
+
       const res = await createAdminProduct({
-        category_id: categoryId,
+        category_id: targetCatId,
         segment,
         name,
         slug,

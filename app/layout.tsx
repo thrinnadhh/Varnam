@@ -16,11 +16,11 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: "Varnam — Girls' Couture & Festive Apparel (Ages 2–14Y)",
+    default: "Varnam — Festive & Celebratory Couture (Women, Teens & Girls)",
     template: "%s | Varnam",
   },
   description:
-    "Handcrafted zari lehengas, whimsical tiered party gowns, and pure cotton twirl frocks for girls aged 2–14. Tailored with 100% breathable cotton inner linings.",
+    "Handcrafted royal anarkalis, festive co-ord sets, and pure cotton twirl frocks for Women (XS–XXL), Teens (13–18Y), and Girls (2–12Y). Tailored with 100% breathable cotton inner linings.",
 };
 
 export default function RootLayout({

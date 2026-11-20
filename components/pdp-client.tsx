@@ -328,25 +328,25 @@ export function PDPClient({ product }: PDPClientProps) {
                 {selectedVariant.bust_inches && (
                   <span>
                     {product.segment === "girls" ? "Chest" : "Bust"}:{" "}
-                    <strong className="text-text-heading">{selectedVariant.bust_inches}" ({selectedVariant.bust_cm} cm)</strong>
+                    <strong className="text-text-heading">{selectedVariant.bust_inches}&quot; ({selectedVariant.bust_cm} cm)</strong>
                   </span>
                 )}
                 {selectedVariant.waist_inches && (
                   <span>
                     Waist:{" "}
-                    <strong className="text-text-heading">{selectedVariant.waist_inches}" ({selectedVariant.waist_cm} cm)</strong>
+                    <strong className="text-text-heading">{selectedVariant.waist_inches}&quot; ({selectedVariant.waist_cm} cm)</strong>
                   </span>
                 )}
                 {selectedVariant.hip_inches && (
                   <span>
                     Hip:{" "}
-                    <strong className="text-text-heading">{selectedVariant.hip_inches}" ({selectedVariant.hip_cm} cm)</strong>
+                    <strong className="text-text-heading">{selectedVariant.hip_inches}&quot; ({selectedVariant.hip_cm} cm)</strong>
                   </span>
                 )}
                 {selectedVariant.length_inches && (
                   <span>
                     Length:{" "}
-                    <strong className="text-text-heading">{selectedVariant.length_inches}" ({selectedVariant.length_cm} cm)</strong>
+                    <strong className="text-text-heading">{selectedVariant.length_inches}&quot; ({selectedVariant.length_cm} cm)</strong>
                   </span>
                 )}
               </div>

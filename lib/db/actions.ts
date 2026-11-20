@@ -119,7 +119,7 @@ export async function getProducts(params: GetProductsParams = {}) {
   }
 
   // Client-side sort for price if requested
-  let results = data || [];
+  const results = data || [];
   if (params.sort === "price_asc") {
     results.sort((a, b) => {
       const minA = Math.min(...a.product_variants.map((v) => v.price));

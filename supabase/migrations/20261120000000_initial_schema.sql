@@ -336,16 +336,16 @@ security definer
 set search_path = public, auth
 as $$
 begin
-  -- Prevent role modification unless done by an admin
+  -- Prevent role modification unless done by an admin or service_role
   if new.role is distinct from old.role then
-    if not (select public.is_admin()) then
+    if coalesce(current_setting('role', true), '') not in ('service_role', 'postgres') and not (select public.is_admin()) then
       raise exception 'Unauthorized: Only an administrator can modify user roles.';
     end if;
   end if;
 
-  -- Prevent direct email modification unless done by admin
+  -- Prevent direct email modification unless done by admin or service_role
   if new.email is distinct from old.email then
-    if not (select public.is_admin()) then
+    if coalesce(current_setting('role', true), '') not in ('service_role', 'postgres') and not (select public.is_admin()) then
       raise exception 'Unauthorized: Profile email cannot be modified directly.';
     end if;
   end if;

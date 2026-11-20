@@ -1,7 +1,7 @@
 # Varnam Architecture & Technical Specification
 
 > **Celebratory Indian Couture & Apparel Mobile-First Storefront**
-> Built for Women, Teens (12–18Y), and Girls (2–14Y).
+> Built for Women (XS–XXL), Teens (13–18Y), and Girls (2–12Y).
 > Target: High Trust, Multi-Generational Celebration, Crystal-Clear Sizing (In/Cm), Impeccable Performance & Ironclad Security.
 > Post-EGM Hardened, Multi-Segment Verified Edition.
 
@@ -11,8 +11,8 @@
 
 **Varnam** is an artisanal and modern mobile-first e-commerce storefront crafted for celebratory apparel across three generational demographics:
 1. **Women's Couture (Sizes XS–XXL, Numeric 28–38, Free Size):** Royal Raw Silk Anarkalis, Hand-Painted Organza Gowns, and Zari Ensembles with complete bust (32–42"), waist, and hip (36–46") measurements.
-2. **Teens Couture (Ages 12–18Y / Youth Sizes 11-12Y to M):** Contemporary festive co-ord sets, tiered party gowns, and fusion styles specifically proportioned for adolescent silhouettes.
-3. **Girls' Apparel & Dresses (Ages 2–14Y):** Handcrafted zari lehengas, whimsical tiered party gowns, and pure cotton twirl frocks with true-to-age sizing and +2 inch growth margins.
+2. **Teens Couture (Ages 13–18Y / Youth Sizes 13-14Y to M):** Contemporary festive co-ord sets, tiered party gowns, and fusion styles specifically proportioned for adolescent silhouettes.
+3. **Girls' Apparel & Dresses (Ages 2–12Y):** Handcrafted zari lehengas, whimsical tiered party gowns, and pure cotton twirl frocks with true-to-age milestone sizing (`2-3Y` through `11-12Y`) and +2 inch growth margins.
 
 Key product tenets:
 - **Trust & Garment Transparency:** High-contrast typography (strict WCAG AA compliance), multi-segment sizing charts with an interactive **Inches (in) / Centimeters (cm)** toggle, explicit garment measurements (bust, chest, waist, hip, length), segment-specific model fit disclosures (`model_height` and `model_size_worn`), and mandatory explicit inner lining declaration on every dress (no defaults allowed).
@@ -72,7 +72,8 @@ Key product tenets:
    - The procedure `cancel_expired_orders()` queries pending orders where `expires_at < now() and status = 'pending' and payment_status = 'pending' and payment_method <> 'cod'`.
    - Transitions expired orders to `'cancelled'`.
    - The trigger `tr_restore_stock_on_cancel` executes **idempotently** (`old.cancelled_at is null`) and restores inventory back to `product_variants.stock`.
-   - Scheduled via `pg_cron` (running every 2 minutes: `*/2 * * * *`).
+   - **Primary Scheduler (`pg_cron`)**: Scheduled natively inside Postgres via `pg_cron` running every 2 minutes (`*/2 * * * *`). Hosted Supabase provides `pg_cron` out of the box in the `extensions` schema.
+   - **Secondary Backup (Vercel Cron)**: The serverless endpoint `/api/cron/cancel-expired-orders` (authenticated via `Bearer ${CRON_SECRET}`) runs daily in `vercel.json` (`0 0 * * *`) as a non-breaking safety net, preventing deployment failures on Vercel Hobby accounts which prohibit sub-daily crons.
 8. **Cancellation Protection Guard:**
    - Orders in `'shipped'` or `'delivered'` status are strictly blocked from cancellation (`tr_restore_stock_on_cancel` throws an uncatchable exception: `Cannot cancel order: order is already shipped/delivered.`).
 
@@ -256,8 +257,8 @@ To accommodate Women, Teens, and Girls without shoehorning different sizing conv
 | Demographic Segment | `size_group` | Size Values Supported | Key Measurement Columns | Fit Disclosures |
 |---|---|---|---|---|
 | **Women** | `women` | Alpha (`XS` to `XXL`), Numeric (`28`–`38`), Free Size (`Free Size` / `FS`) | Bust, Waist, Hip, Length (Inches & CM) | `model_height` (e.g. 5'8" / 173 cm), `model_size_worn` (e.g. Size S) |
-| **Teens** | `teen` | Age/Alpha (`11-12Y`, `13-14Y`, `15-16Y`, `XS`, `S`, `M`) | Bust, Waist, Hip, Length (Inches & CM) | Youth silhouette fit callout |
-| **Girls** | `kids` | Milestones (`2-3Y`, `4-5Y`, `6-7Y`, `8-9Y`, `10-11Y`, `12-14Y`) | Chest, Waist, Length (Inches & CM) | +2" growth margins, `model_height` (e.g. 4'2" / 127 cm), `model_size_worn` (Age 6-7Y) |
+| **Teens** | `teen` | Age/Alpha (`13-14Y`, `15-16Y`, `17-18Y`, `XS`, `S`, `M`) | Bust, Waist, Hip, Length (Inches & CM) | Youth silhouette fit callout |
+| **Girls** | `kids` | Milestones (`2-3Y`, `4-5Y`, `6-7Y`, `8-9Y`, `10-11Y`, `11-12Y`) | Chest, Waist, Length (Inches & CM) | +2" growth margins, `model_height` (e.g. 4'2" / 127 cm), `model_size_worn` (Age 6-7Y) |
 
 ### Best Practices Applied (Supabase Postgres Guidelines & EGM Hardening)
 - **All monetary values in integer paise (`bigint`):** Prevents floating-point rounding errors on financial transactions.
@@ -408,7 +409,7 @@ Animation elevates brand perception for shoppers across all generational edits, 
 
 ## 10. Preconditions Verification Summary (Passed Gates)
 
-- [x] **Multi-Segment Architecture Confirmed**: Women (XS–XXL), Teens (12–18Y), and Girls (2–14Y) supported across categories, products, variants, and storefront navigation.
+- [x] **Multi-Segment Architecture Confirmed**: Women (XS–XXL), Teens (13–18Y), and Girls (2–12Y) supported across categories, products, variants, and storefront navigation.
 - [x] **Cashfree Provider Confirmed**: Fully documented across architecture, RPCs, and webhooks.
 - [x] **Late Payment & Scheduler Implemented**: `refund_status` on payments; late payment trigger; `cancel_expired_orders()` scheduler (COD excluded).
 - [x] **Idempotent Restock & Shipped Block**: Trigger restocks only once per order, blocks cancelling shipped/delivered orders.

@@ -59,11 +59,11 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const segmentLabel =
     product.segment === "women"
-      ? "Women"
+      ? "Women (XS–XXL)"
       : product.segment === "teens"
-      ? "Teens (12–18Y)"
+      ? "Teens (13–18Y)"
       : product.segment === "girls"
-      ? "Girls (2–14Y)"
+      ? "Girls (2–12Y)"
       : null;
 
   const handleWishlistClick = (e: React.MouseEvent) => {
@@ -167,11 +167,13 @@ export function ProductCard({ product }: ProductCardProps) {
         </motion.button>
 
         {/* Cotton Lining Indicator Tag */}
-        <div className="absolute bottom-2 left-2 right-2">
-          <span className="inline-block bg-surface/95 backdrop-blur-sm text-brand-primary text-[10px] font-semibold px-2 py-0.5 rounded-md border border-border/80 shadow-sm">
-            🌿 {product.lining || "100% Breathable Cotton"}
-          </span>
-        </div>
+        {product.lining && (
+          <div className="absolute bottom-2 left-2 right-2">
+            <span className="inline-block bg-surface/95 backdrop-blur-sm text-brand-primary text-[10px] font-semibold px-2 py-0.5 rounded-md border border-border/80 shadow-sm">
+              🌿 {product.lining}
+            </span>
+          </div>
+        )}
       </Link>
 
       {/* Product Content Details */}

@@ -34,10 +34,12 @@ export async function POST(req: NextRequest) {
         .update(timestamp + rawBody)
         .digest("base64");
 
-      const isValid = crypto.timingSafeEqual(
-        Buffer.from(signature),
-        Buffer.from(expectedSignature)
-      );
+      const sigBuf = Buffer.from(signature);
+      const expectedBuf = Buffer.from(expectedSignature);
+
+      const isValid =
+        sigBuf.length === expectedBuf.length &&
+        crypto.timingSafeEqual(sigBuf, expectedBuf);
 
       if (!isValid) {
         console.error("Cashfree webhook signature mismatch");

@@ -28,10 +28,10 @@ export function Footer() {
               </div>
               <div>
                 <h4 className="font-serif font-bold text-text-heading text-base">
-                  Parent-Approved Sizing (2–14Y)
+                  Curated Multi-Generational Sizing
                 </h4>
                 <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                  Milestone-based sizing with hidden +2 inch side margins for easy letting out as your child grows.
+                  Aligned sizing for Women (XS–XXL), Teens (13–18Y), and Girls (2–12Y) with generous internal alteration margins.
                 </p>
               </div>
             </div>
@@ -61,7 +61,7 @@ export function Footer() {
               Varnam
             </Link>
             <p className="text-xs text-text-muted mt-3 leading-relaxed">
-              Curated celebrations and daily twirls for girls aged 2 to 14. Combining the grandeur of Indian textiles with skin-safe cotton comfort.
+              Curated celebrations and daily twirls for Women (XS–XXL), Teens (13–18Y), and Girls (2–12Y). Combining the grandeur of Indian textiles with skin-safe cotton comfort.
             </p>
             <div className="mt-4 flex items-center gap-1.5 text-xs text-brand-secondary font-medium">
               <Sparkles className="w-3.5 h-3.5" /> Handcrafted with love in India
@@ -107,13 +107,24 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <span className="text-text-muted">Size & Growth Guide</span>
+                <Link href="/shipping" className="hover:text-brand-primary transition-colors">
+                  Shipping & Delivery Info
+                </Link>
               </li>
               <li>
-                <span className="text-text-muted">Wash & Fabric Care Guide</span>
+                <Link href="/returns" className="hover:text-brand-primary transition-colors">
+                  7-Day Returns & Size Exchange
+                </Link>
               </li>
               <li>
-                <span className="text-text-muted">Shipping & Delivery Info</span>
+                <Link href="/privacy" className="hover:text-brand-primary transition-colors">
+                  Privacy Policy & Data Safety
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="hover:text-brand-primary transition-colors">
+                  Terms of Service & Orders
+                </Link>
               </li>
             </ul>
           </div>
@@ -143,7 +154,7 @@ export function Footer() {
           <p className="flex items-center gap-3">
             <span>Prices inclusive of all taxes (INR)</span>
             <span>•</span>
-            <span>Made for Girls 2–14Y</span>
+            <span>Women (XS–XXL) • Teens (13–18Y) • Girls (2–12Y)</span>
           </p>
         </div>
       </div>

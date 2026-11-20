@@ -28,11 +28,25 @@ export async function generateMetadata({
     product.product_images.find((img) => img.is_primary) ||
     product.product_images[0];
 
+  const segmentSuffix =
+    product.segment === "women"
+      ? "(Sizes XS–XXL)"
+      : product.segment === "teens"
+      ? "(Ages 13–18Y)"
+      : "(Ages 2–12Y)";
+
+  const segmentBrand =
+    product.segment === "women"
+      ? "Women's Couture"
+      : product.segment === "teens"
+      ? "Teens Festive"
+      : "Girls' Apparel";
+
   return {
-    title: `${product.name} (Ages 2–14Y)`,
-    description: `${product.description} Handcrafted with ${product.lining}. Safe, premium comfort for girls.`,
+    title: `${product.name} ${segmentSuffix}`,
+    description: `${product.description} Handcrafted in ${product.fabric} with ${product.lining}.`,
     openGraph: {
-      title: `${product.name} | Varnam Girls' Couture`,
+      title: `${product.name} | Varnam ${segmentBrand}`,
       description: product.description,
       images: primaryImage ? [primaryImage.image_url] : [],
     },

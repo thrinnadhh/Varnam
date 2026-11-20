@@ -38,3 +38,24 @@ export function formatDate(isoString: string): string {
     year: "numeric",
   });
 }
+
+/**
+ * Validate that a redirect URL is strictly an internal, same-origin relative path.
+ * Prevents open-redirect vulnerabilities.
+ */
+export function getSafeRedirectUrl(target: string | null | undefined, fallback = "/account"): string {
+  if (!target) return fallback;
+  const trimmed = target.trim();
+  // Must start with single '/' and must NOT start with '//' or contain '\'
+  if (trimmed.startsWith("/") && !trimmed.startsWith("//") && !trimmed.includes("\\")) {
+    try {
+      const parsed = new URL(trimmed, "http://localhost");
+      if (parsed.origin === "http://localhost") {
+        return parsed.pathname + parsed.search + parsed.hash;
+      }
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+}

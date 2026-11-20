@@ -68,23 +68,6 @@ function AccountContent() {
 
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    async function checkUser() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
-        if (user) {
-          loadUserData();
-        }
-      } catch (err) {
-        console.error("Auth check error:", err);
-      } finally {
-        setIsLoadingAuth(false);
-      }
-    }
-    checkUser();
-  }, [supabase]);
-
   const loadUserData = async () => {
     setIsDataLoading(true);
     try {
@@ -102,6 +85,23 @@ function AccountContent() {
       setIsDataLoading(false);
     }
   };
+
+  useEffect(() => {
+    async function checkUser() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+        if (user) {
+          loadUserData();
+        }
+      } catch (err) {
+        console.error("Auth check error:", err);
+      } finally {
+        setIsLoadingAuth(false);
+      }
+    }
+    checkUser();
+  }, [supabase]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();

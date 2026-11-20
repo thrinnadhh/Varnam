@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/db/client";
 import { Sparkles, ArrowRight, Lock, Mail, AlertCircle, ShoppingBag } from "lucide-react";
+import { getSafeRedirectUrl } from "@/lib/utils";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") || "/account";
+  const redirectTo = getSafeRedirectUrl(searchParams.get("redirectTo"), "/account");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

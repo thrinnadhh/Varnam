@@ -106,7 +106,6 @@ export async function getAdminOrders(statusFilter?: string) {
       shipping_address,
       notes,
       created_at,
-      profiles(email),
       order_items(
         id,
         product_name,
@@ -114,8 +113,7 @@ export async function getAdminOrders(statusFilter?: string) {
         size_age,
         color_name,
         quantity,
-        unit_price,
-        total_price
+        price
       )
     `)
     .order("created_at", { ascending: false });

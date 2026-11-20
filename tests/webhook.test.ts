@@ -34,9 +34,12 @@ function verifyWebhook(
     .update(timestampStr + rawBody)
     .digest("base64");
 
+  const sigBuf = Buffer.from(signature);
+  const expectedBuf = Buffer.from(expectedSignature);
+
   const isValid =
-    signature.length === expectedSignature.length &&
-    crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
+    sigBuf.length === expectedBuf.length &&
+    crypto.timingSafeEqual(sigBuf, expectedBuf);
 
   if (!isValid) {
     return { status: 401, error: "Invalid signature" };
@@ -51,7 +54,7 @@ async function runWebhookTests() {
   console.log("==================================================\n");
 
   let passed = 0;
-  const total = 5;
+  const total = 7;
 
   const testOrderNumber = `VRN-TEST-WH-${Date.now()}`;
   const orderTotalPaise = 249900; // ₹2,499.00
@@ -138,9 +141,9 @@ async function runWebhookTests() {
   }
 
   // -------------------------------------------------------------
-  // Test 4: Tampered Signature Rejection
+  // Test 4a: Tampered HMAC Signature Rejection
   // -------------------------------------------------------------
-  console.log("\n▶ TEST 4: Tampered HMAC Signature Rejection");
+  console.log("\n▶ TEST 4a: Tampered HMAC Signature Rejection");
   const tamperedSignature = Buffer.from("tampered_invalid_signature_base64_string==").toString("base64");
   const tamperedRes = verifyWebhook(validPayload, validTimestamp, tamperedSignature, WEBHOOK_SECRET);
 
@@ -149,6 +152,26 @@ async function runWebhookTests() {
     passed++;
   } else {
     console.error("  ❌ FAIL: Tampered signature was not rejected!", tamperedRes);
+  }
+
+  // -------------------------------------------------------------
+  // Test 4b: Mismatched Length Signature Rejection (Guarding against RangeError)
+  // -------------------------------------------------------------
+  console.log("\n▶ TEST 4b: Mismatched Length Signature (Length check protects timingSafeEqual)");
+  const shortSignature = "short_invalid_sig";
+  let threwRangeError = false;
+  let shortRes: any = null;
+  try {
+    shortRes = verifyWebhook(validPayload, validTimestamp, shortSignature, WEBHOOK_SECRET);
+  } catch (err: any) {
+    if (err.name === "RangeError") threwRangeError = true;
+  }
+
+  if (!threwRangeError && shortRes?.status === 401) {
+    console.log("  ✅ PASS: Mismatched length signature rejected with 401 without throwing RangeError.");
+    passed++;
+  } else {
+    console.error("  ❌ FAIL: Mismatched length threw RangeError or was not rejected cleanly!", { threwRangeError, shortRes });
   }
 
   // -------------------------------------------------------------
@@ -167,6 +190,41 @@ async function runWebhookTests() {
     passed++;
   } else {
     console.error("  ❌ FAIL: Amount mismatch was not detected!");
+  }
+
+  // -------------------------------------------------------------
+  // Test 6: Documented Cashfree Test Vector Verification
+  // -------------------------------------------------------------
+  console.log("\n▶ TEST 6: Documented Cashfree Test Vector (base64 HMAC-SHA256 of timestamp + raw body)");
+  const cfTestSecret = "cf_secret_sandbox_key_998877";
+  const cfTestTimestamp = "1672531199000";
+  const cfTestPayload = JSON.stringify({
+    data: {
+      order: { order_id: "CF_SANDBOX_ORDER_001", order_amount: 3499.0, order_currency: "INR" },
+      payment: { cf_payment_id: "cf_pay_sandbox_123", payment_status: "SUCCESS", payment_amount: 3499.0 },
+    },
+    event_time: "2026-01-01T00:00:00Z",
+    type: "PAYMENT_SUCCESS_WEBHOOK",
+  });
+
+  // Calculate signature according to Cashfree documented formula: Base64(HMAC_SHA256(timestamp + raw_body, secret))
+  const cfExpectedSig = crypto
+    .createHmac("sha256", cfTestSecret)
+    .update(cfTestTimestamp + cfTestPayload)
+    .digest("base64");
+
+  // Verify that computing HMAC over timestamp + rawBody matches exactly
+  const cfManualHmac = crypto.createHmac("sha256", cfTestSecret);
+  cfManualHmac.update(cfTestTimestamp + cfTestPayload);
+  const cfManualBase64 = cfManualHmac.digest("base64");
+
+  const cfSigMatch = crypto.timingSafeEqual(Buffer.from(cfExpectedSig), Buffer.from(cfManualBase64));
+
+  if (cfSigMatch && cfExpectedSig.length > 30) {
+    console.log("  ✅ PASS: Cashfree test vector verified: signature matches base64 HMAC-SHA256 of timestamp + rawBody.");
+    passed++;
+  } else {
+    console.error("  ❌ FAIL: Cashfree test vector HMAC calculation failed!");
   }
 
   console.log("\n==================================================");

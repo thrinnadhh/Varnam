@@ -20,8 +20,11 @@ export function SmoothScroll({ children }: SmoothScrollProps) {
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReducedMotion(mediaQuery.matches);
+    if (mediaQuery.matches) {
+      setReducedMotion(true);
+    }
 
     const handleChange = (e: MediaQueryListEvent) => {
       setReducedMotion(e.matches);

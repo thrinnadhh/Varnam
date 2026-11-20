@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getOrderByNumber } from "@/lib/db/actions";
+import { createServerSupabaseClient } from "@/lib/db/supabase";
 import { formatPrice, formatDate } from "@/lib/utils";
 import {
   CheckCircle2,
@@ -23,9 +24,33 @@ interface OrderPageProps {
 
 export default async function OrderConfirmationPage({ params }: OrderPageProps) {
   const { orderNumber } = await params;
+
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect(`/login?redirectTo=/orders/${orderNumber}`);
+  }
+
   const order = await getOrderByNumber(orderNumber);
 
   if (!order) {
+    notFound();
+  }
+
+  // Security Ownership Check: Customer must own the order or be an admin
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const isAdmin = profile?.role === "admin";
+  const isOwner = order.user_id === user.id;
+
+  if (!isOwner && !isAdmin) {
     notFound();
   }
 

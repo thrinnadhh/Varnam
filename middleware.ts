@@ -56,15 +56,24 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Server-side Route Guard for /account
+  if (pathname.startsWith("/account")) {
+    if (!user) {
+      const redirectUrl = new URL("/login", request.url);
+      redirectUrl.searchParams.set("redirectTo", pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
   // Content Security Policy
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://sdk.cashfree.com;
+    script-src 'self' 'unsafe-eval' 'unsafe-inline' https://sdk.cashfree.com https://*.cashfree.com;
     style-src 'self' 'unsafe-inline';
-    img-src 'self' blob: data: https://images.unsplash.com https://*.supabase.co http://127.0.0.1:54321 http://localhost:3000;
+    img-src 'self' blob: data: https://images.unsplash.com https://*.supabase.co https://*.cashfree.com http://127.0.0.1:54321 http://localhost:3000 http://localhost:3040;
     font-src 'self' data: https://fonts.gstatic.com;
-    connect-src 'self' https://api.cashfree.com https://sandbox.cashfree.com https://*.supabase.co http://127.0.0.1:54321 ws://127.0.0.1:54321 http://localhost:3000;
-    frame-src 'self' https://sdk.cashfree.com;
+    connect-src 'self' https://api.cashfree.com https://sandbox.cashfree.com https://*.cashfree.com https://*.supabase.co http://127.0.0.1:54321 ws://127.0.0.1:54321 http://localhost:3000 http://localhost:3040;
+    frame-src 'self' https://sdk.cashfree.com https://*.cashfree.com;
     object-src 'none';
     base-uri 'self';
     form-action 'self';

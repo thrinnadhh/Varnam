@@ -68,7 +68,7 @@ export function HomeHeroMotion() {
             Blush Peony Tiered Tulle Gown
           </h3>
           <p className="text-xs text-stone-200 mt-0.5">
-            Ages 2–14Y • Pure Mulmul Cotton Lining
+            Ages 2–12Y • 100% Breathable Malmal Cotton
           </p>
         </div>
       </div>
